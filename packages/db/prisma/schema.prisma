@@ -1,0 +1,400 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TRAVELLER
+  SUPPLIER
+  ADMIN
+}
+
+enum ListingCategory {
+  ROOM
+  CAR
+  TRAVEL_SERVICE
+}
+
+enum SlotStatus {
+  OPEN
+  HELD
+  BOOKED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  EXPIRED
+}
+
+enum BookingSource {
+  DIRECT_SEARCH
+  REVERSE_BID
+}
+
+enum RateRuleKind {
+  WEEKEND
+  PEAK
+  CORPORATE
+  AI_DYNAMIC
+}
+
+enum BookingRequestStatus {
+  OPEN
+  MATCHED
+  EXPIRED
+  CANCELLED
+}
+
+enum SupplierOfferStatus {
+  PENDING
+  RECOMMENDED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum AgentType {
+  PRICING
+  NEGOTIATION
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum NotificationCategory {
+  TRANSACTIONAL
+  MARKETING
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum SourcedDraftStatus {
+  DRAFT
+  PUBLISHED
+  DISCARDED
+}
+
+enum SourcedDraftOrigin {
+  URL
+  FEED
+  MANUAL
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String
+  role              Role     @default(TRAVELLER)
+  isBusinessAccount Boolean  @default(false)
+  /// Optional mobile number for the SMS communication channel.
+  phone             String?
+  /// Consent flag for marketing/campaign emails (transactional mail is always sent).
+  marketingOptIn    Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  properties      Property[]
+  bookings        Booking[]
+  bookingRequests BookingRequest[]
+  supplierOffers  SupplierOffer[]
+  notifications   Notification[]
+  sourcedDrafts   SourcedListingDraft[]
+  consentEvents   ConsentEvent[]
+
+  @@map("users")
+}
+
+/// Append-only audit of marketing-consent changes (grant/withdraw), for
+/// GDPR/CAN-SPAM accountability. Records who, what channel, and how it changed.
+model ConsentEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  channel   String   // e.g. "marketing_email"
+  granted   Boolean
+  source    String   // "preferences" | "unsubscribe_link" | "signup"
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("consent_events")
+}
+
+model Property {
+  id          String          @id @default(cuid())
+  supplierId  String
+  supplier    User            @relation(fields: [supplierId], references: [id])
+  name        String
+  category    ListingCategory @default(ROOM)
+  addressLine String
+  city        String
+  country     String
+  lat         Float
+  lng         Float
+  amenities   String[]
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rooms Room[]
+
+  @@index([city])
+  @@map("properties")
+}
+
+model Room {
+  id             String   @id @default(cuid())
+  propertyId     String
+  property       Property @relation(fields: [propertyId], references: [id])
+  name           String
+  capacity       Int
+  amenities      String[]
+  baseHourlyRate Decimal  @db.Decimal(10, 2)
+  currency       String   @default("GBP")
+  minHours       Int      @default(2)
+  maxHours       Int      @default(24)
+  status         String   @default("ACTIVE")
+  /// B2A seam: when true, this room's own supplier agent auto-submits
+  /// SupplierOffers on matching open BookingRequests instead of waiting
+  /// for a human to respond.
+  autoOfferEnabled Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  rateRules         RoomRateRule[]
+  availabilitySlots AvailabilitySlot[]
+  bookings          Booking[]
+  supplierOffers    SupplierOffer[]
+
+  @@index([propertyId])
+  @@map("rooms")
+}
+
+/// Host-configured static rules (WEEKEND/PEAK/CORPORATE) and AI-written
+/// dynamic rate suggestions (AI_DYNAMIC) coexist here; only the pricing
+/// agent is allowed to write AI_DYNAMIC rows.
+model RoomRateRule {
+  id         String       @id @default(cuid())
+  roomId     String
+  room       Room         @relation(fields: [roomId], references: [id])
+  kind       RateRuleKind
+  multiplier Decimal      @db.Decimal(5, 3)
+  validFrom  DateTime?
+  validTo    DateTime?
+  createdAt  DateTime     @default(now())
+
+  @@index([roomId, kind])
+  @@map("room_rate_rules")
+}
+
+/// Hourly-granularity slot table -- what makes hourly (vs nightly) booking
+/// enforceable. A booking claims one or more contiguous slots.
+model AvailabilitySlot {
+  id        String     @id @default(cuid())
+  roomId    String
+  room      Room       @relation(fields: [roomId], references: [id])
+  startsAt  DateTime
+  endsAt    DateTime
+  status    SlotStatus @default(OPEN)
+  bookingId String?
+  booking   Booking?   @relation(fields: [bookingId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@unique([roomId, startsAt])
+  @@index([roomId, startsAt, endsAt])
+  @@map("availability_slots")
+}
+
+/// Traveller's reverse-bid ask. Deliberately generic (not room-specific
+/// field names) so other verticals can reuse this table via `category`.
+model BookingRequest {
+  id                String               @id @default(cuid())
+  travellerId       String
+  traveller         User                 @relation(fields: [travellerId], references: [id])
+  category          String               @default("ROOM")
+  locationQuery     String
+  desiredStart      DateTime
+  desiredEnd        DateTime
+  requiredAmenities String[]
+  maxBudget         Decimal?             @db.Decimal(10, 2)
+  /// A2B seam: when true, the traveller's agent auto-accepts the
+  /// negotiation agent's top recommendation as soon as it is within
+  /// maxBudget, instead of waiting for a manual click.
+  autoAcceptEnabled Boolean              @default(false)
+  status            BookingRequestStatus @default(OPEN)
+  expiresAt         DateTime
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  offers SupplierOffer[]
+
+  @@index([status, expiresAt])
+  @@map("booking_requests")
+}
+
+model SupplierOffer {
+  id               String              @id @default(cuid())
+  bookingRequestId String
+  bookingRequest   BookingRequest      @relation(fields: [bookingRequestId], references: [id])
+  supplierId       String
+  supplier         User                @relation(fields: [supplierId], references: [id])
+  roomId           String
+  room             Room                @relation(fields: [roomId], references: [id])
+  offeredRate      Decimal             @db.Decimal(10, 2)
+  offeredTotal     Decimal             @db.Decimal(10, 2)
+  message          String?
+  /// True when this offer was generated by the supplier's own agent
+  /// (B2A auto-offer) rather than submitted by a human.
+  isAgentSubmitted Boolean             @default(false)
+  status           SupplierOfferStatus @default(PENDING)
+  submittedAt      DateTime            @default(now())
+
+  booking Booking?
+
+  @@index([bookingRequestId, status])
+  @@map("supplier_offers")
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  travellerId     String
+  traveller       User          @relation(fields: [travellerId], references: [id])
+  roomId          String
+  room            Room          @relation(fields: [roomId], references: [id])
+  startsAt        DateTime
+  endsAt          DateTime
+  /// Agreed room price before the platform fee (hours × rate).
+  subtotalAmount  Decimal       @db.Decimal(10, 2) @default(0)
+  /// Total platform commission (1% of subtotal), split between both parties.
+  platformFee     Decimal       @db.Decimal(10, 2) @default(0)
+  /// Amount remitted to the supplier: subtotal − supplier's half of the fee.
+  supplierPayout  Decimal       @db.Decimal(10, 2) @default(0)
+  /// Amount the traveller is charged: subtotal + traveller's half of the fee.
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  currency        String        @default("GBP")
+  isCorporateRate Boolean       @default(false)
+  source          BookingSource @default(DIRECT_SEARCH)
+  sourceOfferId   String?       @unique
+  sourceOffer     SupplierOffer? @relation(fields: [sourceOfferId], references: [id])
+  /// True when the traveller's agent auto-accepted the winning offer
+  /// (A2B auto-accept) rather than a human clicking accept.
+  isAgentAccepted Boolean       @default(false)
+  status          BookingStatus @default(PENDING_PAYMENT)
+  /// While PENDING_PAYMENT the room's slots are only HELD; if payment isn't
+  /// completed by this time a background job releases them and expires the booking.
+  reservationExpiresAt DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  slots   AvailabilitySlot[]
+  payment Payment?
+
+  @@index([travellerId])
+  @@index([roomId, startsAt])
+  @@map("bookings")
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  bookingId             String   @unique
+  booking               Booking  @relation(fields: [bookingId], references: [id])
+  stripePaymentIntentId String   @unique
+  amount                Decimal  @db.Decimal(10, 2)
+  currency              String
+  status                String
+  capturedAt            DateTime?
+  stripeRefundId        String?
+  refundedAt            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("payments")
+}
+
+/// Every pricing/negotiation agent call writes exactly one row here,
+/// giving a full audit trail of autonomous AI decisions.
+model AgentDecisionLog {
+  id                String    @id @default(cuid())
+  agentType         AgentType
+  subjectType       String
+  subjectId         String
+  inputSnapshot     Json
+  promptVersion     String
+  modelUsed         String
+  rawModelOutput    Json
+  parsedDecision    Json
+  reasoning         String?
+  latencyMs         Int
+  costEstimateUsd   Decimal?  @db.Decimal(10, 6)
+  outcomeAccepted   Boolean?
+  createdAt         DateTime  @default(now())
+
+  @@index([agentType, subjectType, subjectId])
+  @@map("agent_decision_logs")
+}
+
+/// One row per message delivered on a communication channel. In-app rows are
+/// the user's notification feed; email/SMS rows record what was dispatched
+/// (or would have been, in dev fallback). Marketing rows respect opt-in.
+model Notification {
+  id         String               @id @default(cuid())
+  userId     String
+  user       User                 @relation(fields: [userId], references: [id])
+  channel    NotificationChannel
+  category   NotificationCategory @default(TRANSACTIONAL)
+  type       String
+  subject    String
+  body       String
+  /// Arbitrary structured payload (e.g. bookingId) for the client to deep-link.
+  data       Json?
+  status     NotificationStatus   @default(QUEUED)
+  /// Provider message id when a real email/SMS provider handled it.
+  providerRef String?
+  readAt     DateTime?
+  createdAt  DateTime             @default(now())
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+/// A listing sourced from an external URL or feed. Always lands as a DRAFT
+/// that a supplier must claim and review before it is published as bookable
+/// inventory — nothing scraped is ever auto-listed for sale.
+model SourcedListingDraft {
+  id           String             @id @default(cuid())
+  /// The supplier who imported it and is accountable for the published listing.
+  supplierId   String
+  supplier     User               @relation(fields: [supplierId], references: [id])
+  origin       SourcedDraftOrigin
+  sourceUrl    String?
+  status       SourcedDraftStatus @default(DRAFT)
+  /// Parsed/normalised fields the supplier can edit before publishing.
+  name         String
+  addressLine  String?
+  city         String?
+  country      String?
+  amenities    String[]
+  suggestedHourlyRate Decimal?    @db.Decimal(10, 2)
+  currency     String             @default("GBP")
+  /// Raw extracted snapshot for provenance/audit.
+  rawExtract   Json?
+  publishedPropertyId String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([supplierId, status])
+  @@map("sourced_listing_drafts")
+}

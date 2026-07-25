@@ -1,0 +1,29 @@
+{
+  "name": "gihtcx",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "node --import tsx --test \"packages/**/src/**/*.test.ts\"",
+    "test:watch": "node --import tsx --test --watch \"packages/**/src/**/*.test.ts\"",
+    "test:integration": "node --import tsx --test \"packages/**/src/**/*.itest.ts\"",
+    "db:generate": "npm run generate --workspace=packages/db",
+    "db:migrate": "npm run migrate --workspace=packages/db",
+    "db:deploy": "npm run deploy --workspace=packages/db",
+    "db:drift": "npm run drift --workspace=packages/db",
+    "db:seed": "npm run seed --workspace=packages/db"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

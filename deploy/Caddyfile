@@ -1,0 +1,19 @@
+# Caddy fetches and renews Let's Encrypt certificates automatically for both
+# hostnames — no manual TLS setup. Requires: ports 80+443 open, and DNS A/AAAA
+# records for goodhours.shop AND api.goodhours.shop pointing at this server.
+{
+	# ACME contact address for certificate notices. Change to your email.
+	email admin@goodhours.shop
+}
+
+# Public web app.
+goodhours.shop, www.goodhours.shop {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+# Public API (the browser calls this directly; it's NEXT_PUBLIC_API_URL).
+api.goodhours.shop {
+	encode zstd gzip
+	reverse_proxy api:4000
+}
