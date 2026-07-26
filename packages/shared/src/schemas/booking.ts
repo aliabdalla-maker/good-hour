@@ -19,6 +19,23 @@ export const receiptViewSchema = z.object({
 });
 export type ReceiptView = z.infer<typeof receiptViewSchema>;
 
+export const supplierBookingSchema = z.object({
+  id: z.string(),
+  itemName: z.string(),
+  status: z.enum(BOOKING_STATUSES),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  currency: z.string(),
+  payout: z.number(),
+});
+export const supplierEarningsSchema = z.object({
+  currency: z.string(),
+  totalEarned: z.number(),
+  confirmedCount: z.number(),
+  bookings: z.array(supplierBookingSchema),
+});
+export type SupplierEarnings = z.infer<typeof supplierEarningsSchema>;
+
 export const createBookingSchema = z.object({
   roomId: z.string(),
   startsAt: z.string().datetime(),

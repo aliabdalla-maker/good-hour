@@ -176,6 +176,33 @@ export async function getReceipt(userId: string, role: string, bookingId: string
   };
 }
 
+/** Supplier earnings summary + booking list across all their rooms. */
+export async function getSupplierEarnings(supplierId: string) {
+  const bookings = await prisma.booking.findMany({
+    where: { room: { property: { supplierId } } },
+    include: { room: true },
+    orderBy: { startsAt: "desc" },
+    take: 100,
+  });
+  const earned = bookings
+    .filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED")
+    .reduce((sum, b) => sum + Number(b.supplierPayout), 0);
+  return {
+    currency: bookings[0]?.currency ?? "GBP",
+    totalEarned: Math.round(earned * 100) / 100,
+    confirmedCount: bookings.filter((b) => b.status === "CONFIRMED").length,
+    bookings: bookings.map((b) => ({
+      id: b.id,
+      itemName: b.room.name,
+      status: b.status as BookingStatus,
+      startsAt: b.startsAt.toISOString(),
+      endsAt: b.endsAt.toISOString(),
+      currency: b.currency,
+      payout: Number(b.supplierPayout),
+    })),
+  };
+}
+
 export async function cancelBooking(bookingId: string, travellerId: string) {
   const booking = await getBookingById(bookingId);
   if (booking.travellerId !== travellerId) {

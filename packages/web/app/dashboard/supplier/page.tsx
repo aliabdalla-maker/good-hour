@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import type { PropertyWithRooms, VerificationStatusView } from "@gihtcx/shared";
+import type { PropertyWithRooms, VerificationStatusView, SupplierEarnings } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { Badge } from "../../../components/ui/Badge";
 
@@ -49,6 +49,7 @@ export default function SupplierDashboardPage() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold">Supplier dashboard</h1>
 
+      <EarningsSection />
       <VerificationCard />
 
       <form onSubmit={handleCreateProperty} className="mb-8 grid grid-cols-1 gap-3 rounded border border-slate-200 bg-white p-4 sm:grid-cols-3">
@@ -72,6 +73,60 @@ export default function SupplierDashboardPage() {
           <PropertyCard key={property.id} property={property} onRoomAdded={() => queryClient.invalidateQueries({ queryKey: ["my-properties"] })} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function EarningsSection() {
+  const { data } = useQuery<SupplierEarnings>({
+    queryKey: ["supplier-earnings"],
+    queryFn: () => api.get<SupplierEarnings>("/bookings/supplier"),
+  });
+  if (!data) return null;
+  const money = (n: number) => `${data.currency} ${n.toFixed(2)}`;
+
+  return (
+    <div className="mb-8 animate-fade-in-up">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div
+          className="rounded-2xl p-5 text-white shadow-card"
+          style={{ backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" }}
+        >
+          <p className="text-xs uppercase tracking-wide text-white/80">Total earned</p>
+          <p className="mt-1 text-3xl font-semibold">{money(data.totalEarned)}</p>
+          <p className="mt-1 text-xs text-white/75">from confirmed &amp; completed bookings</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Active bookings</p>
+          <p className="mt-1 text-3xl font-semibold text-brand-600">{data.confirmedCount}</p>
+          <p className="mt-1 text-xs text-slate-400">confirmed &amp; upcoming</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Total bookings</p>
+          <p className="mt-1 text-3xl font-semibold text-slate-900">{data.bookings.length}</p>
+          <p className="mt-1 text-xs text-slate-400">all time</p>
+        </div>
+      </div>
+
+      {data.bookings.length > 0 && (
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
+          <h2 className="mb-1 font-medium">Recent bookings</h2>
+          <div className="flex flex-col divide-y divide-slate-100">
+            {data.bookings.slice(0, 8).map((b) => (
+              <div key={b.id} className="flex items-center justify-between py-2 text-sm">
+                <div>
+                  <p className="font-medium">{b.itemName}</p>
+                  <p className="text-xs text-slate-400">{new Date(b.startsAt).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-slate-800">{money(b.payout)}</p>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-400">{b.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

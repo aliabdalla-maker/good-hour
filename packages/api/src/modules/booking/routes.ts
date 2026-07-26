@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { createBookingSchema, bookingPublicSchema, receiptViewSchema } from "@gihtcx/shared";
-import { cancelBooking, createDirectBooking, getBookingById, getReceipt, listBookingsForTraveller, toPublicBooking } from "./service";
+import { createBookingSchema, bookingPublicSchema, receiptViewSchema, supplierEarningsSchema } from "@gihtcx/shared";
+import { cancelBooking, createDirectBooking, getBookingById, getReceipt, getSupplierEarnings, listBookingsForTraveller, toPublicBooking } from "./service";
 
 export default async function bookingRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -29,6 +29,17 @@ export default async function bookingRoutes(app: FastifyInstance) {
       const { booking, clientSecret } = await createDirectBooking(request.currentUser!.sub, request.body);
       return reply.status(201).send(toPublicBooking(booking, clientSecret));
     }
+  );
+
+  // Supplier's earnings + bookings across their rooms. Static path is matched
+  // before the "/:bookingId" param route by Fastify's router.
+  server.get(
+    "/supplier",
+    {
+      preHandler: [app.authenticate, app.requireRole(["SUPPLIER", "ADMIN"])],
+      schema: { response: { 200: supplierEarningsSchema } },
+    },
+    async (request, reply) => reply.send(await getSupplierEarnings(request.currentUser!.sub))
   );
 
   server.get(

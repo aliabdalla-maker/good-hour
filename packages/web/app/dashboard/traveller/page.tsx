@@ -1,13 +1,42 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { BookingPublic } from "@gihtcx/shared";
-import { api } from "../../../lib/apiClient";
+import { api, ApiError } from "../../../lib/apiClient";
 import { ReviewForm } from "../../../components/ReviewForm";
 import { MessageThread } from "../../../components/MessageThread";
 
 const REVIEWABLE = new Set(["CONFIRMED", "COMPLETED"]);
+const CANCELLABLE = new Set(["PENDING_PAYMENT", "CONFIRMED"]);
+
+function CancelButton({ bookingId }: { bookingId: string }) {
+  const qc = useQueryClient();
+  const [err, setErr] = useState<string | null>(null);
+  const cancel = useMutation({
+    mutationFn: () => api.post(`/bookings/${bookingId}/cancel`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-bookings"] }),
+    onError: (e) => setErr(e instanceof ApiError ? e.message : "Could not cancel"),
+  });
+  return (
+    <span className="ml-3">
+      <button
+        onClick={() => {
+          if (window.confirm("Cancel this booking? If it was paid, you'll be refunded to your card.")) {
+            setErr(null);
+            cancel.mutate();
+          }
+        }}
+        disabled={cancel.isPending}
+        className="text-sm font-medium text-red-600 underline disabled:opacity-60"
+      >
+        {cancel.isPending ? "Cancelling…" : "Cancel booking"}
+      </button>
+      {err && <span className="ml-2 text-xs text-red-600">{err}</span>}
+    </span>
+  );
+}
 
 export default function TravellerDashboardPage() {
   const { data: bookings } = useQuery<BookingPublic[]>({
@@ -38,11 +67,14 @@ export default function TravellerDashboardPage() {
                 <p className="text-xs uppercase text-slate-400">{booking.status}</p>
               </div>
             </Link>
-            {REVIEWABLE.has(booking.status) && (
-              <Link href={`/booking/${booking.id}/receipt`} className="mt-2 inline-block text-sm font-medium text-brand-600 underline">
-                View receipt
-              </Link>
-            )}
+            <div className="mt-2">
+              {REVIEWABLE.has(booking.status) && (
+                <Link href={`/booking/${booking.id}/receipt`} className="text-sm font-medium text-brand-600 underline">
+                  View receipt
+                </Link>
+              )}
+              {CANCELLABLE.has(booking.status) && <CancelButton bookingId={booking.id} />}
+            </div>
             <MessageThread bookingId={booking.id} />
             {REVIEWABLE.has(booking.status) && <ReviewForm bookingId={booking.id} />}
           </div>
