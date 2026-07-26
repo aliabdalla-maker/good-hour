@@ -5,7 +5,9 @@ async function main() {
   const app = buildApp();
 
   try {
-    await app.listen({ port: config.API_PORT, host: "0.0.0.0" });
+    // Hosts like Render/Railway inject PORT and route to it; fall back to API_PORT locally.
+    const port = Number(process.env.PORT) || config.API_PORT;
+    await app.listen({ port, host: "0.0.0.0" });
   } catch (error) {
     app.log.error(error);
     process.exit(1);
