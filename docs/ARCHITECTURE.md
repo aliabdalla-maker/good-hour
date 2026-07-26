@@ -18,7 +18,7 @@ Both `api` and `worker` run via `tsx` (not a `tsc` build) even in the Docker ima
 
 - **Stripe webhooks are processed synchronously** in the `POST /payments/webhook` handler, not via the `webhookProcess` BullMQ queue the plan sketched out. Signature verification + a couple of DB writes is fast and idempotent; queuing it added a queue for no real benefit, so that queue was dropped.
 - **Notifications are in-process**, subscribing directly to the `domainEvents` `EventEmitter` inside the `api` process, console-logging "sent" emails. The plan described notifications running in the `worker` process, but the domain event bus is same-process only (a plain `EventEmitter`) — wiring cross-process delivery would need routing these through Redis/BullMQ too, which isn't justified yet at this scale. Swap in a real provider (Resend) inside `modules/notifications/service.ts` without touching the event bus.
-- **No rating/distance signals yet.** `negotiation-agent`'s input schema has `supplierRatingAvg` and `roomDistanceKm` as nullable specifically because neither a review system nor geocoding is implemented — both are always sent as `null` today. Add a reviews model and a geocode-on-write step for `Property` to light these up.
+- **`supplierRatingAvg` is now wired** from real `Review` data (`reviews/service.ts#getSupplierRatingAvg`, averaged across all of a supplier's rooms) — see `offerEvaluation.processor.ts`. `roomDistanceKm` is still always `null`; it needs a geocode-on-write step for `Property` that isn't implemented.
 
 ## A2B / B2A autonomy
 

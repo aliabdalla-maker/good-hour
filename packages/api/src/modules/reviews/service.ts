@@ -57,6 +57,19 @@ export async function createReview(authorId: string, input: CreateReviewInput): 
   return toPublicReview(review);
 }
 
+/**
+ * Average rating (rounded to 1dp) across every review left for any room under
+ * this supplier's properties, or null if they have none yet. Feeds the
+ * negotiation agent's `supplierRatingAvg` signal (see offerEvaluation.processor.ts).
+ */
+export async function getSupplierRatingAvg(supplierId: string): Promise<number | null> {
+  const result = await prisma.review.aggregate({
+    where: { room: { property: { supplierId } } },
+    _avg: { rating: true },
+  });
+  return result._avg.rating != null ? Math.round(result._avg.rating * 10) / 10 : null;
+}
+
 export async function listReviewsForRoom(roomId: string): Promise<ReviewPublic[]> {
   const reviews = await prisma.review.findMany({
     where: { roomId },

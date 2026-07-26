@@ -16,9 +16,12 @@ Guidelines:
 - When recommending a specific listing or a section of the app, call the "navigate" tool so the user gets a button.
 - Valid navigate paths: /browse, /search, /requests/new, /dashboard/traveller, /dashboard/supplier,
   /notifications, /login, /register, and /room/<id> for a specific listing (use ids from search_listings).
-- Never invent listings, prices or ids — only use what search_listings returns.`;
+- Never invent listings, prices or ids — only use what search_listings or get_my_bookings return.
+- You can look up and discuss the signed-in user's own bookings (get_my_bookings), but you can never
+  create a booking, take a payment, or change anything on their behalf — you are read-only. If they want
+  to book, direct them to the right page with "navigate" instead.`;
 
-const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+const BASE_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
@@ -51,6 +54,20 @@ const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   },
 ];
 
+// Only offered to the model when the request carries a valid session — the
+// model can never call a tool that isn't in this list, so an unauthenticated
+// chat can never even attempt to look up someone's bookings.
+const AUTH_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "get_my_bookings",
+      description: "Look up the signed-in user's own recent bookings and their status.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+];
+
 async function searchListings(args: { category?: string; city?: string; maxHourlyRate?: number }) {
   const properties = await prisma.property.findMany({
     where: {
@@ -77,9 +94,39 @@ async function searchListings(args: { category?: string; city?: string; maxHourl
   return rows.slice(0, 8);
 }
 
-async function runTool(name: string, args: Record<string, unknown>, actions: AssistantAction[]) {
+async function getMyBookings(userId: string) {
+  const bookings = await prisma.booking.findMany({
+    where: { travellerId: userId },
+    include: { room: true },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+  return {
+    bookings: bookings.map((b) => ({
+      bookingId: b.id,
+      itemName: b.room.name,
+      status: b.status,
+      startsAt: b.startsAt.toISOString(),
+      currency: b.currency,
+      totalAmount: Number(b.totalAmount),
+    })),
+  };
+}
+
+async function runTool(
+  name: string,
+  args: Record<string, unknown>,
+  actions: AssistantAction[],
+  userId: string | null
+) {
   if (name === "search_listings") {
     return { listings: await searchListings(args) };
+  }
+  if (name === "get_my_bookings") {
+    // Belt-and-braces: even though this tool is only offered when userId is
+    // set, never trust that alone — refuse if it's somehow missing.
+    if (!userId) return { error: "not signed in" };
+    return getMyBookings(userId);
   }
   if (name === "navigate") {
     const path = String(args.path ?? "/browse");
@@ -90,24 +137,29 @@ async function runTool(name: string, args: Record<string, unknown>, actions: Ass
   return { error: "unknown tool" };
 }
 
-/** Agentic loop: the model can call tools (search / navigate) before replying. */
-export async function chatWithAssistant(input: AssistantChatInput): Promise<AssistantReply> {
-  if (!featureFlags.aiNegotiationEnabled) return fallbackReply(input);
+/** Agentic loop: the model can call tools (search / navigate / get_my_bookings) before replying. */
+export async function chatWithAssistant(
+  input: AssistantChatInput,
+  userId: string | null = null
+): Promise<AssistantReply> {
+  if (!featureFlags.aiNegotiationEnabled) return fallbackReply(input, userId);
 
   try {
     const client = getOpenAIClient();
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
       ...(input.pageContext ? [{ role: "system" as const, content: `The user is currently on: ${input.pageContext}` }] : []),
+      ...(userId ? [{ role: "system" as const, content: "The user is signed in — get_my_bookings is available." }] : []),
       ...input.messages,
     ];
     const actions: AssistantAction[] = [];
+    const tools = userId ? [...BASE_TOOLS, ...AUTH_TOOLS] : BASE_TOOLS;
 
     for (let step = 0; step < 3; step++) {
       const res = await client.chat.completions.create({
         model: OPENAI_MODEL,
         messages,
-        tools: TOOLS,
+        tools,
         tool_choice: "auto",
         temperature: 0.3,
         max_tokens: 500,
@@ -126,7 +178,7 @@ export async function chatWithAssistant(input: AssistantChatInput): Promise<Assi
         } catch {
           parsed = {};
         }
-        const result = await runTool(tc.function.name, parsed, actions);
+        const result = await runTool(tc.function.name, parsed, actions, userId);
         messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(result) });
       }
     }
@@ -143,17 +195,27 @@ export async function chatWithAssistant(input: AssistantChatInput): Promise<Assi
       aiPowered: true,
     };
   } catch {
-    return fallbackReply(input);
+    return fallbackReply(input, userId);
   }
 }
 
 /** Offline keyword helper so the assistant still works without an OpenAI key. */
-function fallbackReply(input: AssistantChatInput): AssistantReply {
+async function fallbackReply(input: AssistantChatInput, userId: string | null): Promise<AssistantReply> {
   const last = [...input.messages].reverse().find((m) => m.role === "user")?.content.toLowerCase() ?? "";
   const actions: AssistantAction[] = [];
   let reply: string;
 
-  if (/(car|drive|vehicle|rental)/.test(last)) {
+  if (userId && /(my booking|my order|booking status|have i booked)/.test(last)) {
+    const { bookings } = await getMyBookings(userId);
+    if (bookings.length === 0) {
+      reply = "You don't have any bookings yet — want to find something to book?";
+      actions.push({ type: "navigate", path: "/browse", label: "Browse listings" });
+    } else {
+      const b = bookings[0];
+      reply = `Your most recent booking: ${b.itemName} — ${b.status} — ${b.currency} ${b.totalAmount.toFixed(2)}. You have ${bookings.length} booking(s) on file.`;
+      actions.push({ type: "navigate", path: "/dashboard/traveller", label: "View all my bookings" });
+    }
+  } else if (/(car|drive|vehicle|rental)/.test(last)) {
     reply = "You can rent cars by the hour on Good Hours. Browse the Cars category to see what's available.";
     actions.push({ type: "navigate", path: "/browse", label: "Browse cars & more" });
   } else if (/(host|list|sell|supplier|earn)/.test(last)) {

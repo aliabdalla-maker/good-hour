@@ -6,6 +6,7 @@ import { QUEUE_NAMES } from "../../../api/src/queue/queues";
 import type { OfferEvaluationJobData } from "../../../api/src/queue/jobs/types";
 import { evaluateOffers } from "../../../api/src/modules/negotiation-agent/service";
 import { markRecommendedOffer, maybeAutoAccept } from "../../../api/src/modules/bidding/service";
+import { getSupplierRatingAvg } from "../../../api/src/modules/reviews";
 
 async function buildNegotiationInput(bookingRequestId: string): Promise<NegotiationAgentInput | null> {
   const bookingRequest = await prisma.bookingRequest.findUnique({ where: { id: bookingRequestId } });
@@ -19,12 +20,14 @@ async function buildNegotiationInput(bookingRequestId: string): Promise<Negotiat
 
   const offerInputs = await Promise.all(
     offers.map(async (offer) => {
-      // No review/rating system yet, so supplierRatingAvg and roomDistanceKm
-      // (which would need geocoding locationQuery) are left null -- the
-      // negotiation agent's schema treats both as optional signals.
-      const supplierCompletedBookings = await prisma.booking.count({
-        where: { status: "COMPLETED", room: { property: { supplierId: offer.supplierId } } },
-      });
+      // roomDistanceKm is still null -- it needs geocoding locationQuery, which
+      // isn't implemented. supplierRatingAvg IS wired now, from real reviews.
+      const [supplierCompletedBookings, supplierRatingAvg] = await Promise.all([
+        prisma.booking.count({
+          where: { status: "COMPLETED", room: { property: { supplierId: offer.supplierId } } },
+        }),
+        getSupplierRatingAvg(offer.supplierId),
+      ]);
 
       return {
         offerId: offer.id,
@@ -34,7 +37,7 @@ async function buildNegotiationInput(bookingRequestId: string): Promise<Negotiat
         offeredTotal: Number(offer.offeredTotal),
         roomAmenities: offer.room.amenities,
         roomDistanceKm: null,
-        supplierRatingAvg: null,
+        supplierRatingAvg,
         supplierCompletedBookings,
       };
     })
