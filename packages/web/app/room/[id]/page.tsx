@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import type { RoomPublic, PricingDecision, BookingPublic } from "@gihtcx/shared";
+import type { RoomPublic, PricingDecision, BookingPublic, ReviewPublic } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { Card } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
 import { Field, Input } from "../../../components/ui/Field";
 import { Badge } from "../../../components/ui/Badge";
+import { Stars } from "../../../components/ui/Stars";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { AiPriceCard } from "../../../components/ai/AiPriceCard";
@@ -30,6 +31,10 @@ export default function RoomDetailPage() {
   const { data: aiPrice } = useQuery<PricingDecision>({
     queryKey: ["room-ai-price", id],
     queryFn: () => api.get<PricingDecision>(`/pricing/rooms/${id}/suggested-rate`),
+  });
+  const { data: reviews } = useQuery<ReviewPublic[]>({
+    queryKey: ["room-reviews", id],
+    queryFn: () => api.get<ReviewPublic[]>(`/reviews?roomId=${id}`),
   });
 
   const [startsAt, setStartsAt] = useState(defaultDateTime(2));
@@ -91,6 +96,8 @@ export default function RoomDetailPage() {
             ))}
           </div>
 
+          <Stars rating={room.avgRating} count={room.reviewCount} />
+
           <div>
             <p className="text-xs uppercase text-slate-400">Host rate</p>
             <p className="text-xl font-semibold text-slate-900">
@@ -141,6 +148,33 @@ export default function RoomDetailPage() {
           </form>
         </Card>
       </div>
+
+      {/* Reviews */}
+      <section className="mt-10">
+        <h2 className="mb-4 text-lg font-semibold">
+          Reviews{room.reviewCount > 0 ? ` (${room.reviewCount})` : ""}
+        </h2>
+        {reviews && reviews.length > 0 ? (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {reviews.map((r) => (
+              <Card key={r.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <Stars rating={r.rating} />
+                  <span className="text-xs text-slate-400">
+                    {new Date(r.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                {r.comment && <p className="mt-2 text-sm text-slate-600">“{r.comment}”</p>}
+                <p className="mt-2 text-xs text-slate-400">— {r.authorName}, verified guest</p>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">
+            No reviews yet — be the first after you book and complete a stay.
+          </p>
+        )}
+      </section>
     </div>
   );
 }

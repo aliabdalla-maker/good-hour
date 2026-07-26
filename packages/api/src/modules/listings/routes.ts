@@ -16,6 +16,7 @@ import {
   toPublicProperty,
   toPublicRoom,
 } from "./service";
+import { getRoomRatings } from "../reviews";
 
 export default async function listingsRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -40,10 +41,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const properties = await listPropertiesForSupplier(request.currentUser!.sub);
+      const ratings = await getRoomRatings(properties.flatMap((p) => p.rooms.map((r) => r.id)));
       return reply.send(
         properties.map((property) => ({
           ...toPublicProperty(property),
-          rooms: property.rooms.map(toPublicRoom),
+          rooms: property.rooms.map((r) => toPublicRoom(r, ratings.get(r.id))),
         }))
       );
     }
@@ -68,10 +70,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
     { schema: { response: { 200: z.array(propertyWithRoomsSchema) } } },
     async (_request, reply) => {
       const properties = await listPublicCatalog();
+      const ratings = await getRoomRatings(properties.flatMap((p) => p.rooms.map((r) => r.id)));
       return reply.send(
         properties.map((property) => ({
           ...toPublicProperty(property),
-          rooms: property.rooms.map(toPublicRoom),
+          rooms: property.rooms.map((r) => toPublicRoom(r, ratings.get(r.id))),
         }))
       );
     }
@@ -82,7 +85,11 @@ export default async function listingsRoutes(app: FastifyInstance) {
     { schema: { params: z.object({ roomId: z.string() }), response: { 200: roomPublicSchema } } },
     async (request, reply) => {
       const room = await getRoomById(request.params.roomId);
-      return reply.send({ ...toPublicRoom(room), property: toPublicProperty(room.property) });
+      const ratings = await getRoomRatings([room.id]);
+      return reply.send({
+        ...toPublicRoom(room, ratings.get(room.id)),
+        property: toPublicProperty(room.property),
+      });
     }
   );
 }

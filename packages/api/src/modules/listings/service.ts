@@ -112,19 +112,22 @@ export function toPublicProperty(property: {
   };
 }
 
-export function toPublicRoom(room: {
-  id: string;
-  propertyId: string;
-  name: string;
-  capacity: number;
-  amenities: string[];
-  baseHourlyRate: unknown;
-  currency: string;
-  minHours: number;
-  maxHours: number;
-  status: string;
-  autoOfferEnabled: boolean;
-}) {
+export function toPublicRoom(
+  room: {
+    id: string;
+    propertyId: string;
+    name: string;
+    capacity: number;
+    amenities: string[];
+    baseHourlyRate: unknown;
+    currency: string;
+    minHours: number;
+    maxHours: number;
+    status: string;
+    autoOfferEnabled: boolean;
+  },
+  rating?: { avgRating: number | null; reviewCount: number }
+) {
   return {
     id: room.id,
     propertyId: room.propertyId,
@@ -137,5 +140,7 @@ export function toPublicRoom(room: {
     maxHours: room.maxHours,
     status: room.status,
     autoOfferEnabled: room.autoOfferEnabled,
+    avgRating: rating?.avgRating ?? null,
+    reviewCount: rating?.reviewCount ?? 0,
   };
 }

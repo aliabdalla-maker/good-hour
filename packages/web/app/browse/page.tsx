@@ -8,6 +8,7 @@ import { BUYER_FEE_RATE, SELLER_FEE_RATE } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
 import { Card, InteractiveCard } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
+import { Stars } from "../../components/ui/Stars";
 import { SkeletonGrid } from "../../components/ui/Skeleton";
 import { EmptyState } from "../../components/ui/EmptyState";
 
@@ -131,7 +132,10 @@ export default function BrowsePage() {
                         </span>
                       </div>
                       <div className="p-3">
-                        <h3 className="font-medium">{room.name}</h3>
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-medium">{room.name}</h3>
+                          <Stars rating={room.avgRating} count={room.reviewCount} showEmpty={false} />
+                        </div>
                         <p className="mt-1 text-xs text-slate-500">Capacity {room.capacity} · {room.minHours}-{room.maxHours}h</p>
                         {room.amenities.length > 0 && (
                           <p className="mt-1 text-xs text-slate-400">{room.amenities.join(", ")}</p>

@@ -52,6 +52,9 @@ export const roomPublicSchema = z.object({
   maxHours: z.number(),
   status: z.string(),
   autoOfferEnabled: z.boolean(),
+  /** Aggregate review rating for this unit (null until it has any reviews). */
+  avgRating: z.number().nullable().default(null),
+  reviewCount: z.number().default(0),
   /** Present on the single-room detail endpoint so the UI can show property context. */
   property: propertyPublicSchema.optional(),
 });

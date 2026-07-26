@@ -8,3 +8,4 @@ export * from "./schemas/bidding";
 export * from "./schemas/agent";
 export * from "./schemas/notifications";
 export * from "./schemas/sourcing";
+export * from "./schemas/reviews";

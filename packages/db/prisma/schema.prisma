@@ -121,6 +121,7 @@ model User {
   notifications   Notification[]
   sourcedDrafts   SourcedListingDraft[]
   consentEvents   ConsentEvent[]
+  reviews         Review[]
 
   @@map("users")
 }
@@ -203,9 +204,29 @@ model Room {
   availabilitySlots AvailabilitySlot[]
   bookings          Booking[]
   supplierOffers    SupplierOffer[]
+  reviews           Review[]
 
   @@index([propertyId])
   @@map("rooms")
+}
+
+/// A traveller's rating of a completed booking. One review per booking so the
+/// score can't be inflated; the booking link is the proof the reviewer
+/// actually transacted (verified review).
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id])
+  rating     Int // 1..5, enforced in the API layer
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@index([roomId, createdAt])
+  @@map("reviews")
 }
 
 /// Host-configured static rules (WEEKEND/PEAK/CORPORATE) and AI-written
@@ -326,6 +347,7 @@ model Booking {
 
   slots   AvailabilitySlot[]
   payment Payment?
+  review  Review?
 
   @@index([travellerId])
   @@index([roomId, startsAt])
