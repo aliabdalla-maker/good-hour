@@ -105,7 +105,7 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
   // The traveller is charged the subtotal plus their half of the platform fee.
   const { clientSecret } = await createPaymentIntentForBooking(booking.id, fee.travellerTotal, room.currency);
 
-  domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
+  await domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
 
   return { booking, clientSecret };
 }
@@ -127,7 +127,7 @@ export async function releaseExpiredReservation(bookingId: string) {
     }),
   ]);
 
-  domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
+  await domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
 }
 
 export async function listBookingsForTraveller(travellerId: string) {
@@ -167,7 +167,7 @@ export async function cancelBooking(bookingId: string, travellerId: string) {
     await refundBookingPayment(bookingId);
   }
 
-  domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
+  await domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
 }
 
 export function toPublicBooking(booking: {

@@ -94,7 +94,7 @@ async function generateAutoOffers(bookingRequestId: string) {
       },
     });
 
-    domainEvents.publish({ type: "offer.submitted", payload: { offerId: offer.id, bookingRequestId } });
+    await domainEvents.publish({ type: "offer.submitted", payload: { offerId: offer.id, bookingRequestId } });
   }
 
   await offerEvaluationQueue.add("evaluate", { bookingRequestId, reason: "offer_submitted" });
@@ -126,7 +126,7 @@ export async function submitSupplierOffer(supplierId: string, input: CreateSuppl
     },
   });
 
-  domainEvents.publish({ type: "offer.submitted", payload: { offerId: offer.id, bookingRequestId: input.bookingRequestId } });
+  await domainEvents.publish({ type: "offer.submitted", payload: { offerId: offer.id, bookingRequestId: input.bookingRequestId } });
   await offerEvaluationQueue.add("evaluate", { bookingRequestId: input.bookingRequestId, reason: "offer_submitted" });
 
   return offer;
@@ -158,7 +158,7 @@ async function recordNegotiationOutcome(bookingRequestId: string, acceptedOfferI
 /** Called by the offer-evaluation worker job once negotiation-agent has ranked the offers. */
 export async function markRecommendedOffer(bookingRequestId: string, offerId: string) {
   await prisma.supplierOffer.update({ where: { id: offerId }, data: { status: "RECOMMENDED" } });
-  domainEvents.publish({ type: "match.recommended", payload: { bookingRequestId, offerId } });
+  await domainEvents.publish({ type: "match.recommended", payload: { bookingRequestId, offerId } });
 }
 
 /**
@@ -284,7 +284,7 @@ export async function acceptOffer(travellerId: string, offerId: string, isAgentA
 
   const { clientSecret } = await createPaymentIntentForBooking(booking.id, fee.travellerTotal, booking.currency);
 
-  domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
+  await domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
 
   await recordNegotiationOutcome(offer.bookingRequestId, offer.id);
 

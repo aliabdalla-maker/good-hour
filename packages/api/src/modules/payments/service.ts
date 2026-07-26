@@ -83,8 +83,8 @@ export async function markPaymentSucceeded(stripePaymentIntentId: string) {
     }),
   ]);
 
-  domainEvents.publish({ type: "payment.succeeded", payload: { paymentId: payment.id, bookingId: payment.bookingId } });
-  domainEvents.publish({ type: "booking.confirmed", payload: { bookingId: payment.bookingId } });
+  await domainEvents.publish({ type: "payment.succeeded", payload: { paymentId: payment.id, bookingId: payment.bookingId } });
+  await domainEvents.publish({ type: "booking.confirmed", payload: { bookingId: payment.bookingId } });
 }
 
 /**
@@ -117,7 +117,7 @@ export async function markPaymentFailed(stripePaymentIntentId: string, reason: s
   }
 
   await prisma.payment.update({ where: { id: payment.id }, data: { status: "failed" } });
-  domainEvents.publish({ type: "payment.failed", payload: { bookingId: payment.bookingId, reason } });
+  await domainEvents.publish({ type: "payment.failed", payload: { bookingId: payment.bookingId, reason } });
 }
 
 /** Dev-only helper: lets the demo flow "pay" without a real Stripe account configured. */

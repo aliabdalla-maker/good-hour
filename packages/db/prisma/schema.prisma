@@ -19,6 +19,13 @@ enum ListingCategory {
   TRAVEL_SERVICE
 }
 
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
 enum SlotStatus {
   OPEN
   HELD
@@ -116,6 +123,24 @@ model User {
   consentEvents   ConsentEvent[]
 
   @@map("users")
+}
+
+/// Transactional outbox: domain events are durably recorded here (surviving
+/// process restarts), then a relay in the worker dispatches them to handlers
+/// with retries. Replaces the fire-and-forget in-process EventEmitter.
+model OutboxEvent {
+  id          String       @id @default(cuid())
+  type        String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  attempts    Int          @default(0)
+  lastError   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  processedAt DateTime?
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
 }
 
 /// Append-only audit of marketing-consent changes (grant/withdraw), for

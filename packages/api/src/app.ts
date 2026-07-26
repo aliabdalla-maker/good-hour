@@ -13,7 +13,7 @@ import bookingModule from "./modules/booking";
 import biddingModule from "./modules/bidding";
 import paymentsModule from "./modules/payments";
 import pricingAgentModule from "./modules/pricing-agent";
-import notificationsModule, { registerNotificationListeners } from "./modules/notifications";
+import notificationsModule from "./modules/notifications";
 import sourcingModule from "./modules/sourcing";
 
 export function buildApp() {
@@ -48,7 +48,9 @@ export function buildApp() {
   app.register(notificationsModule);
   app.register(sourcingModule);
 
-  registerNotificationListeners();
+  // NB: domain-event handlers (notifications) are registered and drained in the
+  // worker via the transactional outbox — not in-process here. The api only
+  // *publishes* events (writes outbox rows).
 
   return app;
 }

@@ -21,7 +21,7 @@ export async function registerUser(input: RegisterInput) {
     },
   });
 
-  domainEvents.publish({ type: "user.registered", payload: { userId: user.id, role: user.role } });
+  await domainEvents.publish({ type: "user.registered", payload: { userId: user.id, role: user.role } });
 
   const token = await signSession({
     sub: user.id,
