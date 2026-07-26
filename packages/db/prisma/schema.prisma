@@ -84,6 +84,7 @@ enum SupplierOfferStatus {
 enum AgentType {
   PRICING
   NEGOTIATION
+  IMAGE
 }
 
 enum NotificationChannel {

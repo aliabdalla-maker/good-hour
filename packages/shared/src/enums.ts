@@ -50,7 +50,7 @@ export const SUPPLIER_OFFER_STATUSES = [
 ] as const;
 export type SupplierOfferStatus = (typeof SUPPLIER_OFFER_STATUSES)[number];
 
-export const AGENT_TYPES = ["PRICING", "NEGOTIATION"] as const;
+export const AGENT_TYPES = ["PRICING", "NEGOTIATION", "IMAGE"] as const;
 export type AgentType = (typeof AGENT_TYPES)[number];
 
 export const NOTIFICATION_CHANNELS = ["IN_APP", "EMAIL", "SMS"] as const;

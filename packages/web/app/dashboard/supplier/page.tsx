@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import type { PropertyWithRooms, VerificationStatusView, SupplierEarnings } from "@gihtcx/shared";
+import type { PropertyWithRooms, VerificationStatusView, SupplierEarnings, GeneratedImageView } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { Badge } from "../../../components/ui/Badge";
 
@@ -221,7 +221,19 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
   const [minHours, setMinHours] = useState(2);
   const [maxHours, setMaxHours] = useState(12);
   const [autoOfferEnabled, setAutoOfferEnabled] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [imageError, setImageError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const generateImage = useMutation({
+    mutationFn: () =>
+      api.post<GeneratedImageView>("/image-agent/generate", {
+        prompt: imagePrompt || `${roomName || "a listing"}, capacity ${capacity}`,
+      }),
+    onSuccess: (res) => setImageUrl(res.imageUrl),
+    onError: (e) => setImageError(e instanceof ApiError ? e.message : "Could not generate an image"),
+  });
 
   async function handleCreateRoom(e: React.FormEvent) {
     e.preventDefault();
@@ -232,6 +244,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
         name: roomName,
         capacity,
         amenities: ["wifi"],
+        imageUrl: imageUrl || undefined,
         baseHourlyRate,
         currency: "GBP",
         minHours,
@@ -239,6 +252,8 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
         autoOfferEnabled,
       });
       setRoomName("");
+      setImageUrl("");
+      setImagePrompt("");
       setShowForm(false);
       onRoomAdded();
     } catch (err) {
@@ -274,6 +289,49 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
             <input type="checkbox" checked={autoOfferEnabled} onChange={(e) => setAutoOfferEnabled(e.target.checked)} />
             Let this room&apos;s agent auto-offer on matching bid requests (B2A)
           </label>
+
+          <div className="col-span-2 rounded-lg border border-dashed border-slate-200 p-2">
+            <p className="mb-1 text-xs font-medium text-slate-500">Photo (optional)</p>
+            <div className="flex gap-2">
+              {imageUrl && (
+                <img src={imageUrl} alt="Preview" className="h-14 w-14 shrink-0 rounded object-cover" />
+              )}
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                <input
+                  placeholder="Describe the photo, e.g. 'bright modern hotel day-room with desk'"
+                  value={imagePrompt}
+                  onChange={(e) => setImagePrompt(e.target.value)}
+                  className="rounded border border-slate-300 px-2 py-1 text-sm"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setImageError(null); generateImage.mutate(); }}
+                    disabled={generateImage.isPending || !imagePrompt.trim()}
+                    className="w-fit rounded-full bg-ai-50 px-3 py-1 text-xs font-medium text-ai-700 ring-1 ring-ai-200 hover:bg-ai-100 disabled:opacity-60"
+                  >
+                    {generateImage.isPending ? "Generating…" : "✨ Generate with AI (Nano Banana)"}
+                  </button>
+                  {imageUrl && (
+                    <button type="button" onClick={() => setImageUrl("")} className="text-xs text-slate-400 hover:text-red-500">
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {imageError && (
+                  <p className="text-xs text-red-600">
+                    {imageError} — you can paste an image URL instead:
+                    <input
+                      placeholder="https://…"
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      className="ml-1 rounded border border-slate-300 px-1.5 py-0.5 text-xs"
+                    />
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
           {error && <p className="col-span-2 text-sm text-red-600">{error}</p>}
           <button type="submit" className="col-span-2 rounded bg-slate-900 px-3 py-1.5 text-sm text-white sm:w-fit">
             Add room

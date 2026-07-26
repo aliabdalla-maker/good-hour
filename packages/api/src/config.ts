@@ -23,6 +23,9 @@ const envSchema = z.object({
   RESERVATION_HOLD_MINUTES: z.coerce.number().int().positive().default(15),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
+  // Google AI Studio key for Gemini image generation ("Nano Banana").
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   // --- Communication channels (all optional; fall back to console logging) ---
@@ -47,6 +50,7 @@ export const config = loadConfig();
 export const featureFlags = {
   aiPricingEnabled: Boolean(config.OPENAI_API_KEY),
   aiNegotiationEnabled: Boolean(config.OPENAI_API_KEY),
+  imageGenEnabled: Boolean(config.GEMINI_API_KEY),
   paymentsEnabled: Boolean(config.STRIPE_SECRET_KEY),
   emailEnabled: Boolean(config.RESEND_API_KEY),
   smsEnabled: Boolean(

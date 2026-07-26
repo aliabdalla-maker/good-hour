@@ -50,6 +50,8 @@ services:
         value: Good Hours <no-reply@goodhour.shop>
       - { key: OPENAI_API_KEY, sync: false }
       - { key: OPENAI_MODEL, value: gpt-4o-mini }
+      - { key: GEMINI_API_KEY, sync: false }
+      - { key: GEMINI_IMAGE_MODEL, value: gemini-2.5-flash-image }
       - { key: STRIPE_SECRET_KEY, sync: false }
       - { key: STRIPE_WEBHOOK_SECRET, sync: false }
       - { key: RESEND_API_KEY, sync: false }
