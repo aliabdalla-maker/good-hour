@@ -1,17 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../../lib/apiClient";
 
+// useSearchParams() requires a Suspense boundary for static prerendering.
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-sm py-10 text-slate-500">Loading…</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Return to the page the user was blocked on, if any (must be an internal path).
+  const nextParam = searchParams.get("next");
+  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/browse";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +34,7 @@ export default function LoginPage() {
     try {
       const user = await api.post("/auth/login", { email, password });
       queryClient.setQueryData(["me"], user);
-      router.push("/search");
+      router.push(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed");
     } finally {

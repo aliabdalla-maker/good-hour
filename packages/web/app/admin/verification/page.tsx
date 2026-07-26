@@ -4,7 +4,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PendingSupplier } from "@gihtcx/shared";
 import { api } from "../../../lib/apiClient";
 
+import { RequireAuth } from "../../../components/RequireAuth";
+
 export default function AdminVerificationPage() {
+  return (
+    <RequireAuth roles={["ADMIN"]}>
+      <AdminVerificationPageInner />
+    </RequireAuth>
+  );
+}
+
+function AdminVerificationPageInner() {
   const qc = useQueryClient();
   const { data: pending, isPending } = useQuery<PendingSupplier[]>({
     queryKey: ["pending-suppliers"],

@@ -17,7 +17,17 @@ const TEMPLATES = [
   },
 ];
 
+import { RequireAuth } from "../../../components/RequireAuth";
+
 export default function CampaignsPage() {
+  return (
+    <RequireAuth roles={["ADMIN"]}>
+      <CampaignsPageInner />
+    </RequireAuth>
+  );
+}
+
+function CampaignsPageInner() {
   const [subject, setSubject] = useState(TEMPLATES[0].subject);
   const [body, setBody] = useState(TEMPLATES[0].body);
   const [audience, setAudience] = useState<"ALL" | "TRAVELLER" | "SUPPLIER">("ALL");

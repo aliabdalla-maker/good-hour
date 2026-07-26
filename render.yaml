@@ -1,0 +1,97 @@
+# Render Blueprint — one-click deploy of the whole Good Hours stack from this
+# GitHub repo (web + api + worker + managed Postgres + Redis).
+#
+# HOW TO USE (see docs/DEPLOY.md → "Managed deploy" for the full walkthrough):
+#   1. Render Dashboard → New → Blueprint → connect  aliabdalla-maker/good-hour
+#   2. Render provisions everything below. Fill the "sync: false" secrets
+#      (OpenAI, Stripe, Resend) in the dashboard when prompted.
+#   3. Add custom domains (goodhour.shop → web, api.goodhour.shop → api),
+#      then point GoDaddy DNS at the targets Render gives you.
+#
+# Field names follow the current Render Blueprint spec; verify against
+# https://render.com/docs/blueprint-spec if Render has since changed them.
+
+databases:
+  - name: goodhour-db
+    databaseName: gihtcx
+    plan: free # upgrade to "basic"/"standard" for production durability
+
+services:
+  # --- Redis (BullMQ queues) ---
+  - type: redis
+    name: goodhour-redis
+    plan: free
+    ipAllowList: [] # only reachable from other Render services
+
+  # --- API (Fastify) ---
+  - type: web
+    name: goodhour-api
+    runtime: docker
+    dockerfilePath: ./packages/api/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    # Apply DB migrations before each new version goes live.
+    preDeployCommand: npm run db:deploy
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: goodhour-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: redis, name: goodhour-redis, property: connectionString }
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        value: https://goodhour.shop,https://www.goodhour.shop
+      - key: API_PUBLIC_URL
+        value: https://api.goodhour.shop
+      - key: EMAIL_FROM
+        value: Good Hours <no-reply@goodhour.shop>
+      - { key: OPENAI_API_KEY, sync: false }
+      - { key: OPENAI_MODEL, value: gpt-4o-mini }
+      - { key: STRIPE_SECRET_KEY, sync: false }
+      - { key: STRIPE_WEBHOOK_SECRET, sync: false }
+      - { key: RESEND_API_KEY, sync: false }
+      - { key: TWILIO_ACCOUNT_SID, sync: false }
+      - { key: TWILIO_AUTH_TOKEN, sync: false }
+      - { key: TWILIO_FROM_NUMBER, sync: false }
+
+  # --- Worker (BullMQ: reservation expiry, pricing, notifications, outbox relay) ---
+  - type: worker
+    name: goodhour-worker
+    runtime: docker
+    dockerfilePath: ./packages/worker/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: goodhour-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: redis, name: goodhour-redis, property: connectionString }
+      - key: NODE_ENV
+        value: production
+      - { key: OPENAI_API_KEY, sync: false }
+      - { key: OPENAI_MODEL, value: gpt-4o-mini }
+      - { key: STRIPE_SECRET_KEY, sync: false }
+      - { key: RESEND_API_KEY, sync: false }
+      - { key: EMAIL_FROM, value: Good Hours <no-reply@goodhour.shop> }
+      - { key: TWILIO_ACCOUNT_SID, sync: false }
+      - { key: TWILIO_AUTH_TOKEN, sync: false }
+      - { key: TWILIO_FROM_NUMBER, sync: false }
+
+  # --- Web (Next.js) ---
+  - type: web
+    name: goodhour-web
+    runtime: docker
+    dockerfilePath: ./packages/web/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # NEXT_PUBLIC_* are inlined at build time — Render passes service env vars
+      # as Docker build args, so this reaches the browser bundle.
+      - key: NEXT_PUBLIC_API_URL
+        value: https://api.goodhour.shop
+      - { key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, sync: false }

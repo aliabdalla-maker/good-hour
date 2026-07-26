@@ -11,7 +11,17 @@ function defaultDateTime(hoursFromNow: number) {
   return d.toISOString().slice(0, 16);
 }
 
+import { RequireAuth } from "../../../components/RequireAuth";
+
 export default function NewBookingRequestPage() {
+  return (
+    <RequireAuth>
+      <NewBookingRequestPageInner />
+    </RequireAuth>
+  );
+}
+
+function NewBookingRequestPageInner() {
   const router = useRouter();
   const [locationQuery, setLocationQuery] = useState("London");
   const [desiredStart, setDesiredStart] = useState(defaultDateTime(2));

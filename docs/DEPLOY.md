@@ -1,4 +1,4 @@
-# Deploying Good Hours to goodhours.shop
+# Deploying Good Hours to goodhour.shop
 
 The simplest reliable path: **one small Linux VPS running the Docker Compose
 stack behind Caddy** (automatic HTTPS). ~$5–6/month. Everything below reuses
@@ -8,8 +8,8 @@ The stack that will run:
 
 ```
 Internet ──▶ Caddy (:80/:443, auto-TLS)
-                ├── goodhours.shop      ──▶ web  (Next.js  :3000)
-                └── api.goodhours.shop  ──▶ api  (Fastify  :4000)
+                ├── goodhour.shop      ──▶ web  (Next.js  :3000)
+                └── api.goodhour.shop  ──▶ api  (Fastify  :4000)
             web/api ──▶ postgres, redis   (internal only)
             worker  ──▶ background jobs (reservation expiry, pricing, notifications)
             migrate ──▶ one-shot: applies DB migrations on every deploy
@@ -24,7 +24,7 @@ Lightsail…). 1 vCPU / 2 GB RAM is enough to start. Note its public IP.
 
 ## 2. Point DNS at it
 
-At your domain registrar for **goodhours.shop**, create records → the VPS IP:
+At your domain registrar for **goodhour.shop**, create records → the VPS IP:
 
 | Type | Name  | Value        |
 |------|-------|--------------|
@@ -32,7 +32,7 @@ At your domain registrar for **goodhours.shop**, create records → the VPS IP:
 | A    | `www` | `<server-ip>`|
 | A    | `api` | `<server-ip>`|
 
-Wait for propagation (`dig goodhours.shop +short` should return the IP).
+Wait for propagation (`dig goodhour.shop +short` should return the IP).
 
 ## 3. Install Docker on the server
 
@@ -63,10 +63,10 @@ openssl rand -hex 24   # -> POSTGRES_PASSWORD (also update it inside DATABASE_UR
 Key rules (these bite in production):
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` must be a **publishable** key (`pk_live_…`), never `sk_`/`rk_`.
 - `STRIPE_WEBHOOK_SECRET` is a **`whsec_…`** — create it in step 8, not the same as your secret key.
-- `EMAIL_FROM` must use a **domain you've verified in Resend** (e.g. `no-reply@goodhours.shop`).
-- `WEB_ORIGIN` must list every browser origin exactly (`https://goodhours.shop,https://www.goodhours.shop`).
+- `EMAIL_FROM` must use a **domain you've verified in Resend** (e.g. `no-reply@goodhour.shop`).
+- `WEB_ORIGIN` must list every browser origin exactly (`https://goodhour.shop,https://www.goodhour.shop`).
 
-Also set the ACME email in `deploy/Caddyfile` (currently `admin@goodhours.shop`).
+Also set the ACME email in `deploy/Caddyfile` (currently `admin@goodhour.shop`).
 
 ## 6. Launch
 
@@ -82,7 +82,7 @@ docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f caddy api
 ```
 
-Visit **https://goodhours.shop** — it should load over HTTPS.
+Visit **https://goodhour.shop** — it should load over HTTPS.
 
 ## 7. Seed demo data (optional)
 
@@ -94,7 +94,7 @@ docker compose -f docker-compose.prod.yml run --rm api npm run db:seed
 
 In the Stripe Dashboard → Developers → Webhooks → add endpoint:
 
-- URL: `https://api.goodhours.shop/payments/webhook`
+- URL: `https://api.goodhour.shop/payments/webhook`
 - Copy the signing secret (`whsec_…`) into `.env` as `STRIPE_WEBHOOK_SECRET`, then:
 
 ```bash
@@ -112,12 +112,53 @@ Migrations apply automatically on each deploy via the `migrate` service.
 
 ---
 
-## Alternative: managed platform (Render / Railway / Fly.io)
+## Managed deploy — Render (no server to run) — RECOMMENDED to go live fastest
 
-If you'd rather not run a server, these can build the three Dockerfiles,
-provide managed Postgres + Redis, and bind the custom domain with automatic
-HTTPS. Trade-off: a bit more per month and per-service config instead of one
-compose file. Ask and I'll generate the platform-specific config.
+`render.yaml` in the repo root is a Blueprint that provisions the entire stack
+(web + api + worker + managed Postgres + Redis) from GitHub. No VPS, automatic
+HTTPS.
+
+1. **Deploy the Blueprint**
+   - [render.com](https://render.com) → **New → Blueprint** → connect the
+     GitHub repo **aliabdalla-maker/good-hour** → **Apply**.
+   - Render reads `render.yaml` and creates all five resources.
+
+2. **Fill the secrets** (Render prompts for every `sync: false` var):
+   `OPENAI_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
+   `RESEND_API_KEY`, and on the **web** service
+   `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (a `pk_live_…`).
+   > The web bundle inlines `NEXT_PUBLIC_*` at build time — after changing it,
+   > trigger **Manual Deploy → Clear build cache & deploy** on the web service.
+
+3. **Add custom domains** (each service → Settings → Custom Domains):
+   - `goodhour-web`  → add `goodhour.shop` **and** `www.goodhour.shop`
+   - `goodhour-api`  → add `api.goodhour.shop`
+   Render shows a DNS target for each (a CNAME host, plus apex A records).
+
+4. **Point GoDaddy DNS** (GoDaddy → your domain → **DNS → Manage Zones**).
+   Delete any existing "connected website"/parking records first, then add what
+   Render shows you — typically:
+
+   | Type  | Name  | Value (use the exact target Render displays)         |
+   |-------|-------|------------------------------------------------------|
+   | A     | `@`   | Render's apex IP (e.g. `216.24.57.1`)                |
+   | CNAME | `www` | `goodhour-web.onrender.com`                          |
+   | CNAME | `api` | `goodhour-api.onrender.com`                          |
+
+   Wait for Render to show "Verified" (a few minutes to an hour). HTTPS is
+   automatic. Visit **https://goodhour.shop**.
+
+5. **Stripe webhook**: Dashboard → Webhooks → add
+   `https://api.goodhour.shop/payments/webhook`, copy the `whsec_…` into the
+   api service's `STRIPE_WEBHOOK_SECRET`, and redeploy the api.
+
+**Cost**: the `free` DB/Redis and `starter` services (~$7/mo each) are fine to
+start; upgrade the database plan before real traffic (free Postgres expires).
+
+## Alternative: Railway / Fly.io
+
+Both can also build the three Dockerfiles and provide managed Postgres + Redis.
+Same shape as Render; the `render.yaml` maps directly to their configs.
 
 ## Firewall
 

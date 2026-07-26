@@ -10,7 +10,17 @@ interface Preferences {
   phone: string | null;
 }
 
+import { RequireAuth } from "../../components/RequireAuth";
+
 export default function NotificationsPage() {
+  return (
+    <RequireAuth>
+      <NotificationsPageInner />
+    </RequireAuth>
+  );
+}
+
+function NotificationsPageInner() {
   const queryClient = useQueryClient();
   const [phone, setPhone] = useState("");
   const [savedNote, setSavedNote] = useState<string | null>(null);

@@ -7,7 +7,17 @@ import type { BookingRequestPublic, SupplierOfferPublic, PropertyWithRooms } fro
 import { useCurrentUser } from "../../../../lib/useCurrentUser";
 import { api, ApiError } from "../../../../lib/apiClient";
 
+import { RequireAuth } from "../../../../components/RequireAuth";
+
 export default function BookingRequestOffersPage() {
+  return (
+    <RequireAuth>
+      <BookingRequestOffersPageInner />
+    </RequireAuth>
+  );
+}
+
+function BookingRequestOffersPageInner() {
   const { id } = useParams<{ id: string }>();
   const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();

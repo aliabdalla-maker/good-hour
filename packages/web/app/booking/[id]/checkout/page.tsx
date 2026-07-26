@@ -15,7 +15,17 @@ import { useToast } from "../../../../components/ui/Toast";
 
 const STEPS = ["Book", "Pay", "Confirmed"];
 
+import { RequireAuth } from "../../../../components/RequireAuth";
+
 export default function CheckoutPage() {
+  return (
+    <RequireAuth>
+      <CheckoutPageInner />
+    </RequireAuth>
+  );
+}
+
+function CheckoutPageInner() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const toast = useToast();

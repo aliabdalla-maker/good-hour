@@ -60,7 +60,17 @@ function PublishForm({ draft, onDone }: { draft: SourcedDraftPublic; onDone: () 
   );
 }
 
+import { RequireAuth } from "../../components/RequireAuth";
+
 export default function SourcingPage() {
+  return (
+    <RequireAuth roles={["SUPPLIER", "ADMIN"]}>
+      <SourcingPageInner />
+    </RequireAuth>
+  );
+}
+
+function SourcingPageInner() {
   const queryClient = useQueryClient();
   const [url, setUrl] = useState("");
   const [feed, setFeed] = useState('[\n  { "name": "City Centre Meeting Room", "city": "London", "country": "UK", "amenities": ["wifi","projector"], "hourlyRate": 25 }\n]');

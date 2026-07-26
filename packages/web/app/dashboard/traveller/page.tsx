@@ -38,7 +38,17 @@ function CancelButton({ bookingId }: { bookingId: string }) {
   );
 }
 
+import { RequireAuth } from "../../../components/RequireAuth";
+
 export default function TravellerDashboardPage() {
+  return (
+    <RequireAuth roles={["TRAVELLER", "ADMIN"]}>
+      <TravellerDashboardPageInner />
+    </RequireAuth>
+  );
+}
+
+function TravellerDashboardPageInner() {
   const { data: bookings } = useQuery<BookingPublic[]>({
     queryKey: ["my-bookings"],
     queryFn: () => api.get<BookingPublic[]>("/bookings"),

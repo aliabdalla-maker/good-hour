@@ -6,7 +6,17 @@ import type { PropertyWithRooms, VerificationStatusView, SupplierEarnings } from
 import { api, ApiError } from "../../../lib/apiClient";
 import { Badge } from "../../../components/ui/Badge";
 
+import { RequireAuth } from "../../../components/RequireAuth";
+
 export default function SupplierDashboardPage() {
+  return (
+    <RequireAuth roles={["SUPPLIER", "ADMIN"]}>
+      <SupplierDashboardPageInner />
+    </RequireAuth>
+  );
+}
+
+function SupplierDashboardPageInner() {
   const queryClient = useQueryClient();
   const { data: properties } = useQuery<PropertyWithRooms[]>({
     queryKey: ["my-properties"],

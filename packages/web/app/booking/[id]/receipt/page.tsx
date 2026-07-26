@@ -11,7 +11,17 @@ const CATEGORY_LABEL: Record<ReceiptView["category"], string> = {
   TRAVEL_SERVICE: "Travel service",
 };
 
+import { RequireAuth } from "../../../../components/RequireAuth";
+
 export default function ReceiptPage() {
+  return (
+    <RequireAuth>
+      <ReceiptPageInner />
+    </RequireAuth>
+  );
+}
+
+function ReceiptPageInner() {
   const { id } = useParams<{ id: string }>();
   const { data: r, error } = useQuery<ReceiptView>({
     queryKey: ["receipt", id],
@@ -39,7 +49,7 @@ export default function ReceiptPage() {
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
             <p className="text-lg font-semibold">Good Hours</p>
-            <p className="text-xs text-slate-400">goodhours.shop</p>
+            <p className="text-xs text-slate-400">goodhour.shop</p>
           </div>
           <div className="text-right text-xs text-slate-500">
             <p>Receipt #{r.bookingId.slice(-8).toUpperCase()}</p>
