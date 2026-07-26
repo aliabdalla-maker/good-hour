@@ -79,7 +79,7 @@ services:
         # NEXT_PUBLIC_* are inlined at BUILD time — rebuild to change them.
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.goodhour.shop}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
-        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-contact@goodhour.shop}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-admin@softwareequality.com}
     image: goodhours-web
     restart: unless-stopped
     depends_on:

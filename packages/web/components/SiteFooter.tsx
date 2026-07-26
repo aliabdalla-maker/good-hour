@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 // Public contact address for the site. Override at build time with
-// NEXT_PUBLIC_CONTACT_EMAIL; defaults to the domain contact.
-const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contact@goodhour.shop";
+// NEXT_PUBLIC_CONTACT_EMAIL; defaults to the company contact.
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "admin@softwareequality.com";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -47,7 +47,14 @@ export function SiteFooter() {
 
       <div className="border-t border-slate-100">
         <div className="mx-auto max-w-5xl px-6 py-4 text-xs text-slate-400">
-          © {year} Good Hours. A 1% platform fee applies to travellers and hosts on every booking.
+          <p>© {year} Good Hours. A 1% platform fee applies to travellers and hosts on every booking.</p>
+          <p className="mt-1">
+            Good Hours is operated by{" "}
+            <a href="https://www.softwareequality.com" className="hover:text-slate-600" target="_blank" rel="noopener noreferrer">
+              Equality Software Ltd
+            </a>{" "}
+            (Company No. 15006381), registered in England — London, United Kingdom.
+          </p>
         </div>
       </div>
     </footer>
