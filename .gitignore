@@ -12,3 +12,4 @@ packages/db/generated/
 .railway/
 .railway-config-pull-*/
 .agents/
+*.tsbuildinfo
