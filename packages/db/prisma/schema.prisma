@@ -201,6 +201,8 @@ model Room {
   name           String
   capacity       Int
   amenities      String[]
+  /// Optional hero photo for the listing (falls back to a gradient in the UI).
+  imageUrl       String?
   baseHourlyRate Decimal  @db.Decimal(10, 2)
   currency       String   @default("GBP")
   minHours       Int      @default(2)

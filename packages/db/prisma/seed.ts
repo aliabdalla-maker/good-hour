@@ -1,6 +1,9 @@
 import argon2 from "argon2";
 import { prisma } from "../src/client";
 
+// Self-hosted listing photos (served from packages/web/public/listings).
+const IMG = (name: string) => `/listings/${name}.jpg`;
+
 async function main() {
   const passwordHash = await argon2.hash("password123");
 
@@ -60,6 +63,7 @@ async function main() {
               name: "Day-Use Business Room",
               capacity: 2,
               amenities: ["wifi", "desk", "blackout_blinds"],
+              imageUrl: IMG("room"),
               baseHourlyRate: 18.5,
               currency: "GBP",
               minHours: 2,
@@ -69,6 +73,7 @@ async function main() {
               name: "Executive Suite",
               capacity: 4,
               amenities: ["wifi", "parking", "meeting_table", "spa_access"],
+              imageUrl: IMG("suite"),
               baseHourlyRate: 42,
               currency: "GBP",
               minHours: 3,
@@ -103,6 +108,7 @@ async function main() {
               name: "Tesla Model 3 (Electric)",
               capacity: 5,
               amenities: ["automatic", "gps", "autopilot", "electric"],
+              imageUrl: IMG("tesla"),
               baseHourlyRate: 12.0,
               currency: "GBP",
               minHours: 2,
@@ -112,6 +118,7 @@ async function main() {
               name: "VW Transporter Van",
               capacity: 3,
               amenities: ["manual", "large_boot", "diesel"],
+              imageUrl: IMG("van"),
               baseHourlyRate: 9.5,
               currency: "GBP",
               minHours: 3,
@@ -146,6 +153,7 @@ async function main() {
               name: "Private Airport Transfer",
               capacity: 4,
               amenities: ["meet_and_greet", "flight_tracking", "child_seat"],
+              imageUrl: IMG("transfer"),
               baseHourlyRate: 35.0,
               currency: "GBP",
               minHours: 1,
@@ -155,6 +163,7 @@ async function main() {
               name: "Guided City Walking Tour",
               capacity: 10,
               amenities: ["licensed_guide", "small_group", "tickets_included"],
+              imageUrl: IMG("tour"),
               baseHourlyRate: 22.0,
               currency: "GBP",
               minHours: 2,

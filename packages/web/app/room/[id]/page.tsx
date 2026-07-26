@@ -10,6 +10,7 @@ import { Button } from "../../../components/ui/Button";
 import { Field, Input } from "../../../components/ui/Field";
 import { Badge } from "../../../components/ui/Badge";
 import { Stars } from "../../../components/ui/Stars";
+import { ListingImage } from "../../../components/ui/ListingImage";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { AiPriceCard } from "../../../components/ai/AiPriceCard";
@@ -74,15 +75,17 @@ export default function RoomDetailPage() {
 
   return (
     <div>
-      {/* Hero placeholder (real photos land in the imagery batch). */}
-      <div className="mb-6 flex h-40 items-end rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 p-5 sm:h-52">
-        <div className="text-white">
+      {/* Photographic hero with legible gradient scrim. */}
+      <div className="relative mb-6 h-52 overflow-hidden rounded-2xl shadow-card sm:h-72 animate-scale-in">
+        <ListingImage src={room.imageUrl} alt={room.name} seed={room.name} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 p-5 text-white sm:p-6">
           {room.property && (
             <p className="text-xs uppercase tracking-wide text-white/80">
               {room.property.city}, {room.property.country}
             </p>
           )}
-          <h1 className="text-2xl font-semibold">{room.name}</h1>
+          <h1 className="text-2xl font-semibold drop-shadow sm:text-3xl">{room.name}</h1>
         </div>
       </div>
 
@@ -118,6 +121,18 @@ export default function RoomDetailPage() {
                 <p className="mt-1 text-xs text-slate-400">Property: {room.property.amenities.join(", ")}</p>
               )}
               <p className="mt-2 text-xs text-slate-400">Free cancellation while the booking is unpaid.</p>
+            </Card>
+          )}
+
+          {room.property && (
+            <Card className="overflow-hidden p-0">
+              <iframe
+                title={`Map of ${room.property.name}`}
+                loading="lazy"
+                className="h-56 w-full border-0"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${room.property.lng - 0.008}%2C${room.property.lat - 0.006}%2C${room.property.lng + 0.008}%2C${room.property.lat + 0.006}&layer=mapnik&marker=${room.property.lat}%2C${room.property.lng}`}
+              />
+              <p className="p-3 text-xs text-slate-500">📍 {room.property.addressLine}, {room.property.city}</p>
             </Card>
           )}
         </div>
