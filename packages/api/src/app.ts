@@ -42,6 +42,14 @@ export function buildApp() {
   app.register(authGuardPlugin);
 
   app.get("/health", async () => ({ status: "ok" }));
+  // Friendly root so anyone browsing to the bare API origin sees a pointer
+  // instead of a raw 404 (there's no UI here — the web app is the frontend).
+  app.get("/", async () => ({
+    name: "Good Hours API",
+    status: "ok",
+    health: "/health",
+    web: config.WEB_ORIGIN.split(",")[0]?.trim(),
+  }));
 
   app.register(authModule);
   app.register(listingsModule);
