@@ -1,6 +1,19 @@
-# Good Hours — Hourly Hotel Room Booking Marketplace (Agentic AI MVP)
+# Good Hours — Hourly Marketplace for Rooms, Cars & Travel (Agentic AI)
 
-One real, working vertical of a much larger hospitality/travel/commerce concept: search, book, and pay for a hotel room by the hour, with a genuine LLM-backed dynamic pricing agent and a reverse-auction negotiation agent — plus B2A (supplier auto-offer) and A2B (traveller auto-accept) autonomy toggles. See `docs/ARCHITECTURE.md` and `docs/AGENT_DECISIONS.md` for how it's built and why.
+Book rooms, cars and travel services **by the hour** from verified hosts — pay
+instantly or run an AI reverse auction. Multi-vertical listings, verified reviews,
+per-booking messaging, receipts, an agentic on-page AI concierge, split 1%/1%
+fees, and a durable event backbone. See `docs/ARCHITECTURE.md` and
+`docs/AGENT_DECISIONS.md` for how it's built.
+
+## 🚀 Deploy live (goodhour.shop)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aliabdalla-maker/good-hour)
+
+One click provisions the whole stack (web + api + worker + Postgres + Redis) from
+`render.yaml`. Then add the custom domain and point GoDaddy DNS — full walkthrough
+in **[docs/DEPLOY.md](docs/DEPLOY.md)**. Prefer a server you control? A VPS + Caddy
+path (auto-HTTPS) is documented there too.
 
 ## Prerequisites
 
