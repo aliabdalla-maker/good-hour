@@ -11,3 +11,4 @@ export * from "./schemas/sourcing";
 export * from "./schemas/reviews";
 export * from "./schemas/verification";
 export * from "./schemas/messages";
+export * from "./schemas/assistant";
