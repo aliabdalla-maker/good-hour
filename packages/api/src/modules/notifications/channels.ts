@@ -12,7 +12,6 @@ export interface ChannelResult {
  */
 export async function sendEmail(to: string, subject: string, body: string): Promise<ChannelResult> {
   if (!featureFlags.emailEnabled) {
-    // eslint-disable-next-line no-console
     console.log(`[email:logged] -> ${to} | ${subject}\n${body}`);
     return { delivered: "logged" };
   }
@@ -27,7 +26,6 @@ export async function sendEmail(to: string, subject: string, body: string): Prom
   });
 
   if (!res.ok) {
-    // eslint-disable-next-line no-console
     console.error(`[email:error] ${res.status} ${await res.text()}`);
     return { delivered: "logged" };
   }
@@ -41,7 +39,6 @@ export async function sendEmail(to: string, subject: string, body: string): Prom
  */
 export async function sendSms(to: string, body: string): Promise<ChannelResult> {
   if (!featureFlags.smsEnabled) {
-    // eslint-disable-next-line no-console
     console.log(`[sms:logged] -> ${to}\n${body}`);
     return { delivered: "logged" };
   }
@@ -64,7 +61,6 @@ export async function sendSms(to: string, body: string): Promise<ChannelResult> 
   });
 
   if (!res.ok) {
-    // eslint-disable-next-line no-console
     console.error(`[sms:error] ${res.status} ${await res.text()}`);
     return { delivered: "logged" };
   }

@@ -58,7 +58,7 @@ pipeline {
                 '''
                 sh 'npm run db:deploy'
                 sh 'npm run db:drift'          // fails on schema/migration drift
-                sh 'npm run lint || true'      // non-blocking until ESLint lands
+                sh 'npm run lint'
                 sh 'npm run typecheck'
                 sh 'npm test'
                 sh 'npm run test:integration'

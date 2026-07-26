@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint",
+    "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo run typecheck",
     "test": "node --import tsx --test \"packages/**/src/**/*.test.ts\"",
     "test:watch": "node --import tsx --test --watch \"packages/**/src/**/*.test.ts\"",
@@ -21,8 +21,12 @@
     "db:seed": "npm run seed --workspace=packages/db"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "globals": "^17.7.0",
     "turbo": "^2.3.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.65.0"
   },
   "engines": {
     "node": ">=22"

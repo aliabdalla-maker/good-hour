@@ -61,9 +61,8 @@ jobs:
       - name: Migration drift check
         run: npm run db:drift
 
-      - name: Lint (non-blocking)
+      - name: Lint
         run: npm run lint
-        continue-on-error: true
 
       - name: Typecheck
         run: npm run typecheck
