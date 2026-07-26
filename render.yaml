@@ -43,7 +43,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: WEB_ORIGIN
-        value: https://goodhour.shop,https://www.goodhour.shop
+        value: https://www.goodhour.shop
       - key: API_PUBLIC_URL
         value: https://api.goodhour.shop
       - key: EMAIL_FROM

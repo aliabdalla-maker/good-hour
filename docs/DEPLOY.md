@@ -8,7 +8,7 @@ The stack that will run:
 
 ```
 Internet ──▶ Caddy (:80/:443, auto-TLS)
-                ├── goodhour.shop      ──▶ web  (Next.js  :3000)
+                ├── www.goodhour.shop  ──▶ web  (Next.js  :3000)
                 └── api.goodhour.shop  ──▶ api  (Fastify  :4000)
             web/api ──▶ postgres, redis   (internal only)
             worker  ──▶ background jobs (reservation expiry, pricing, notifications)
@@ -24,15 +24,16 @@ Lightsail…). 1 vCPU / 2 GB RAM is enough to start. Note its public IP.
 
 ## 2. Point DNS at it
 
-At your domain registrar for **goodhour.shop**, create records → the VPS IP:
+At your domain registrar for **goodhour.shop**, create records → the VPS IP.
+The apex is intentionally **not** used — only the `www` and `api` subdomains:
 
 | Type | Name  | Value        |
 |------|-------|--------------|
-| A    | `@`   | `<server-ip>`|
 | A    | `www` | `<server-ip>`|
 | A    | `api` | `<server-ip>`|
 
-Wait for propagation (`dig goodhour.shop +short` should return the IP).
+Wait for propagation (`dig www.goodhour.shop +short` should return the IP).
+The site lives at **https://www.goodhour.shop**.
 
 ## 3. Install Docker on the server
 
@@ -82,7 +83,7 @@ docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f caddy api
 ```
 
-Visit **https://goodhour.shop** — it should load over HTTPS.
+Visit **https://www.goodhour.shop** — it should load over HTTPS.
 
 ## 7. Seed demo data (optional)
 
@@ -130,23 +131,27 @@ HTTPS.
    > The web bundle inlines `NEXT_PUBLIC_*` at build time — after changing it,
    > trigger **Manual Deploy → Clear build cache & deploy** on the web service.
 
-3. **Add custom domains** (each service → Settings → Custom Domains):
-   - `goodhour-web`  → add `goodhour.shop` **and** `www.goodhour.shop`
+3. **Add custom domains** (each service → Settings → Custom Domains). We use the
+   `www` and `api` subdomains only — **no apex** (keeps DNS to CNAMEs):
+   - `goodhour-web`  → add `www.goodhour.shop`
    - `goodhour-api`  → add `api.goodhour.shop`
-   Render shows a DNS target for each (a CNAME host, plus apex A records).
+   Render shows a CNAME target for each.
 
 4. **Point GoDaddy DNS** (GoDaddy → your domain → **DNS → Manage Zones**).
-   Delete any existing "connected website"/parking records first, then add what
-   Render shows you — typically:
+   Delete any existing "connected website"/parking records first, then add the
+   two CNAMEs Render shows you:
 
    | Type  | Name  | Value (use the exact target Render displays)         |
    |-------|-------|------------------------------------------------------|
-   | A     | `@`   | Render's apex IP (e.g. `216.24.57.1`)                |
    | CNAME | `www` | `goodhour-web.onrender.com`                          |
    | CNAME | `api` | `goodhour-api.onrender.com`                          |
 
    Wait for Render to show "Verified" (a few minutes to an hour). HTTPS is
-   automatic. Visit **https://goodhour.shop**.
+   automatic. Visit **https://www.goodhour.shop**.
+
+   *(Optional — the bare `goodhour.shop` is unused. If you want it to redirect to
+   www, use GoDaddy's **Forwarding** feature: forward `goodhour.shop` →
+   `https://www.goodhour.shop`. This is optional and needs no A record.)*
 
 5. **Stripe webhook**: Dashboard → Webhooks → add
    `https://api.goodhour.shop/payments/webhook`, copy the `whsec_…` into the

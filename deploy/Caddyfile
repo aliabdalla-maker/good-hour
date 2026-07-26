@@ -1,13 +1,14 @@
-# Caddy fetches and renews Let's Encrypt certificates automatically for both
-# hostnames — no manual TLS setup. Requires: ports 80+443 open, and DNS A/AAAA
-# records for goodhour.shop AND api.goodhour.shop pointing at this server.
+# Caddy fetches and renews Let's Encrypt certificates automatically — no manual
+# TLS setup. Requires ports 80+443 open and CNAME records for www.goodhour.shop
+# and api.goodhour.shop pointing at this server. The apex is intentionally not
+# used (CNAME-only DNS).
 {
 	# ACME contact address for certificate notices. Change to your email.
 	email admin@goodhour.shop
 }
 
-# Public web app.
-goodhour.shop, www.goodhour.shop {
+# Public web app (www subdomain — apex not used).
+www.goodhour.shop {
 	encode zstd gzip
 	reverse_proxy web:3000
 }
