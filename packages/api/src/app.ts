@@ -17,6 +17,7 @@ import notificationsModule from "./modules/notifications";
 import sourcingModule from "./modules/sourcing";
 import reviewsModule from "./modules/reviews";
 import verificationModule from "./modules/verification";
+import messagesModule from "./modules/messages";
 
 export function buildApp() {
   const app = Fastify({
@@ -51,6 +52,7 @@ export function buildApp() {
   app.register(sourcingModule);
   app.register(reviewsModule);
   app.register(verificationModule);
+  app.register(messagesModule);
 
   // NB: domain-event handlers (notifications) are registered and drained in the
   // worker via the transactional outbox — not in-process here. The api only

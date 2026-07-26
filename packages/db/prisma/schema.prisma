@@ -134,6 +134,7 @@ model User {
   sourcedDrafts   SourcedListingDraft[]
   consentEvents   ConsentEvent[]
   reviews         Review[]
+  sentMessages    Message[]
 
   @@map("users")
 }
@@ -357,13 +358,29 @@ model Booking {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  slots   AvailabilitySlot[]
-  payment Payment?
-  review  Review?
+  slots    AvailabilitySlot[]
+  payment  Payment?
+  review   Review?
+  messages Message[]
 
   @@index([travellerId])
   @@index([roomId, startsAt])
   @@map("bookings")
+}
+
+/// In-app messages between the two parties of a booking (traveller and host),
+/// so they can coordinate access, timing, etc. without leaving the platform.
+model Message {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId, createdAt])
+  @@map("messages")
 }
 
 model Payment {

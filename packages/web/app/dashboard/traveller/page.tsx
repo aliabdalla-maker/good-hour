@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { BookingPublic } from "@gihtcx/shared";
 import { api } from "../../../lib/apiClient";
 import { ReviewForm } from "../../../components/ReviewForm";
+import { MessageThread } from "../../../components/MessageThread";
 
 const REVIEWABLE = new Set(["CONFIRMED", "COMPLETED"]);
 
@@ -37,6 +38,7 @@ export default function TravellerDashboardPage() {
                 <p className="text-xs uppercase text-slate-400">{booking.status}</p>
               </div>
             </Link>
+            <MessageThread bookingId={booking.id} />
             {REVIEWABLE.has(booking.status) && <ReviewForm bookingId={booking.id} />}
           </div>
         ))}

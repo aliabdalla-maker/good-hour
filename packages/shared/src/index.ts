@@ -10,3 +10,4 @@ export * from "./schemas/notifications";
 export * from "./schemas/sourcing";
 export * from "./schemas/reviews";
 export * from "./schemas/verification";
+export * from "./schemas/messages";
