@@ -7,6 +7,10 @@ export type Role = (typeof ROLES)[number];
 export const LISTING_CATEGORIES = ["ROOM", "CAR", "TRAVEL_SERVICE"] as const;
 export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
 
+// A host is "Verified" only after an admin approves their submission.
+export const VERIFICATION_STATUSES = ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"] as const;
+export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
+
 export const SLOT_STATUSES = ["OPEN", "HELD", "BOOKED"] as const;
 export type SlotStatus = (typeof SLOT_STATUSES)[number];
 

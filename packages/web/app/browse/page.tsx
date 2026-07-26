@@ -117,7 +117,7 @@ export default function BrowsePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge tone="neutral">{meta.icon} {meta.label}</Badge>
-                  <Badge tone="success">✓ Verified</Badge>
+                  {property.hostVerified && <Badge tone="success">✓ Verified</Badge>}
                   <span className="text-sm font-semibold text-slate-700">{rateRange(property)}</span>
                 </div>
               </div>

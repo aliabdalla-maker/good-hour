@@ -31,6 +31,8 @@ export const propertyPublicSchema = z.object({
   id: z.string(),
   name: z.string(),
   category: z.enum(LISTING_CATEGORIES),
+  /** True only when the host has passed admin verification. */
+  hostVerified: z.boolean().default(false),
   addressLine: z.string(),
   city: z.string(),
   country: z.string(),

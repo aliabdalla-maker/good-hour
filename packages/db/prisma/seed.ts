@@ -6,11 +6,13 @@ async function main() {
 
   const supplier = await prisma.user.upsert({
     where: { email: "supplier@example.com" },
-    update: {},
+    update: { verificationStatus: "VERIFIED", verifiedAt: new Date() },
     create: {
       email: "supplier@example.com",
       passwordHash,
       role: "SUPPLIER",
+      verificationStatus: "VERIFIED",
+      verifiedAt: new Date(),
     },
   });
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { PropertyWithRooms } from "@gihtcx/shared";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import type { PropertyWithRooms, VerificationStatusView } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
+import { Badge } from "../../../components/ui/Badge";
 
 export default function SupplierDashboardPage() {
   const queryClient = useQueryClient();
@@ -48,6 +49,8 @@ export default function SupplierDashboardPage() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold">Supplier dashboard</h1>
 
+      <VerificationCard />
+
       <form onSubmit={handleCreateProperty} className="mb-8 grid grid-cols-1 gap-3 rounded border border-slate-200 bg-white p-4 sm:grid-cols-3">
         <h2 className="col-span-full font-medium">Add a property</h2>
         <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required className="rounded border border-slate-300 px-2 py-1" />
@@ -69,6 +72,78 @@ export default function SupplierDashboardPage() {
           <PropertyCard key={property.id} property={property} onRoomAdded={() => queryClient.invalidateQueries({ queryKey: ["my-properties"] })} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function VerificationCard() {
+  const qc = useQueryClient();
+  const { data: status } = useQuery<VerificationStatusView>({
+    queryKey: ["verification-me"],
+    queryFn: () => api.get<VerificationStatusView>("/verification/me"),
+  });
+  const [businessName, setBusinessName] = useState("");
+  const [registrationId, setRegistrationId] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = useMutation({
+    mutationFn: () =>
+      api.post("/verification/submit", {
+        businessName,
+        registrationId: registrationId || undefined,
+        contactPhone: contactPhone || undefined,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["verification-me"] }),
+    onError: (e) => setError(e instanceof ApiError ? e.message : "Could not submit"),
+  });
+
+  const tone =
+    status?.status === "VERIFIED" ? "success"
+    : status?.status === "PENDING" ? "warning"
+    : status?.status === "REJECTED" ? "danger"
+    : "neutral";
+  const canSubmit = status?.status === "UNVERIFIED" || status?.status === "REJECTED";
+
+  return (
+    <div className="mb-8 rounded border border-slate-200 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-medium">Host verification</h2>
+        <Badge tone={tone}>{status?.status ?? "…"}</Badge>
+      </div>
+      {status?.status === "VERIFIED" && (
+        <p className="mt-2 text-sm text-emerald-600">✓ Your listings show a Verified badge to travellers.</p>
+      )}
+      {status?.status === "PENDING" && (
+        <p className="mt-2 text-sm text-slate-500">Your submission is under review by our team.</p>
+      )}
+      {canSubmit && (
+        <div className="mt-3">
+          <p className="mb-2 text-sm text-slate-500">
+            Get a Verified badge on your listings — submit your business details for review.
+          </p>
+          {status?.status === "REJECTED" && status.note && (
+            <p className="mb-2 text-sm text-red-600">Previous decision: {status.note}</p>
+          )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <input placeholder="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
+            <input placeholder="Registration ID (optional)" value={registrationId} onChange={(e) => setRegistrationId(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
+            <input placeholder="Contact phone (optional)" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
+          </div>
+          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+          <button
+            onClick={() => {
+              setError(null);
+              if (businessName.trim().length < 2) { setError("Enter your business name"); return; }
+              submit.mutate();
+            }}
+            disabled={submit.isPending}
+            className="mt-2 rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60"
+          >
+            {submit.isPending ? "Submitting…" : "Request verification"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

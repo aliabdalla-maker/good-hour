@@ -26,6 +26,13 @@ enum OutboxStatus {
   FAILED
 }
 
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
 enum SlotStatus {
   OPEN
   HELD
@@ -111,6 +118,11 @@ model User {
   phone             String?
   /// Consent flag for marketing/campaign emails (transactional mail is always sent).
   marketingOptIn    Boolean  @default(true)
+  /// Supplier trust: a host is "Verified" only once an admin approves them.
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  /// Admin note or rejection reason attached to the last verification decision.
+  verificationNote   String?
+  verifiedAt         DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

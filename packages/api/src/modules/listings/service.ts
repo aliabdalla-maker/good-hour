@@ -24,7 +24,7 @@ export async function createProperty(supplierId: string, input: CreatePropertyIn
 export async function listPropertiesForSupplier(supplierId: string) {
   return prisma.property.findMany({
     where: { supplierId },
-    include: { rooms: true },
+    include: { rooms: true, supplier: { select: { verificationStatus: true } } },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -40,6 +40,7 @@ export async function listPublicCatalog() {
     where: { rooms: { some: { status: "ACTIVE" } } },
     include: {
       rooms: { where: { status: "ACTIVE" }, orderBy: { baseHourlyRate: "asc" } },
+      supplier: { select: { verificationStatus: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -81,28 +82,36 @@ export async function createRoom(supplierId: string, input: CreateRoomInput) {
 }
 
 export async function getRoomById(roomId: string) {
-  const room = await prisma.room.findUnique({ where: { id: roomId }, include: { property: true } });
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    include: { property: { include: { supplier: { select: { verificationStatus: true } } } } },
+  });
   if (!room) {
     throw new AppError(404, "Room not found", "NOT_FOUND");
   }
   return room;
 }
 
-export function toPublicProperty(property: {
-  id: string;
-  name: string;
-  category: string;
-  addressLine: string;
-  city: string;
-  country: string;
-  lat: number;
-  lng: number;
-  amenities: string[];
-}) {
+export function toPublicProperty(
+  property: {
+    id: string;
+    name: string;
+    category: string;
+    addressLine: string;
+    city: string;
+    country: string;
+    lat: number;
+    lng: number;
+    amenities: string[];
+    supplier?: { verificationStatus: string } | null;
+  },
+  hostVerified = property.supplier?.verificationStatus === "VERIFIED"
+) {
   return {
     id: property.id,
     name: property.name,
     category: property.category as "ROOM" | "CAR" | "TRAVEL_SERVICE",
+    hostVerified,
     addressLine: property.addressLine,
     city: property.city,
     country: property.country,

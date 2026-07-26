@@ -111,7 +111,7 @@ export default function RoomDetailPage() {
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{room.property.name}</p>
-                <Badge tone="success">✓ Verified host</Badge>
+                {room.property.hostVerified && <Badge tone="success">✓ Verified host</Badge>}
               </div>
               <p className="text-sm text-slate-500">{room.property.addressLine}</p>
               {room.property.amenities.length > 0 && (
