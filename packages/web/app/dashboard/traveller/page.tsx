@@ -38,6 +38,11 @@ export default function TravellerDashboardPage() {
                 <p className="text-xs uppercase text-slate-400">{booking.status}</p>
               </div>
             </Link>
+            {REVIEWABLE.has(booking.status) && (
+              <Link href={`/booking/${booking.id}/receipt`} className="mt-2 inline-block text-sm font-medium text-brand-600 underline">
+                View receipt
+              </Link>
+            )}
             <MessageThread bookingId={booking.id} />
             {REVIEWABLE.has(booking.status) && <ReviewForm bookingId={booking.id} />}
           </div>

@@ -145,6 +145,37 @@ export async function getBookingById(bookingId: string) {
   return booking;
 }
 
+/** Traveller-facing receipt: line items + host/item context. Owner or admin only. */
+export async function getReceipt(userId: string, role: string, bookingId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { room: { include: { property: true } } },
+  });
+  if (!booking) throw new AppError(404, "Booking not found", "NOT_FOUND");
+  if (role !== "ADMIN" && booking.travellerId !== userId) {
+    throw new AppError(403, "You do not own this booking", "FORBIDDEN");
+  }
+  const hours = (booking.endsAt.getTime() - booking.startsAt.getTime()) / 3_600_000;
+  const subtotal = Number(booking.subtotalAmount);
+  const total = Number(booking.totalAmount);
+  return {
+    bookingId: booking.id,
+    status: booking.status as BookingStatus,
+    itemName: booking.room.name,
+    category: booking.room.property.category as "ROOM" | "CAR" | "TRAVEL_SERVICE",
+    hostName: booking.room.property.name,
+    city: booking.room.property.city,
+    startsAt: booking.startsAt.toISOString(),
+    endsAt: booking.endsAt.toISOString(),
+    hours: Math.round(hours * 100) / 100,
+    currency: booking.currency,
+    subtotal,
+    travellerFee: Math.round((total - subtotal) * 100) / 100,
+    total,
+    issuedAt: booking.createdAt.toISOString(),
+  };
+}
+
 export async function cancelBooking(bookingId: string, travellerId: string) {
   const booking = await getBookingById(bookingId);
   if (booking.travellerId !== travellerId) {

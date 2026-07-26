@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
-import { createBookingSchema, bookingPublicSchema } from "@gihtcx/shared";
-import { cancelBooking, createDirectBooking, getBookingById, listBookingsForTraveller, toPublicBooking } from "./service";
+import { createBookingSchema, bookingPublicSchema, receiptViewSchema } from "@gihtcx/shared";
+import { cancelBooking, createDirectBooking, getBookingById, getReceipt, listBookingsForTraveller, toPublicBooking } from "./service";
 
 export default async function bookingRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -40,6 +40,22 @@ export default async function bookingRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const booking = await getBookingById(request.params.bookingId);
       return reply.send(toPublicBooking(booking));
+    }
+  );
+
+  server.get(
+    "/:bookingId/receipt",
+    {
+      preHandler: [app.authenticate],
+      schema: { params: z.object({ bookingId: z.string() }), response: { 200: receiptViewSchema } },
+    },
+    async (request, reply) => {
+      const receipt = await getReceipt(
+        request.currentUser!.sub,
+        request.currentUser!.role,
+        request.params.bookingId
+      );
+      return reply.send(receipt);
     }
   );
 

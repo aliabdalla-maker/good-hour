@@ -1,5 +1,23 @@
 import { z } from "zod";
-import { BOOKING_SOURCES, BOOKING_STATUSES } from "../enums";
+import { BOOKING_SOURCES, BOOKING_STATUSES, LISTING_CATEGORIES } from "../enums";
+
+export const receiptViewSchema = z.object({
+  bookingId: z.string(),
+  status: z.enum(BOOKING_STATUSES),
+  itemName: z.string(),
+  category: z.enum(LISTING_CATEGORIES),
+  hostName: z.string(),
+  city: z.string(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  hours: z.number(),
+  currency: z.string(),
+  subtotal: z.number(),
+  travellerFee: z.number(),
+  total: z.number(),
+  issuedAt: z.string(),
+});
+export type ReceiptView = z.infer<typeof receiptViewSchema>;
 
 export const createBookingSchema = z.object({
   roomId: z.string(),

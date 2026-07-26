@@ -5,6 +5,6 @@ export default async function bookingModule(app: FastifyInstance) {
   app.register(bookingRoutes, { prefix: "/bookings" });
 }
 
-export { createDirectBooking, getBookingById, listBookingsForTraveller, cancelBooking, toPublicBooking, releaseExpiredReservation } from "./service";
+export { createDirectBooking, getBookingById, getReceipt, listBookingsForTraveller, cancelBooking, toPublicBooking, releaseExpiredReservation } from "./service";
 export { ensureSlotsGenerated, isRangeFullyOpen } from "./slotService";
 export { assertTransitionAllowed } from "./stateMachine";
