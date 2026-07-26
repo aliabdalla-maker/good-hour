@@ -94,4 +94,6 @@ services:
       # as Docker build args, so this reaches the browser bundle.
       - key: NEXT_PUBLIC_API_URL
         value: https://api.goodhour.shop
+      - key: NEXT_PUBLIC_CONTACT_EMAIL
+        value: contact@goodhour.shop
       - { key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, sync: false }
