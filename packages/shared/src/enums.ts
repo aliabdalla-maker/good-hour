@@ -11,6 +11,10 @@ export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
 export const VERIFICATION_STATUSES = ["UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"] as const;
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
 
+// CRM lifecycle stages for a customer (traveller or host).
+export const CRM_STAGES = ["LEAD", "ACTIVE", "VIP", "DORMANT"] as const;
+export type CrmStage = (typeof CRM_STAGES)[number];
+
 export const SLOT_STATUSES = ["OPEN", "HELD", "BOOKED"] as const;
 export type SlotStatus = (typeof SLOT_STATUSES)[number];
 

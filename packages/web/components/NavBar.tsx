@@ -43,7 +43,13 @@ export function NavBar() {
         ]
       : []),
     ...(user?.role === "TRAVELLER" ? [{ href: "/dashboard/traveller", label: "My bookings" }] : []),
-    ...(user?.role === "ADMIN" ? [{ href: "/admin/campaigns", label: "Campaigns" }] : []),
+    ...(user?.role === "ADMIN"
+      ? [
+          { href: "/admin/crm", label: "CRM" },
+          { href: "/admin/campaigns", label: "Campaigns" },
+          { href: "/admin/verification", label: "Verification" },
+        ]
+      : []),
   ];
 
   const Wordmark = (

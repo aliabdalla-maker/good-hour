@@ -33,6 +33,13 @@ enum VerificationStatus {
   REJECTED
 }
 
+enum CrmStage {
+  LEAD
+  ACTIVE
+  VIP
+  DORMANT
+}
+
 enum SlotStatus {
   OPEN
   HELD
@@ -123,6 +130,9 @@ model User {
   /// Admin note or rejection reason attached to the last verification decision.
   verificationNote   String?
   verifiedAt         DateTime?
+  /// CRM: lifecycle stage + free-form tags, managed by admins in the CRM console.
+  crmStage           CrmStage @default(LEAD)
+  crmTags            String[] @default([])
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -135,8 +145,23 @@ model User {
   consentEvents   ConsentEvent[]
   reviews         Review[]
   sentMessages    Message[]
+  crmNotes        CrmNote[]
 
   @@map("users")
+}
+
+/// CRM: admin-authored notes attached to a customer (user). authorId is the
+/// admin's user id (kept as a plain field to avoid a second User relation).
+model CrmNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("crm_notes")
 }
 
 /// Transactional outbox: domain events are durably recorded here (surviving
