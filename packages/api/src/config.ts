@@ -23,6 +23,9 @@ const envSchema = z.object({
   RESERVATION_HOLD_MINUTES: z.coerce.number().int().positive().default(15),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
+  // Points the OpenAI SDK at an OpenAI-compatible endpoint instead (e.g.
+  // Groq's https://api.groq.com/openai/v1) -- unset uses OpenAI itself.
+  OPENAI_BASE_URL: z.string().optional(),
   // Google AI Studio key for Gemini image generation ("Nano Banana").
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
