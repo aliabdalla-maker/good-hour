@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type { RoomPublic, PricingDecision, BookingPublic, ReviewPublic } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
@@ -47,6 +47,7 @@ export default function RoomDetailPage() {
 function RoomDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const { data: room } = useQuery<RoomPublic>({
@@ -86,6 +87,13 @@ function RoomDetail() {
       if (booking.clientSecret) sessionStorage.setItem(`clientSecret:${booking.id}`, booking.clientSecret);
       router.push(`/booking/${booking.id}/checkout`);
     } catch (err) {
+      // Send anonymous users to log in and back here, instead of surfacing
+      // the raw backend "Authentication required" 401 message inline.
+      if (err instanceof ApiError && err.status === 401) {
+        const next = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+        return;
+      }
       setError(err instanceof ApiError ? err.message : "Booking failed");
     } finally {
       setSubmitting(false);
@@ -191,9 +199,6 @@ function RoomDetail() {
               </label>
             )}
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <p className="text-xs text-slate-400">
-              A 1% platform service fee is added at checkout. The host is charged a matching 1%.
-            </p>
             <Button type="submit" disabled={submitting}>
               {submitting && <Spinner />}
               {submitting ? "Booking…" : "Book & continue to payment"}
