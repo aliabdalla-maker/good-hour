@@ -49,7 +49,8 @@ services:
       - key: EMAIL_FROM
         value: Good Hours <no-reply@goodhour.shop>
       - { key: OPENAI_API_KEY, sync: false }
-      - { key: OPENAI_MODEL, value: gpt-4o-mini }
+      - { key: OPENAI_MODEL, value: openai/gpt-oss-120b }
+      - { key: OPENAI_BASE_URL, value: https://api.groq.com/openai/v1 }
       - { key: GEMINI_API_KEY, sync: false }
       - { key: GEMINI_IMAGE_MODEL, value: gemini-2.5-flash-image }
       - { key: SMOOBU_API_KEY, sync: false }
@@ -75,8 +76,16 @@ services:
         fromService: { type: keyvalue, name: goodhour-redis, property: connectionString }
       - key: NODE_ENV
         value: production
+      # Must be the exact same secret as goodhour-api's JWT_SECRET -- the
+      # worker verifies unsubscribe-link tokens the api signed. If this
+      # "fromService" cross-reference isn't supported by the time you
+      # deploy (check https://render.com/docs/blueprint-spec), copy the
+      # generated api value here manually instead.
+      - key: JWT_SECRET
+        fromService: { type: web, name: goodhour-api, envVarKey: JWT_SECRET }
       - { key: OPENAI_API_KEY, sync: false }
-      - { key: OPENAI_MODEL, value: gpt-4o-mini }
+      - { key: OPENAI_MODEL, value: openai/gpt-oss-120b }
+      - { key: OPENAI_BASE_URL, value: https://api.groq.com/openai/v1 }
       - { key: STRIPE_SECRET_KEY, sync: false }
       - { key: RESEND_API_KEY, sync: false }
       - { key: EMAIL_FROM, value: Good Hours <no-reply@goodhour.shop> }
