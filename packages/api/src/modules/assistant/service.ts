@@ -248,7 +248,11 @@ export async function chatWithAssistant(
       actions,
       aiPowered: true,
     };
-  } catch {
+  } catch (error) {
+    // Never fail silently -- this was previously swallowed with no trace,
+    // making an exhausted/invalid OpenAI key indistinguishable from normal
+    // fallback behaviour. Log where it actually happened.
+    console.error("[assistant] OpenAI call failed, falling back:", error instanceof Error ? error.message : error);
     return fallbackReply(input, userId);
   }
 }

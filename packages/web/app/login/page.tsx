@@ -75,10 +75,6 @@ function LoginForm() {
           {submitting ? "Logging in..." : "Log in"}
         </button>
       </form>
-      <p className="mt-4 text-sm text-slate-500">
-        Demo accounts (after `npm run db:seed`): supplier@example.com / traveller@example.com, password
-        &quot;password123&quot;.
-      </p>
     </div>
   );
 }

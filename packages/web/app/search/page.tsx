@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { SearchResult } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
+import { humanizeTag } from "../../lib/humanize";
 
 function defaultDateTime(hoursFromNow: number) {
   const d = new Date(Date.now() + hoursFromNow * 60 * 60 * 1000);
@@ -39,7 +40,7 @@ export default function SearchPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Find an hourly room</h1>
+      <h1 className="mb-6 text-2xl font-semibold">Book instantly by city &amp; time</h1>
       <form onSubmit={handleSubmit} className="mb-8 grid grid-cols-1 gap-4 rounded border border-slate-200 bg-white p-4 sm:grid-cols-5">
         <label className="flex flex-col gap-1 text-sm">
           City
@@ -86,7 +87,7 @@ export default function SearchPage() {
             <h2 className="text-lg font-medium">{room.roomName}</h2>
             <p className="text-sm text-slate-500">{room.propertyName}</p>
             <p className="mt-2 text-sm">Capacity: {room.capacity} · {room.hours}h</p>
-            <p className="mt-1 text-sm text-slate-500">{room.amenities.join(", ")}</p>
+            <p className="mt-1 text-sm text-slate-500">{room.amenities.map(humanizeTag).join(", ")}</p>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-lg font-semibold">
                 {room.currency} {room.estimatedTotal.toFixed(2)}
@@ -100,7 +101,7 @@ export default function SearchPage() {
           </Link>
         ))}
         {results && results.length === 0 && !isFetching && (
-          <p className="text-slate-500">No rooms available for that search. Try widening the time range.</p>
+          <p className="text-slate-500">Nothing available for that search. Try widening the time range.</p>
         )}
       </div>
     </div>

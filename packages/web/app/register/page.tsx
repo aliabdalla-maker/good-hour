@@ -61,8 +61,8 @@ export default function RegisterPage() {
             onChange={(e) => setRole(e.target.value as "TRAVELLER" | "SUPPLIER")}
             className="rounded border border-slate-300 px-3 py-2"
           >
-            <option value="TRAVELLER">Traveller (booking rooms)</option>
-            <option value="SUPPLIER">Supplier (listing rooms)</option>
+            <option value="TRAVELLER">Traveller (booking rooms, cars &amp; travel)</option>
+            <option value="SUPPLIER">Supplier (listing rooms, cars &amp; travel)</option>
           </select>
         </label>
         {error && <p className="text-sm text-red-600">{error}</p>}

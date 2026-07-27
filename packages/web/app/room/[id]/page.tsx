@@ -14,6 +14,7 @@ import { ListingImage } from "../../../components/ui/ListingImage";
 import { Spinner } from "../../../components/ui/Spinner";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { AiPriceCard } from "../../../components/ai/AiPriceCard";
+import { humanizeTag } from "../../../lib/humanize";
 
 function defaultDateTime(hoursFromNow: number) {
   const d = new Date(Date.now() + hoursFromNow * 60 * 60 * 1000);
@@ -136,7 +137,7 @@ function RoomDetail() {
             <Badge tone="brand">Capacity {room.capacity}</Badge>
             <Badge>{room.minHours}–{room.maxHours}h bookings</Badge>
             {room.amenities.map((a) => (
-              <Badge key={a}>{a}</Badge>
+              <Badge key={a}>{humanizeTag(a)}</Badge>
             ))}
           </div>
 
@@ -159,7 +160,7 @@ function RoomDetail() {
               </div>
               <p className="text-sm text-slate-500">{room.property.addressLine}</p>
               {room.property.amenities.length > 0 && (
-                <p className="mt-1 text-xs text-slate-400">Property: {room.property.amenities.join(", ")}</p>
+                <p className="mt-1 text-xs text-slate-400">Property: {room.property.amenities.map(humanizeTag).join(", ")}</p>
               )}
               <p className="mt-2 text-xs text-slate-400">Free cancellation while the booking is unpaid.</p>
             </Card>

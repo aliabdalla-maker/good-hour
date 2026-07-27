@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { PropertyWithRooms, ListingCategory } from "@gihtcx/shared";
 import { BUYER_FEE_RATE, SELLER_FEE_RATE } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
+import { humanizeTag } from "../../lib/humanize";
 import { Card, InteractiveCard } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Stars } from "../../components/ui/Stars";
@@ -166,7 +167,7 @@ export default function BrowsePage() {
                         </div>
                         <p className="mt-1 text-xs text-slate-500">Capacity {room.capacity} · {room.minHours}-{room.maxHours}h</p>
                         {room.amenities.length > 0 && (
-                          <p className="mt-1 text-xs text-slate-400">{room.amenities.join(", ")}</p>
+                          <p className="mt-1 text-xs text-slate-400">{room.amenities.map(humanizeTag).join(", ")}</p>
                         )}
                       </div>
                     </InteractiveCard>
