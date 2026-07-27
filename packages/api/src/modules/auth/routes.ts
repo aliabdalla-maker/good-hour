@@ -4,9 +4,15 @@ import { registerSchema, loginSchema, userPublicSchema } from "@gihtcx/shared";
 import { config } from "../../config";
 import { getUserById, loginUser, registerUser, toPublicUser } from "./service";
 
+// web and api are deployed on different Railway subdomains (different sites,
+// not just different origins) -- a browser never attaches a SameSite=Lax
+// cookie to a cross-site fetch, so every "authenticated" request would 401
+// regardless of a successful login. "none" (which requires Secure) is the
+// correct setting once the two are genuinely cross-site; "lax" is kept for
+// local dev, where web/api share the same site (just different ports).
 const COOKIE_OPTS = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: (config.NODE_ENV === "production" ? "none" : "lax") as "none" | "lax",
   secure: config.NODE_ENV === "production",
   path: "/",
   maxAge: 60 * 60 * 24 * 7,
@@ -40,7 +46,9 @@ export default async function authRoutes(app: FastifyInstance) {
   );
 
   server.post("/logout", async (_request, reply) => {
-    reply.clearCookie(config.COOKIE_NAME, { path: "/" });
+    // Must match the sameSite/secure attributes the cookie was set with, or
+    // the browser won't recognise this as clearing the same cookie.
+    reply.clearCookie(config.COOKIE_NAME, { path: "/", sameSite: COOKIE_OPTS.sameSite, secure: COOKIE_OPTS.secure });
     return reply.status(204).send();
   });
 
