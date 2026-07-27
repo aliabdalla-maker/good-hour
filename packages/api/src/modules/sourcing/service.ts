@@ -9,6 +9,8 @@ import type {
 } from "@gihtcx/shared";
 import { AppError } from "../../plugins/errorHandler";
 import { isPrivateIp } from "../../lib/ip";
+import { featureFlags } from "../../config";
+import { getApartment, listApartments } from "../../lib/smoobuClient";
 import { createProperty, createRoom } from "../listings/service";
 
 const AMENITY_KEYWORDS = [
@@ -126,6 +128,59 @@ export async function importFromFeed(supplierId: string, items: FeedItemInput[])
       })
     )
   );
+  return drafts;
+}
+
+/**
+ * Pulls every property from the platform's connected Smoobu account in as a
+ * review-before-publish draft, same as a URL/feed import -- nothing from
+ * Smoobu is ever auto-listed as bookable. Skips apartments already imported
+ * by this supplier (matched on the synthetic "smoobu://apartment/<id>"
+ * sourceUrl), so re-running this is safe and only pulls in what's new.
+ */
+export async function importFromSmoobu(supplierId: string) {
+  if (!featureFlags.smoobuEnabled) {
+    throw new AppError(503, "Smoobu is not configured", "SMOOBU_UNAVAILABLE");
+  }
+
+  const apartments = await listApartments();
+  const existing = await prisma.sourcedListingDraft.findMany({
+    where: { supplierId, origin: "SMOOBU" },
+    select: { sourceUrl: true },
+  });
+  const alreadyImported = new Set(existing.map((d) => d.sourceUrl));
+
+  const drafts = [];
+  for (const summary of apartments) {
+    const sourceUrl = `smoobu://apartment/${summary.id}`;
+    if (alreadyImported.has(sourceUrl)) continue;
+
+    const apartment = await getApartment(summary.id);
+    const minimalRate = Number(apartment.price?.minimal ?? 0);
+    // Smoobu's price is a per-stay/nightly rate, not hourly -- offer a rough
+    // starting point only when there's a real rate to convert; otherwise
+    // leave it for the supplier to set during review rather than guessing.
+    const suggestedHourlyRate = minimalRate > 0 ? Math.round((minimalRate / 24) * 100) / 100 : undefined;
+
+    const draft = await prisma.sourcedListingDraft.create({
+      data: {
+        supplierId,
+        origin: "SMOOBU",
+        sourceUrl,
+        status: "DRAFT",
+        name: apartment.name || `Smoobu apartment ${apartment.id}`,
+        addressLine: apartment.location?.street ?? undefined,
+        city: apartment.location?.city ?? undefined,
+        country: apartment.location?.country ?? undefined,
+        amenities: apartment.amenities ?? [],
+        suggestedHourlyRate,
+        currency: apartment.currency || "GBP",
+        rawExtract: apartment as object,
+      },
+    });
+    drafts.push(draft);
+  }
+
   return drafts;
 }
 

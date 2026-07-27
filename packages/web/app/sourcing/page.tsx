@@ -77,6 +77,7 @@ function SourcingPageInner() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [smoobuBusy, setSmoobuBusy] = useState(false);
 
   const { data: drafts } = useQuery<SourcedDraftPublic[]>({
     queryKey: ["sourcing-drafts"],
@@ -114,6 +115,25 @@ function SourcingPageInner() {
     }
   }
 
+  async function importSmoobu() {
+    setError(null);
+    setNote(null);
+    setSmoobuBusy(true);
+    try {
+      const res = await api.post<{ created: number }>("/sourcing/import-smoobu");
+      setNote(
+        res.created > 0
+          ? `Imported ${res.created} new draft(s) from Smoobu.`
+          : "No new Smoobu properties to import — everything's already been pulled in."
+      );
+      refresh();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Smoobu import failed");
+    } finally {
+      setSmoobuBusy(false);
+    }
+  }
+
   async function discard(id: string) {
     await api.post(`/sourcing/drafts/${id}/discard`);
     refresh();
@@ -143,6 +163,17 @@ function SourcingPageInner() {
           <textarea value={feed} onChange={(e) => setFeed(e.target.value)} rows={4} className="w-full rounded border border-slate-300 px-2 py-1 font-mono text-xs" />
           <button onClick={importFeed} className="mt-2 rounded bg-slate-900 px-3 py-1 text-sm text-white">Import feed</button>
         </section>
+
+        <section className="rounded border border-slate-200 bg-white p-4 sm:col-span-2">
+          <h2 className="mb-2 font-medium">Import from Smoobu</h2>
+          <p className="mb-2 text-xs text-slate-500">
+            Pulls in every property from the connected Smoobu account. Rates are per-stay in Smoobu, not hourly —
+            review and set the real hourly rate before publishing.
+          </p>
+          <button onClick={importSmoobu} disabled={smoobuBusy} className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50">
+            {smoobuBusy ? "Importing…" : "Import from Smoobu"}
+          </button>
+        </section>
       </div>
 
       {note && <p className="mt-3 text-sm text-emerald-600">{note}</p>}
@@ -156,7 +187,7 @@ function SourcingPageInner() {
               <div>
                 <p className="font-medium">{d.name}</p>
                 <p className="text-xs text-slate-400">
-                  {d.origin === "URL" ? d.sourceUrl : "Feed import"} ·{" "}
+                  {d.origin === "URL" ? d.sourceUrl : d.origin === "SMOOBU" ? "Smoobu" : d.origin === "FEED" ? "Feed import" : "Manual"} ·{" "}
                   {d.suggestedHourlyRate ? `${d.currency} ${d.suggestedHourlyRate.toFixed(2)}/hr` : "no rate parsed"}
                 </p>
               </div>

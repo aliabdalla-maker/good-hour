@@ -68,5 +68,5 @@ export type CampaignAudience = (typeof CAMPAIGN_AUDIENCES)[number];
 export const SOURCED_DRAFT_STATUSES = ["DRAFT", "PUBLISHED", "DISCARDED"] as const;
 export type SourcedDraftStatus = (typeof SOURCED_DRAFT_STATUSES)[number];
 
-export const SOURCED_DRAFT_ORIGINS = ["URL", "FEED", "MANUAL"] as const;
+export const SOURCED_DRAFT_ORIGINS = ["URL", "FEED", "MANUAL", "SMOOBU"] as const;
 export type SourcedDraftOrigin = (typeof SOURCED_DRAFT_ORIGINS)[number];

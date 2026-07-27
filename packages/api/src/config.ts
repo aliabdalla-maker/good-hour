@@ -28,6 +28,11 @@ const envSchema = z.object({
   GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // Smoobu (vacation rental channel manager) HMAC API credentials, used to
+  // import the platform's connected properties as review-before-publish
+  // sourcing drafts, the same as a URL/feed import.
+  SMOOBU_API_KEY: z.string().optional(),
+  SMOOBU_API_SECRET: z.string().optional(),
   // --- Communication channels (all optional; fall back to console logging) ---
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Good Hours <onboarding@resend.dev>"),
@@ -52,6 +57,7 @@ export const featureFlags = {
   aiNegotiationEnabled: Boolean(config.OPENAI_API_KEY),
   imageGenEnabled: Boolean(config.GEMINI_API_KEY),
   paymentsEnabled: Boolean(config.STRIPE_SECRET_KEY),
+  smoobuEnabled: Boolean(config.SMOOBU_API_KEY && config.SMOOBU_API_SECRET),
   emailEnabled: Boolean(config.RESEND_API_KEY),
   smsEnabled: Boolean(
     config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_FROM_NUMBER

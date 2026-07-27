@@ -13,6 +13,7 @@ import {
   discardDraft,
   getMarketRate,
   importFromFeed,
+  importFromSmoobu,
   importFromUrl,
   listDrafts,
   publishDraft,
@@ -44,6 +45,18 @@ export default async function sourcingRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const drafts = await importFromFeed(request.currentUser!.sub, request.body.items);
+      return reply.status(201).send({ created: drafts.length, drafts: drafts.map(toPublicDraft) });
+    }
+  );
+
+  server.post(
+    "/import-smoobu",
+    {
+      ...supplierGuard,
+      schema: { response: { 201: z.object({ created: z.number(), drafts: z.array(sourcedDraftPublicSchema) }) } },
+    },
+    async (request, reply) => {
+      const drafts = await importFromSmoobu(request.currentUser!.sub);
       return reply.status(201).send({ created: drafts.length, drafts: drafts.map(toPublicDraft) });
     }
   );

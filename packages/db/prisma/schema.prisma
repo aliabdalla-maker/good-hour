@@ -114,6 +114,7 @@ enum SourcedDraftOrigin {
   URL
   FEED
   MANUAL
+  SMOOBU
 }
 
 model User {
