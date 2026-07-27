@@ -54,7 +54,12 @@ export function AssistantWidget() {
   }
 
   function go(action: AssistantAction) {
-    router.push(action.path);
+    if (action.type === "propose_booking") {
+      const params = new URLSearchParams({ startsAt: action.startsAt, endsAt: action.endsAt });
+      router.push(`/room/${action.roomId}?${params.toString()}`);
+    } else {
+      router.push(action.path);
+    }
     setMaximised(false);
   }
 

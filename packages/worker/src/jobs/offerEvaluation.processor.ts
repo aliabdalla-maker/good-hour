@@ -5,7 +5,11 @@ import { redisConnection } from "../../../api/src/queue/connection";
 import { QUEUE_NAMES } from "../../../api/src/queue/queues";
 import type { OfferEvaluationJobData } from "../../../api/src/queue/jobs/types";
 import { evaluateOffers } from "../../../api/src/modules/negotiation-agent/service";
-import { markRecommendedOffer, maybeAutoAccept } from "../../../api/src/modules/bidding/service";
+import {
+  markRecommendedOffer,
+  maybeAutoAccept,
+  expireBookingRequestIfStillOpen,
+} from "../../../api/src/modules/bidding/service";
 import { getSupplierRatingAvg } from "../../../api/src/modules/reviews";
 
 async function buildNegotiationInput(bookingRequestId: string): Promise<NegotiationAgentInput | null> {
@@ -62,11 +66,17 @@ export function startOfferEvaluationWorker() {
     QUEUE_NAMES.offerEvaluation,
     async (job) => {
       const input = await buildNegotiationInput(job.data.bookingRequestId);
-      if (!input) return;
+      if (input) {
+        const decision = await evaluateOffers(input, { bookingRequestId: job.data.bookingRequestId });
+        await markRecommendedOffer(job.data.bookingRequestId, decision.recommendedOfferId);
+        await maybeAutoAccept(job.data.bookingRequestId, decision.recommendedOfferId);
+      }
 
-      const decision = await evaluateOffers(input, { bookingRequestId: job.data.bookingRequestId });
-      await markRecommendedOffer(job.data.bookingRequestId, decision.recommendedOfferId);
-      await maybeAutoAccept(job.data.bookingRequestId, decision.recommendedOfferId);
+      // Runs after the re-evaluate + auto-accept attempt above, so it only
+      // ever closes a request that's genuinely still undecided at its deadline.
+      if (job.data.reason === "expiry_approaching") {
+        await expireBookingRequestIfStillOpen(job.data.bookingRequestId);
+      }
     },
     { connection: redisConnection }
   );

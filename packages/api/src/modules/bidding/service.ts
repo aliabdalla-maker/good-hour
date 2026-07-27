@@ -40,6 +40,20 @@ export async function createBookingRequest(travellerId: string, input: CreateBoo
 
   await generateAutoOffers(bookingRequest.id);
 
+  // Forces a decision at the request's own deadline instead of leaving it
+  // OPEN forever if the traveller never acts: re-evaluates offers (giving
+  // auto-accept one last chance) then expires the request if still open.
+  await offerEvaluationQueue.add(
+    "evaluate",
+    { bookingRequestId: bookingRequest.id, reason: "expiry_approaching" },
+    {
+      delay: Math.max(0, bookingRequest.expiresAt.getTime() - Date.now()),
+      jobId: `expiry-${bookingRequest.id}`,
+      removeOnComplete: true,
+      removeOnFail: true,
+    }
+  );
+
   return bookingRequest;
 }
 
@@ -176,6 +190,31 @@ export async function maybeAutoAccept(bookingRequestId: string, recommendedOffer
   if (bookingRequest.maxBudget && Number(offer.offeredTotal) > Number(bookingRequest.maxBudget)) return;
 
   await acceptOffer(bookingRequest.travellerId, recommendedOfferId, true);
+}
+
+/**
+ * Called by the offer-evaluation worker job when the "expiry_approaching"
+ * job fires at bookingRequest.expiresAt -- runs AFTER a final evaluate +
+ * maybeAutoAccept pass in the same job, so this only ever finds a request
+ * still OPEN if the traveller never accepted and auto-accept didn't fire
+ * (disabled, or no offer within maxBudget). Forces the request closed
+ * instead of leaving it OPEN forever with a deadline that's already passed.
+ */
+export async function expireBookingRequestIfStillOpen(bookingRequestId: string) {
+  const bookingRequest = await prisma.bookingRequest.findUnique({ where: { id: bookingRequestId } });
+  if (!bookingRequest || bookingRequest.status !== "OPEN") return;
+
+  const pendingOffers = await prisma.supplierOffer.updateMany({
+    where: { bookingRequestId, status: { in: ["PENDING", "RECOMMENDED"] } },
+    data: { status: "WITHDRAWN" },
+  });
+
+  await prisma.bookingRequest.update({ where: { id: bookingRequestId }, data: { status: "EXPIRED" } });
+
+  await domainEvents.publish({
+    type: "request.expired",
+    payload: { bookingRequestId, hadOffers: pendingOffers.count > 0 },
+  });
 }
 
 export async function getBookingRequestById(id: string) {

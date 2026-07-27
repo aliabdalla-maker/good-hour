@@ -8,6 +8,7 @@ import { bookingExpiryQueue } from "../../queue/queues";
 import { getRoomById } from "../listings";
 import { createPaymentIntentForBooking, refundBookingPayment } from "../payments";
 import { getSuggestedRateForRoom } from "../pricing-agent";
+import { recordAgentOutcome } from "../agent-log";
 import { assertTransitionAllowed } from "./stateMachine";
 import { ensureSlotsGenerated, isRangeFullyOpen } from "./slotService";
 
@@ -30,6 +31,24 @@ async function scheduleReservationExpiry(bookingId: string) {
 
 function hoursBetween(start: Date, end: Date): number {
   return (end.getTime() - start.getTime()) / (60 * 60 * 1000);
+}
+
+/**
+ * Closes the pricing-agent audit loop the same way acceptOffer closes it for
+ * the negotiation agent: finds the most recent PRICING decision for this room
+ * and records whether this booking actually used it. An imperfect proxy for
+ * "did the traveller see and reject this exact recommendation" (the log could
+ * be up to ~30min stale, from the periodic refresh job), but it's the only
+ * signal available without threading a specific decision id through search
+ * results, and it's the first outcome feedback PRICING logs get at all.
+ */
+async function recordPricingOutcome(roomId: string, accepted: boolean) {
+  const latestLog = await prisma.agentDecisionLog.findFirst({
+    where: { agentType: "PRICING", subjectType: "Room", subjectId: roomId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!latestLog) return;
+  await recordAgentOutcome(latestLog.id, accepted);
 }
 
 export async function createDirectBooking(travellerId: string, input: CreateBookingInput) {
@@ -106,6 +125,8 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
   const { clientSecret } = await createPaymentIntentForBooking(booking.id, fee.travellerTotal, room.currency);
 
   await domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
+
+  await recordPricingOutcome(room.id, input.useAiSuggestedRate);
 
   return { booking, clientSecret };
 }

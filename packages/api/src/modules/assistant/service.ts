@@ -17,9 +17,12 @@ Guidelines:
 - Valid navigate paths: /browse, /search, /requests/new, /dashboard/traveller, /dashboard/supplier,
   /notifications, /login, /register, and /room/<id> for a specific listing (use ids from search_listings).
 - Never invent listings, prices or ids — only use what search_listings or get_my_bookings return.
+- If the user has picked a specific listing (from search_listings) and a specific start/end time, call
+  "propose_booking" instead of "navigate" — it pre-fills the booking form so they just have to confirm and
+  pay. Always use a roomId that came from search_listings, and a start/end time the user actually gave you.
 - You can look up and discuss the signed-in user's own bookings (get_my_bookings), but you can never
-  create a booking, take a payment, or change anything on their behalf — you are read-only. If they want
-  to book, direct them to the right page with "navigate" instead.`;
+  take a payment or complete a booking yourself — "propose_booking" only pre-fills a form the user must
+  still explicitly confirm. You are never the one that moves money.`;
 
 const BASE_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
@@ -49,6 +52,24 @@ const BASE_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
           label: { type: "string", description: "Short button label, e.g. 'Book instantly'" },
         },
         required: ["path", "label"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "propose_booking",
+      description:
+        "Pre-fill the booking form for a specific room and time so the user only has to review and confirm. " +
+        "Does NOT create a booking or charge anything — the user still clicks 'Book & continue to payment' themselves.",
+      parameters: {
+        type: "object",
+        properties: {
+          roomId: { type: "string", description: "A roomId returned by search_listings" },
+          startsAt: { type: "string", description: "ISO 8601 datetime for the start of the booking" },
+          endsAt: { type: "string", description: "ISO 8601 datetime for the end of the booking" },
+        },
+        required: ["roomId", "startsAt", "endsAt"],
       },
     },
   },
@@ -113,6 +134,36 @@ async function getMyBookings(userId: string) {
   };
 }
 
+/**
+ * Never books anything itself -- just validates the room is real/active and
+ * the time range is sane, then pushes a "propose_booking" action for the
+ * frontend to pre-fill. The actual booking write still requires the user to
+ * submit the real booking form.
+ */
+async function proposeBooking(args: { roomId?: unknown; startsAt?: unknown; endsAt?: unknown }, actions: AssistantAction[]) {
+  const roomId = String(args.roomId ?? "");
+  const start = new Date(String(args.startsAt ?? ""));
+  const end = new Date(String(args.endsAt ?? ""));
+  if (!roomId || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+    return { error: "roomId, and a valid startsAt/endsAt where endsAt is after startsAt, are required" };
+  }
+
+  const room = await prisma.room.findUnique({ where: { id: roomId }, select: { id: true, name: true, status: true } });
+  if (!room || room.status !== "ACTIVE") {
+    return { error: "room not found or no longer active" };
+  }
+
+  actions.push({
+    type: "propose_booking",
+    roomId: room.id,
+    roomName: room.name,
+    startsAt: start.toISOString(),
+    endsAt: end.toISOString(),
+    label: `Review booking: ${room.name}`,
+  });
+  return { ok: true, note: "Proposed to the user — they still need to confirm and pay on the booking page." };
+}
+
 async function runTool(
   name: string,
   args: Record<string, unknown>,
@@ -133,6 +184,9 @@ async function runTool(
     const label = String(args.label ?? "Open");
     if (path.startsWith("/")) actions.push({ type: "navigate", path, label });
     return { ok: true };
+  }
+  if (name === "propose_booking") {
+    return proposeBooking(args, actions);
   }
   return { error: "unknown tool" };
 }

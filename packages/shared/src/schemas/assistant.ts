@@ -13,11 +13,28 @@ export const assistantChatSchema = z.object({
 });
 export type AssistantChatInput = z.infer<typeof assistantChatSchema>;
 
-export const assistantActionSchema = z.object({
+const navigateActionSchema = z.object({
   type: z.literal("navigate"),
   path: z.string(),
   label: z.string(),
 });
+
+// Pre-fills a specific room + time on the booking form for the user to
+// review and confirm -- the assistant proposes, it never books or charges
+// anything itself (that still requires an explicit click on the room page).
+const proposeBookingActionSchema = z.object({
+  type: z.literal("propose_booking"),
+  roomId: z.string(),
+  roomName: z.string(),
+  startsAt: z.string(),
+  endsAt: z.string(),
+  label: z.string(),
+});
+
+export const assistantActionSchema = z.discriminatedUnion("type", [
+  navigateActionSchema,
+  proposeBookingActionSchema,
+]);
 export type AssistantAction = z.infer<typeof assistantActionSchema>;
 
 export const assistantReplySchema = z.object({

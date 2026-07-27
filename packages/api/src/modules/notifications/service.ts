@@ -271,6 +271,20 @@ export function registerNotificationListeners() {
     });
   });
 
+  domainEvents.onEvent("request.expired", async ({ bookingRequestId, hadOffers }) => {
+    const request = await prisma.bookingRequest.findUnique({ where: { id: bookingRequestId } });
+    if (!request) return;
+    await notify({
+      userId: request.travellerId,
+      type: "request.expired",
+      subject: "Your request expired without a booking",
+      body: hadOffers
+        ? "Your request window closed before you accepted an offer. The offers are no longer held — post a new request if you still need this."
+        : "Your request window closed with no offers from hosts. Try widening your location or budget and post again.",
+      data: { bookingRequestId },
+    });
+  });
+
   domainEvents.onEvent("payment.succeeded", async ({ bookingId }) => {
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
     if (!booking) return;

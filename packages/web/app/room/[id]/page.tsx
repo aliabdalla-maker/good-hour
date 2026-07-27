@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type { RoomPublic, PricingDecision, BookingPublic, ReviewPublic } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
@@ -21,9 +21,33 @@ function defaultDateTime(hoursFromNow: number) {
   return d.toISOString().slice(0, 16);
 }
 
+// Matches defaultDateTime's convention above (toISOString, not local time).
+function toDatetimeLocalValue(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 16);
+}
+
+// useSearchParams() requires a Suspense boundary for static prerendering.
 export default function RoomDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          <Skeleton className="h-64 w-full rounded-2xl" />
+          <Skeleton className="h-64 w-full rounded-2xl" />
+        </div>
+      }
+    >
+      <RoomDetail />
+    </Suspense>
+  );
+}
+
+function RoomDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { data: room } = useQuery<RoomPublic>({
     queryKey: ["room", id],
@@ -38,8 +62,12 @@ export default function RoomDetailPage() {
     queryFn: () => api.get<ReviewPublic[]>(`/reviews?roomId=${id}`),
   });
 
-  const [startsAt, setStartsAt] = useState(defaultDateTime(2));
-  const [endsAt, setEndsAt] = useState(defaultDateTime(6));
+  // Pre-filled when the assistant's "propose_booking" action linked here —
+  // still just form defaults; the traveller must still submit to book.
+  const prefilledStart = toDatetimeLocalValue(searchParams.get("startsAt") ?? "");
+  const prefilledEnd = toDatetimeLocalValue(searchParams.get("endsAt") ?? "");
+  const [startsAt, setStartsAt] = useState(prefilledStart ?? defaultDateTime(2));
+  const [endsAt, setEndsAt] = useState(prefilledEnd ?? defaultDateTime(6));
   const [useAiSuggestedRate, setUseAiSuggestedRate] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -144,6 +172,11 @@ export default function RoomDetailPage() {
 
         <Card className="h-fit p-5">
           <h2 className="mb-4 text-lg font-semibold">Book this room</h2>
+          {prefilledStart && prefilledEnd && (
+            <p className="mb-3 rounded-lg bg-ai-50 p-2 text-xs text-ai-800">
+              ✦ Times pre-filled from your assistant chat — review and confirm below.
+            </p>
+          )}
           <form onSubmit={handleBook} className="flex flex-col gap-4">
             <Field label="From">
               <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />

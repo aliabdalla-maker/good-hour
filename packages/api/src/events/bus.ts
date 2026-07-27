@@ -7,6 +7,7 @@ export type DomainEvent =
   | { type: "booking.cancelled"; payload: { bookingId: string } }
   | { type: "offer.submitted"; payload: { offerId: string; bookingRequestId: string } }
   | { type: "match.recommended"; payload: { bookingRequestId: string; offerId: string } }
+  | { type: "request.expired"; payload: { bookingRequestId: string; hadOffers: boolean } }
   | { type: "payment.succeeded"; payload: { paymentId: string; bookingId: string } }
   | { type: "payment.failed"; payload: { bookingId: string; reason: string } };
 
