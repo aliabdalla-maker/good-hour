@@ -27,6 +27,11 @@ export function buildApp() {
     logger: {
       level: config.NODE_ENV === "development" ? "info" : "warn",
     },
+    // Fastify's 1MB default would silently reject a data:image/ room photo
+    // before Zod even runs — a generated image's base64 payload routinely
+    // exceeds that. Matches the imageUrl cap in listings.ts with headroom
+    // for the rest of the JSON body.
+    bodyLimit: 5 * 1024 * 1024,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);

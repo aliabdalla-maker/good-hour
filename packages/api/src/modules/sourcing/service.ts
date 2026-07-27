@@ -166,6 +166,8 @@ export async function publishDraft(supplierId: string, draftId: string, input: P
     name: input.roomName,
     capacity: input.capacity,
     amenities: input.amenities,
+    // Imported/sourced listings are never AI-generated photos.
+    imageIsAiGenerated: false,
     baseHourlyRate: input.baseHourlyRate,
     currency: input.currency,
     minHours: input.minHours,

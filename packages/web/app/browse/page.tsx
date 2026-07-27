@@ -153,6 +153,11 @@ export default function BrowsePage() {
                         <span className="absolute bottom-2 left-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                           {room.currency} {room.baseHourlyRate.toFixed(2)}{meta.unit}
                         </span>
+                        {room.imageIsAiGenerated && (
+                          <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+                            ✨ AI-generated photo
+                          </span>
+                        )}
                       </div>
                       <div className="p-3">
                         <div className="flex items-center justify-between gap-2">

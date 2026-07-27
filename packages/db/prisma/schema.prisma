@@ -228,7 +228,12 @@ model Room {
   capacity       Int
   amenities      String[]
   /// Optional hero photo for the listing (falls back to a gradient in the UI).
+  /// May be an http(s) URL, a site-relative path, or a data:image/ URI
+  /// (AI-generated photos are never resized/uploaded, just stored inline).
   imageUrl       String?
+  /// True when imageUrl came from the Nano Banana generate button, so the UI
+  /// can disclose it -- never silently pass off a generated photo as real.
+  imageIsAiGenerated Boolean @default(false)
   baseHourlyRate Decimal  @db.Decimal(10, 2)
   currency       String   @default("GBP")
   minHours       Int      @default(2)

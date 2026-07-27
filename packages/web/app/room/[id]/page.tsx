@@ -79,6 +79,11 @@ export default function RoomDetailPage() {
       <div className="relative mb-6 h-52 overflow-hidden rounded-2xl shadow-card sm:h-72 animate-scale-in">
         <ListingImage src={room.imageUrl} alt={room.name} seed={room.name} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+        {room.imageIsAiGenerated && (
+          <span className="absolute right-3 top-3 rounded-md bg-ai-600/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+            ✨ AI-generated photo — may not depict the actual space
+          </span>
+        )}
         <div className="absolute bottom-0 p-5 text-white sm:p-6">
           {room.property && (
             <p className="text-xs uppercase tracking-wide text-white/80">

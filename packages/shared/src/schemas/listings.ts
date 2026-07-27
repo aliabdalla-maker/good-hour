@@ -1,6 +1,19 @@
 import { z } from "zod";
 import { LISTING_CATEGORIES } from "../enums";
 
+// Accepts an absolute http(s) URL, a site-relative path (our own seeded
+// static photos, e.g. "/listings/room.jpg" -- plain .url() rejects these),
+// or a data:image/... URI (AI-generated photos, which can legitimately run
+// to hundreds of KB of base64 text). Capped well above any realistic
+// generated image so it still bounds worst-case abuse.
+const imageUrlValue = z
+  .string()
+  .max(2_000_000)
+  .refine(
+    (v) => v.startsWith("http://") || v.startsWith("https://") || v.startsWith("/") || v.startsWith("data:image/"),
+    { message: "imageUrl must be an http(s) URL, a site-relative path, or a data:image/ URI" }
+  );
+
 export const createPropertySchema = z.object({
   name: z.string().min(2).max(200),
   category: z.enum(LISTING_CATEGORIES).default("ROOM"),
@@ -18,7 +31,9 @@ export const createRoomSchema = z.object({
   name: z.string().min(1).max(150),
   capacity: z.number().int().min(1).max(20),
   amenities: z.array(z.string()).default([]),
-  imageUrl: z.string().url().max(500).optional(),
+  imageUrl: imageUrlValue.optional(),
+  /** True when imageUrl came from the Nano Banana generate button, not a pasted URL. */
+  imageIsAiGenerated: z.boolean().default(false),
   baseHourlyRate: z.number().positive(),
   currency: z.string().length(3).default("GBP"),
   minHours: z.number().int().min(1).max(24).default(2),
@@ -50,6 +65,7 @@ export const roomPublicSchema = z.object({
   capacity: z.number(),
   amenities: z.array(z.string()),
   imageUrl: z.string().nullable().default(null),
+  imageIsAiGenerated: z.boolean().default(false),
   baseHourlyRate: z.number(),
   currency: z.string(),
   minHours: z.number(),

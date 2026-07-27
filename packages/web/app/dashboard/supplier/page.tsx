@@ -222,6 +222,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
   const [maxHours, setMaxHours] = useState(12);
   const [autoOfferEnabled, setAutoOfferEnabled] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [imageIsAiGenerated, setImageIsAiGenerated] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -231,7 +232,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
       api.post<GeneratedImageView>("/image-agent/generate", {
         prompt: imagePrompt || `${roomName || "a listing"}, capacity ${capacity}`,
       }),
-    onSuccess: (res) => setImageUrl(res.imageUrl),
+    onSuccess: (res) => { setImageUrl(res.imageUrl); setImageIsAiGenerated(true); },
     onError: (e) => setImageError(e instanceof ApiError ? e.message : "Could not generate an image"),
   });
 
@@ -245,6 +246,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
         capacity,
         amenities: ["wifi"],
         imageUrl: imageUrl || undefined,
+        imageIsAiGenerated,
         baseHourlyRate,
         currency: "GBP",
         minHours,
@@ -253,6 +255,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
       });
       setRoomName("");
       setImageUrl("");
+      setImageIsAiGenerated(false);
       setImagePrompt("");
       setShowForm(false);
       onRoomAdded();
@@ -313,17 +316,18 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
                     {generateImage.isPending ? "Generating…" : "✨ Generate with AI (Nano Banana)"}
                   </button>
                   {imageUrl && (
-                    <button type="button" onClick={() => setImageUrl("")} className="text-xs text-slate-400 hover:text-red-500">
+                    <button type="button" onClick={() => { setImageUrl(""); setImageIsAiGenerated(false); }} className="text-xs text-slate-400 hover:text-red-500">
                       Remove
                     </button>
                   )}
+                  {imageIsAiGenerated && <span className="text-xs text-ai-600">✨ AI-generated — will be labelled on the listing</span>}
                 </div>
                 {imageError && (
                   <p className="text-xs text-red-600">
-                    {imageError} — you can paste an image URL instead:
+                    {imageError} — you can paste a real image URL instead:
                     <input
                       placeholder="https://…"
-                      onChange={(e) => setImageUrl(e.target.value)}
+                      onChange={(e) => { setImageUrl(e.target.value); setImageIsAiGenerated(false); }}
                       className="ml-1 rounded border border-slate-300 px-1.5 py-0.5 text-xs"
                     />
                   </p>

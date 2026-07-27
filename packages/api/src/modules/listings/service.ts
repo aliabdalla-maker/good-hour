@@ -62,6 +62,7 @@ export async function createRoom(supplierId: string, input: CreateRoomInput) {
       capacity: input.capacity,
       amenities: input.amenities,
       imageUrl: input.imageUrl,
+      imageIsAiGenerated: input.imageIsAiGenerated,
       baseHourlyRate: input.baseHourlyRate,
       currency: input.currency,
       minHours: input.minHours,
@@ -130,6 +131,7 @@ export function toPublicRoom(
     capacity: number;
     amenities: string[];
     imageUrl?: string | null;
+    imageIsAiGenerated?: boolean;
     baseHourlyRate: unknown;
     currency: string;
     minHours: number;
@@ -146,6 +148,7 @@ export function toPublicRoom(
     capacity: room.capacity,
     amenities: room.amenities,
     imageUrl: room.imageUrl ?? null,
+    imageIsAiGenerated: room.imageIsAiGenerated ?? false,
     baseHourlyRate: Number(room.baseHourlyRate),
     currency: room.currency,
     minHours: room.minHours,
