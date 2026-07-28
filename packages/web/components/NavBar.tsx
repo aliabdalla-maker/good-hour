@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { NotificationPublic } from "@gihtcx/shared";
+import { ERP_ADMIN_EMAIL, type NotificationPublic } from "@gihtcx/shared";
 import { useCurrentUser } from "../lib/useCurrentUser";
 import { api } from "../lib/apiClient";
 import { cn } from "../lib/cn";
@@ -50,6 +50,9 @@ export function NavBar() {
           { href: "/admin/verification", label: "Verification" },
         ]
       : []),
+    // Not a role check -- this one link is for the single owner-operator
+    // account only, hidden from every other ADMIN too.
+    ...(user?.email === ERP_ADMIN_EMAIL ? [{ href: "/admin/erp", label: "ERP" }] : []),
   ];
 
   const Wordmark = (

@@ -70,3 +70,13 @@ export type SourcedDraftStatus = (typeof SOURCED_DRAFT_STATUSES)[number];
 
 export const SOURCED_DRAFT_ORIGINS = ["URL", "FEED", "MANUAL", "SMOOBU"] as const;
 export type SourcedDraftOrigin = (typeof SOURCED_DRAFT_ORIGINS)[number];
+
+/**
+ * The one account allowed into the ERP console (packages/web/app/admin/erp).
+ * Deliberately a single hardcoded owner-operator address, not the broader
+ * ADMIN role -- financial/payout data here is more sensitive than the CRM
+ * console every ADMIN can already see.
+ */
+// Email lookups in this app are case-sensitive (no normalization on
+// register/login), so this must match the stored value's exact casing.
+export const ERP_ADMIN_EMAIL = "Admin@softwareequality.com";

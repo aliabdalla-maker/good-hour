@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
+import { prisma } from "@gihtcx/db";
 import { config } from "../config";
 import { verifySession, type SessionPayload } from "../modules/auth/session";
 import { AppError } from "./errorHandler";
@@ -13,6 +14,7 @@ declare module "fastify" {
     requireRole: (
       roles: SessionPayload["role"][]
     ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireEmail: (emails: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 
@@ -37,6 +39,24 @@ async function authGuardPlugin(app: FastifyInstance) {
         throw new AppError(401, "Authentication required", "UNAUTHENTICATED");
       }
       if (!roles.includes(request.currentUser.role)) {
+        throw new AppError(403, "Insufficient permissions", "FORBIDDEN");
+      }
+    };
+  });
+
+  // Gate on the account's actual email, not its role -- for surfaces (like
+  // the ERP console) meant for one specific owner-operator, not every
+  // ADMIN-role account. Email isn't in the session JWT, so this looks it up.
+  app.decorate("requireEmail", (emails: string[]) => {
+    return async (request: FastifyRequest) => {
+      if (!request.currentUser) {
+        throw new AppError(401, "Authentication required", "UNAUTHENTICATED");
+      }
+      const user = await prisma.user.findUnique({
+        where: { id: request.currentUser.sub },
+        select: { email: true },
+      });
+      if (!user || !emails.includes(user.email)) {
         throw new AppError(403, "Insufficient permissions", "FORBIDDEN");
       }
     };
