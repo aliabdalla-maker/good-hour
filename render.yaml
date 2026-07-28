@@ -105,8 +105,14 @@ services:
         value: production
       # NEXT_PUBLIC_* are inlined at build time — Render passes service env vars
       # as Docker build args, so this reaches the browser bundle.
+      #
+      # NOTE: api.goodhour.shop was never actually provisioned (no DNS record,
+      # no custom domain on goodhour-api) -- every fetch from the deployed
+      # site was silently failing against a hostname that doesn't resolve.
+      # Pointing this at the real Render URL until api.goodhour.shop is set up
+      # for real (custom domain on goodhour-api + matching GoDaddy CNAME).
       - key: NEXT_PUBLIC_API_URL
-        value: https://api.goodhour.shop
+        value: https://goodhour-api.onrender.com
       - key: NEXT_PUBLIC_CONTACT_EMAIL
         value: admin@softwareequality.com
       - { key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, sync: false }
