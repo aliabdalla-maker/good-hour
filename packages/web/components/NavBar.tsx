@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ERP_ADMIN_EMAIL, type NotificationPublic } from "@gihtcx/shared";
 import { useCurrentUser } from "../lib/useCurrentUser";
@@ -21,13 +22,35 @@ function useUnreadCount(enabled: boolean) {
 export function NavBar() {
   const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const unread = useUnreadCount(Boolean(user));
 
+  const [loggingOut, setLoggingOut] = useState(false);
+
   async function handleLogout() {
-    await api.post("/auth/logout");
-    queryClient.setQueryData(["me"], null);
-    setOpen(false);
+    setLoggingOut(true);
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Swallow deliberately. Previously an unhandled rejection here — a
+      // network blip, or the global 100/min rate limiter returning 429 — meant
+      // setQueryData never ran, so clicking "Log out" did absolutely nothing:
+      // no error, no visual change. Signing out locally must never depend on
+      // the network call succeeding.
+    } finally {
+      // clear(), not setQueryData(["me"], null). The old version left every
+      // other cached query intact, so the previous user's wallet balance,
+      // bookings and notifications stayed in memory (and on screen) after
+      // logout — a data-leak on any shared device.
+      queryClient.clear();
+      setOpen(false);
+      setLoggingOut(false);
+      // Leave whatever authenticated page they were on. Without this, logging
+      // out from a public page changed only the nav, which reads as "nothing
+      // happened", and RequireAuth pages could briefly render stale content.
+      router.replace("/login");
+    }
   }
 
   const primaryLinks = [
@@ -96,8 +119,8 @@ export function NavBar() {
           ))}
           {NotificationsLink}
           {user ? (
-            <button onClick={handleLogout} className="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
-              Log out
+            <button onClick={handleLogout} disabled={loggingOut} className="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50 disabled:opacity-60">
+              {loggingOut ? "Signing out…" : "Log out"}
             </button>
           ) : (
             <>
@@ -137,7 +160,7 @@ export function NavBar() {
           )}
           <div className="mt-2 border-t border-slate-100 pt-2">
             {user ? (
-              <button onClick={handleLogout} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-left text-slate-700">
+              <button onClick={handleLogout} disabled={loggingOut} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-left text-slate-700 disabled:opacity-60">
                 Log out ({user.email})
               </button>
             ) : (
