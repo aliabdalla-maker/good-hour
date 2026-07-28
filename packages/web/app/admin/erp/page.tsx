@@ -96,6 +96,7 @@ function ErpInner() {
     creditEconomy,
     marketplace,
     wallet,
+    auctions,
     aiInsights,
   } = data;
   const fmt = (n: number) => `${financial.currency} ${n.toFixed(2)}`;
@@ -168,6 +169,55 @@ function ErpInner() {
             <p className="text-slate-500">Credit fee revenue</p>
             <p className="text-xl font-semibold text-brand-700">{fmt(creditEconomy.creditFeeRevenue)}</p>
           </div>
+        </div>
+      </section>
+
+      {/* Hourly auctions */}
+      <section
+        className="mb-8 animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover"
+        style={{ animationDelay: "190ms" }}
+      >
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Hourly auctions</h2>
+          <Link href="/auctions" className="text-xs font-medium text-brand-700 hover:underline">
+            Open auctions &rarr;
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div>
+            <p className="text-slate-500">Settled</p>
+            <p className="text-xl font-semibold text-slate-900">
+              <AnimatedNumber value={auctions.settledCount} />
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500">Total bids</p>
+            <p className="text-xl font-semibold text-slate-900">
+              <AnimatedNumber value={auctions.totalBids} />
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500">Placed by agents</p>
+            <p className="text-xl font-semibold text-ai-700">
+              <AnimatedNumber value={auctions.agentPlacedBids} />
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-500">Agent share</p>
+            <p className="text-xl font-semibold text-ai-700">
+              <AnimatedNumber value={auctions.agentBidShare * 100} decimals={0} />%
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {Object.entries(auctions.byStatus).map(([st, n]) => (
+            <span key={st} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              {st.toLowerCase()}: <AnimatedNumber value={n} />
+            </span>
+          ))}
+          {Object.keys(auctions.byStatus).length === 0 && (
+            <span className="text-xs text-slate-500">No auctions yet.</span>
+          )}
         </div>
       </section>
 

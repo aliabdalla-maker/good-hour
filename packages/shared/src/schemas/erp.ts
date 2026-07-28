@@ -85,7 +85,19 @@ export const erpWalletSchema = z.object({
 });
 export type ErpWallet = z.infer<typeof erpWalletSchema>;
 
+/** Hourly auctions: throughput and how much of the bidding agents are doing. */
+export const erpAuctionsSchema = z.object({
+  byStatus: z.record(z.string(), z.number().int()),
+  settledCount: z.number().int(),
+  totalBids: z.number().int(),
+  agentPlacedBids: z.number().int(),
+  /** 0-1. The share of all bids placed by an agent rather than a human click. */
+  agentBidShare: z.number(),
+});
+export type ErpAuctions = z.infer<typeof erpAuctionsSchema>;
+
 export const erpOverviewSchema = z.object({
+  auctions: erpAuctionsSchema,
   creditEconomy: erpCreditEconomySchema,
   marketplace: erpMarketplaceSchema,
   wallet: erpWalletSchema,

@@ -8,6 +8,7 @@ export const QUEUE_NAMES = {
   pricingRefresh: "pricing-refresh",
   offerEvaluation: "offer-evaluation",
   bookingExpiry: "booking-expiry",
+  auctionClose: "auction-close",
 } as const;
 
 export const pricingRefreshQueue = new Queue(QUEUE_NAMES.pricingRefresh, {
@@ -19,5 +20,11 @@ export const offerEvaluationQueue = new Queue(QUEUE_NAMES.offerEvaluation, {
 });
 
 export const bookingExpiryQueue = new Queue(QUEUE_NAMES.bookingExpiry, {
+  connection: redisConnection,
+});
+
+/// Fires once at each auction's closesAt to pick the winner and, when the
+/// winning bid carried an autoSettle mandate, move the money.
+export const auctionCloseQueue = new Queue(QUEUE_NAMES.auctionClose, {
   connection: redisConnection,
 });

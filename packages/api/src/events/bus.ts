@@ -18,6 +18,31 @@ export type DomainEvent =
     }
   | { type: "wallet.topped_up"; payload: { userId: string; amount: number } }
   | {
+      type: "auction.opened";
+      payload: { auctionId: string; kind: string; createdById: string };
+    }
+  | {
+      type: "auction.bid";
+      payload: {
+        auctionId: string;
+        bidId: string;
+        bidderId: string;
+        amountPerHour: number;
+        isAgentPlaced: boolean;
+      };
+    }
+  | { type: "auction.closed"; payload: { auctionId: string; winningBidId: string | null } }
+  | {
+      type: "auction.settled";
+      payload: {
+        auctionId: string;
+        buyerId: string;
+        sellerId: string;
+        amount: number;
+        viaAgent: boolean;
+      };
+    }
+  | {
       type: "order.refunded";
       payload: {
         orderId: string;

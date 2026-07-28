@@ -57,6 +57,7 @@ export function NavBar() {
     { href: "/browse", label: "Browse" },
     { href: "/search", label: "Search by time" },
     { href: "/market", label: "Products & services" },
+    { href: "/auctions", label: "Auctions" },
     { href: "/requests/new", label: "Request a match" },
   ];
   const roleLinks = [

@@ -4,6 +4,7 @@ import { generateAiInsights } from "./insights";
 import { getOutstandingCreditLiability } from "../credits";
 import { getWalletLiability } from "../wallet";
 import { getMarketplaceStats } from "../marketplace";
+import { getAuctionStats } from "../auctions";
 
 // Bookings in these states represent real, recognised revenue -- unlike
 // PENDING_PAYMENT (not yet paid) or CANCELLED/EXPIRED (never collected).
@@ -140,6 +141,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
     creditEconomy,
     marketplace,
     wallet,
+    auctions,
   ] = await Promise.all([
     getFinancial(),
     getBookingPipeline(),
@@ -150,6 +152,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
     getOutstandingCreditLiability(),
     getMarketplaceStats(),
     getWalletLiability(),
+    getAuctionStats(),
   ]);
 
   const aiInsights = await generateAiInsights({
@@ -162,6 +165,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
     creditEconomy,
     marketplace,
     wallet,
+    auctions,
   });
 
   return {
@@ -174,6 +178,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
     creditEconomy,
     marketplace,
     wallet,
+    auctions,
     aiInsights,
     generatedAt: new Date().toISOString(),
   };

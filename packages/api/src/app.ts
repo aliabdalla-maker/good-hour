@@ -24,6 +24,7 @@ import erpModule from "./modules/erp";
 import creditsModule from "./modules/credits";
 import walletModule from "./modules/wallet";
 import marketplaceModule from "./modules/marketplace";
+import auctionsModule from "./modules/auctions";
 
 export function buildApp() {
   const app = Fastify({
@@ -83,6 +84,7 @@ export function buildApp() {
   app.register(creditsModule);
   app.register(walletModule);
   app.register(marketplaceModule);
+  app.register(auctionsModule);
 
   // NB: domain-event handlers (notifications) are registered and drained in the
   // worker via the transactional outbox — not in-process here. The api only

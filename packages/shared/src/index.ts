@@ -17,3 +17,4 @@ export * from "./schemas/erp";
 export * from "./schemas/credits";
 export * from "./schemas/wallet";
 export * from "./schemas/marketplace";
+export * from "./schemas/auctions";

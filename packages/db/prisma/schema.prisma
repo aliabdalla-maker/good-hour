@@ -87,6 +87,8 @@ enum AgentType {
   IMAGE
   /// Quotes fair exchange rates between time-credit categories.
   EXCHANGE
+  /// Decides whether and how much to counter-bid in an hourly auction.
+  AUCTION
 }
 
 enum NotificationChannel {
@@ -182,8 +184,10 @@ model User {
   walletEntries   WalletLedgerEntry[]
   walletTopUps    WalletTopUp[]
   marketListings  MarketplaceListing[]
-  ordersAsBuyer   MarketplaceOrder[]   @relation("MarketplaceOrdersAsBuyer")
-  ordersAsSeller  MarketplaceOrder[]   @relation("MarketplaceOrdersAsSeller")
+  ordersAsBuyer   MarketplaceOrder[]    @relation("MarketplaceOrdersAsBuyer")
+  ordersAsSeller  MarketplaceOrder[]    @relation("MarketplaceOrdersAsSeller")
+  auctionsCreated MarketplaceAuction[]  @relation("AuctionsCreated")
+  auctionBids     AuctionBid[]          @relation("AuctionBids")
 
   @@map("users")
 }
@@ -598,11 +602,11 @@ model CreditLedgerEntry {
   note               String?
   createdAt          DateTime        @default(now())
 
-  @@index([userId, category])
-  @@index([correlationId])
   /// One grant per paid purchase, enforced by the database rather than by the
   /// `grantedAt` check -- see the note on wallet_ledger_entries.
   @@unique([creditPurchaseId, kind])
+  @@index([userId, category])
+  @@index([correlationId])
   @@map("credit_ledger_entries")
 }
 
@@ -681,17 +685,15 @@ model WalletLedgerEntry {
   currency String          @default("GBP")
   kind     WalletEntryKind
 
-  topUpId        String?
-  topUp          WalletTopUp? @relation(fields: [topUpId], references: [id])
-  relatedOrderId String?
+  topUpId            String?
+  topUp              WalletTopUp? @relation(fields: [topUpId], references: [id])
+  relatedOrderId     String?
   counterpartyUserId String?
   /// Groups the buyer debit, seller credit and fee rows of one order.
-  correlationId  String?
-  note           String?
-  createdAt      DateTime  @default(now())
+  correlationId      String?
+  note               String?
+  createdAt          DateTime     @default(now())
 
-  @@index([userId, createdAt])
-  @@index([correlationId])
   /// DB-enforced idempotency. The webhook handlers commit money in one
   /// transaction and their `creditedAt`/`settledAt` marker in another, so a
   /// crash in between left the marker unset and Stripe's retry (which runs for
@@ -704,6 +706,8 @@ model WalletLedgerEntry {
   /// + SALE_CLAWBACK (seller). One of each per order, never two.
   @@unique([topUpId, kind])
   @@unique([relatedOrderId, kind])
+  @@index([userId, createdAt])
+  @@index([correlationId])
   @@map("wallet_ledger_entries")
 }
 
@@ -790,7 +794,8 @@ model MarketplaceListing {
   createdAt   DateTime                 @default(now())
   updatedAt   DateTime                 @updatedAt
 
-  orders MarketplaceOrder[]
+  orders   MarketplaceOrder[]
+  auctions MarketplaceAuction[]
 
   @@index([kind, status])
   @@index([category])
@@ -806,15 +811,15 @@ model MarketplaceOrder {
   sellerId  String
   seller    User               @relation("MarketplaceOrdersAsSeller", fields: [sellerId], references: [id])
 
-  quantity  Int     @default(1)
+  quantity       Int     @default(1)
   /// Price per unit at the time of order, so later listing edits can't
   /// retroactively change what someone was charged.
-  unitPrice Decimal @db.Decimal(12, 2)
-  subtotal  Decimal @db.Decimal(12, 2)
+  unitPrice      Decimal @db.Decimal(12, 2)
+  subtotal       Decimal @db.Decimal(12, 2)
   /// 1% charged to the buyer on top.
-  buyerFee  Decimal @db.Decimal(12, 2)
+  buyerFee       Decimal @db.Decimal(12, 2)
   /// 1% deducted from the seller's proceeds.
-  sellerFee Decimal @db.Decimal(12, 2)
+  sellerFee      Decimal @db.Decimal(12, 2)
   /// buyerFee + sellerFee -- the platform's take (2% of subtotal).
   platformFee    Decimal @db.Decimal(12, 2)
   buyerTotal     Decimal @db.Decimal(12, 2)
@@ -833,4 +838,105 @@ model MarketplaceOrder {
   @@index([buyerId, createdAt])
   @@index([sellerId, createdAt])
   @@map("marketplace_orders")
+}
+
+// ---------------------------------------------------------------------------
+// Hourly auctions for products & services
+//
+// Both directions, chosen per auction:
+//  - FORWARD: a seller offers N hours and buyers bid the price UP. Highest wins.
+//  - REVERSE: a buyer needs N hours and sellers bid the price DOWN. Lowest wins.
+//
+// Everything is priced PER HOUR and multiplied by `hours`, so a 3-hour
+// consulting auction and a 3-hour van hire compare on the same axis.
+// ---------------------------------------------------------------------------
+
+enum AuctionKind {
+  FORWARD
+  REVERSE
+}
+
+enum AuctionStatus {
+  OPEN
+  /// Clock ran out and a winner was picked, but money hasn't moved yet.
+  CLOSED
+  /// Winner paid; this is terminal.
+  SETTLED
+  /// Closed with no bid that met the reserve.
+  UNMET
+  CANCELLED
+}
+
+enum AuctionBidStatus {
+  ACTIVE
+  OUTBID
+  WON
+  LOST
+  WITHDRAWN
+}
+
+model MarketplaceAuction {
+  id          String              @id @default(cuid())
+  kind        AuctionKind
+  /// Seller for FORWARD, buyer for REVERSE -- whoever opened it.
+  createdById String
+  createdBy   User                @relation("AuctionsCreated", fields: [createdById], references: [id])
+  /// Set when a FORWARD auction is raised from existing inventory.
+  listingId   String?
+  listing     MarketplaceListing? @relation(fields: [listingId], references: [id])
+
+  title       String
+  description String
+  category    String
+  /// How many hours are being auctioned. Bids are per hour; total = bid x hours.
+  hours       Decimal @db.Decimal(10, 2)
+
+  /// FORWARD: the minimum per-hour price the seller will accept.
+  /// REVERSE: the maximum per-hour price the buyer will pay.
+  /// Either way a bid that fails to clear it cannot win -- the auction goes UNMET.
+  reservePerHour Decimal @db.Decimal(12, 2)
+  currency       String  @default("GBP")
+
+  closesAt     DateTime
+  status       AuctionStatus @default(OPEN)
+  winningBidId String?       @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bids AuctionBid[]
+
+  @@index([status, closesAt])
+  @@index([kind, status])
+  @@map("marketplace_auctions")
+}
+
+model AuctionBid {
+  id        String             @id @default(cuid())
+  auctionId String
+  auction   MarketplaceAuction @relation(fields: [auctionId], references: [id])
+  bidderId  String
+  bidder    User               @relation("AuctionBids", fields: [bidderId], references: [id])
+
+  amountPerHour Decimal @db.Decimal(12, 2)
+  /// amountPerHour x auction.hours, stored so a later hours edit can't restate
+  /// what someone bid.
+  totalAmount   Decimal @db.Decimal(12, 2)
+
+  /// Proxy ceiling. When set, this bidder's agent may keep counter-bidding on
+  /// their behalf up to (FORWARD) or down to (REVERSE) this figure without
+  /// asking again. Null means a one-shot manual bid.
+  maxPerHour    Decimal? @db.Decimal(12, 2)
+  /// True when an agent placed this bid rather than a human clicking.
+  isAgentPlaced Boolean  @default(false)
+  /// When true and this bid wins, settlement charges the wallet with no human
+  /// confirmation. Opt-in per bid: full autonomy is a choice, not the default.
+  autoSettle    Boolean  @default(false)
+
+  status    AuctionBidStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+
+  @@index([auctionId, amountPerHour])
+  @@index([bidderId, createdAt])
+  @@map("auction_bids")
 }
