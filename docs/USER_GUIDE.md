@@ -86,8 +86,74 @@ description of the running app.
    directly if you need to audit a specific decision (no admin UI for this
    yet).
 
+## Time wallet — buying, gifting and exchanging hours
+
+`/wallet`, once you're signed in. An hour you buy is yours to keep: it isn't
+tied to one booking, one date, or one listing.
+
+### Buying hours
+
+1. Go to **`/wallet`** → **Buy hours**.
+2. Pick a category (🏨 Room / 🚗 Car / 🧭 Travel) and how many hours (quarter-hour
+   increments).
+3. The price is the live *average* hourly rate for that category, plus the
+   standard 1% buyer fee. You'll see the total before confirming.
+4. Complete the card payment. **Hours appear in your wallet once the payment
+   clears, not when you click buy** — if you abandon checkout, nothing is
+   charged and nothing is credited.
+
+Hours are held per category. Room hours book rooms; car hours book cars. To
+move value between them, use Exchange (below).
+
+### Spending hours on a booking
+
+On any listing page, if you hold hours in that listing's category, a **Use time
+credits** box appears above the booking button. Enter how many hours to apply:
+
+- You can apply at most the number of hours you're booking — a credit buys an
+  hour, it isn't a percentage discount.
+- Only the remainder is charged to your card. If credits cover the whole
+  booking, it's **confirmed immediately** with no payment step.
+- **Cancel, or let an unpaid booking expire, and your hours come back.** You
+  don't lose them by not completing payment.
+
+### Gifting hours
+
+**`/wallet` → Gift hours.** Enter the recipient's account email, the bucket, and
+how many hours. Gifts are **free** — no platform fee on a transfer. Useful for
+family, or for a business handing hours to employees.
+
+The recipient's wallet values the gifted hours at what *you* paid for them, not
+today's market price.
+
+### Exchanging hours across categories
+
+**`/wallet` → Exchange.** Choose a From and To bucket and the hours to convert,
+then **Get quote**.
+
+The rate is anchored on the real average prices of live listings, so dearer
+hours buy more cheap ones — e.g. 4 hours of rooms (~£30/hr) converts to roughly
+11 hours of cars (~£10.75/hr). An AI agent may adjust that anchor slightly for
+demand, and it shows you its reasoning and confidence. A **1% commission** is
+taken in hours of the destination bucket, so you give up about 1% of value on
+an exchange.
+
+If a category has no active listings, the exchange is refused rather than
+quoted at a made-up rate.
+
+### Reading your history
+
+The **History** table at the bottom of `/wallet` is the complete record — every
+purchase, redemption, gift, exchange and refund, with the counterparty where
+relevant. Nothing is ever edited or deleted from it; corrections appear as new
+rows.
+
 ## The 1% fee, plainly
 
 Every booking splits a 2% platform fee in half: the traveller pays subtotal
 + 1%, the supplier receives subtotal − 1%. It's shown on the booking screen,
 the receipt, and the browse page footer before you commit to anything.
+
+The same 1%-each-side rule applies to trading, not just booking: buying time
+credits carries a 1% buyer fee, and exchanging credits between categories
+carries a 1% commission. **Gifting is free.**

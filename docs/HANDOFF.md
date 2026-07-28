@@ -61,6 +61,14 @@ pricing, offer negotiation) with a full decision audit trail.
 - Contact email/company footer is live (`admin@softwareequality.com`,
   Equality Software Ltd, Co. No. 15006381) — pulled from
   `www.softwareequality.com` verbatim, not fabricated.
+- **Time-credit economy is live** (`modules/credits`, `/wallet`). Buy hours with
+  money, redeem them against a booking, gift them to another account, or
+  exchange them across categories at an AI-quoted rate. The 1%-buyer/1%-seller
+  commission now covers credit trades as well as bookings, via
+  `computeTradeFee`. See `ARCHITECTURE.md` § Time-credit economy for the three
+  design decisions that carry the weight, and `OPERATIONS.md` for the ledger
+  reconciliation queries — especially the "negative balance" integrity check,
+  which should always return zero rows.
 - **ERP console** at `/admin/erp` is restricted to a single hardcoded address
   (`ERP_ADMIN_EMAIL` in `packages/shared/src/enums.ts`), enforced server-side
   by the `requireEmail` guard — *not* the broader `ADMIN` role. Email lookups
@@ -102,6 +110,20 @@ Two gotchas worth knowing if you ever need to read the old Railway data:
 - Smoobu integration is real and HMAC-signed, but the connected Smoobu
   account contains only one placeholder property with no usable rate data —
   the code path is tested, there's just nothing meaningful to import yet.
+- **Credit top-ups have no card UI yet.** `POST /credits/purchase` creates a
+  real Stripe intent and returns a `clientSecret`, but `/wallet` doesn't mount
+  Stripe Elements — so the page tells the user to complete payment rather than
+  implying the hours have landed. Wiring Elements there is the obvious next
+  step; the server side is finished and the webhook grant path is tested.
+- **Peer-to-peer credit sale/auction isn't built.** Gifting (free) and
+  cross-category exchange (1%) exist. Selling hours to another user *for money*
+  is where the 1%-both-sides rule gets its fullest expression, and it's the
+  natural next feature — `computeTradeFee` already returns both sides.
+- Credit `unitValue` is a weighted average over inflows, rounded to 2dp. On
+  very small balances that rounding shows up as a few pence of drift in the
+  wallet's estimated value. It's cosmetic (the hours themselves are exact), but
+  it's why the exchange fee measures as ~0.95% rather than exactly 1.00% on a
+  4-hour test.
 
 ## If you're picking this up to keep building
 

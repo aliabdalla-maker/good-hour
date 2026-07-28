@@ -17,8 +17,78 @@ Both `api` and `worker` run via `tsx` (not a `tsc` build) even in the Docker ima
 ## Deviations from the original plan (and why)
 
 - **Stripe webhooks are processed synchronously** in the `POST /payments/webhook` handler, not via the `webhookProcess` BullMQ queue the plan sketched out. Signature verification + a couple of DB writes is fast and idempotent; queuing it added a queue for no real benefit, so that queue was dropped.
-- **Notifications are in-process**, subscribing directly to the `domainEvents` `EventEmitter` inside the `api` process, console-logging "sent" emails. The plan described notifications running in the `worker` process, but the domain event bus is same-process only (a plain `EventEmitter`) — wiring cross-process delivery would need routing these through Redis/BullMQ too, which isn't justified yet at this scale. Swap in a real provider (Resend) inside `modules/notifications/service.ts` without touching the event bus.
+- **Domain events go through a transactional outbox, not an in-process bus.** `domainEvents.publish()` writes an `OutboxEvent` row in the same transaction as the business change; a relay in the `worker` (`startOutboxRelay()`) picks rows up and dispatches to handlers with retries. This replaced an earlier fire-and-forget `EventEmitter` that lost events on restart. The `api` process only ever *publishes* — handlers (notifications) are registered and run in the `worker`. Swap in a real provider (Resend) inside `modules/notifications/service.ts` without touching the outbox.
 - **`supplierRatingAvg` is now wired** from real `Review` data (`reviews/service.ts#getSupplierRatingAvg`, averaged across all of a supplier's rooms) — see `offerEvaluation.processor.ts`. `roomDistanceKm` is still always `null`; it needs a geocode-on-write step for `Property` that isn't implemented.
+
+## Module map (`packages/api/src/modules/*`)
+
+Each is a Fastify plugin exposing a public `index.ts`; cross-module access is
+expected to go through that barrel rather than a deep import.
+
+**This is a convention, not an enforced rule.** The original plan called for an
+ESLint `no-restricted-imports` guard and it was never actually added — there is
+no such rule in `eslint.config.mjs`. Nothing currently stops a deep import into
+another module's internals, so the boundary holds only as long as reviewers
+watch for it. Adding the rule is a genuine, small, unstarted improvement.
+
+| Module | Owns | Route prefix |
+|---|---|---|
+| `auth` | Users, sessions, JWT cookie | `/auth` |
+| `listings` | Property, Room, rate rules | `/listings` |
+| `search` | Availability search + ranking | `/search` |
+| `booking` | Slots, Booking lifecycle, expiry | `/bookings` |
+| `bidding` | BookingRequest, SupplierOffer | `/requests`, `/offers` |
+| `payments` | Stripe intents, webhook, refunds | `/payments` |
+| `credits` | Time-credit ledger, wallet, exchange | `/credits` |
+| `pricing-agent` | Dynamic rate recommendation | `/pricing` |
+| `negotiation-agent` | Offer ranking (worker-invoked) | — |
+| `assistant` | Tool-calling concierge | `/assistant` |
+| `notifications` | In-app/email/SMS + campaigns | `/notifications` |
+| `reviews` / `messages` / `verification` | Trust & comms | respective |
+| `sourcing` | URL/feed/Smoobu listing import | `/sourcing` |
+| `crm` | Admin customer console | `/crm` |
+| `erp` | Owner-only financial/ops overview | `/erp` |
+| `image-agent` | Listing photo generation | `/image-agent` |
+| `agent-log` | Shared AgentDecisionLog helper | — |
+
+## Time-credit economy (`modules/credits`)
+
+A purchased hour is a transferable asset, not a prepayment. Three design
+decisions carry the weight:
+
+**The wallet has no balance column.** A balance is always `SUM(hours)` over
+the append-only `CreditLedgerEntry` table. The alternative — a stored balance —
+turns a concurrency bug into permanently wrong state that no later correction
+can explain. Here the only failure mode is contention, and it's solvable.
+
+**Debits run in a `Serializable` transaction whose non-negative check happens
+*after* the insert.** Checking first would reintroduce the read-then-write gap
+the isolation level exists to close. Two concurrent spends of the same hours
+therefore cannot both commit; the loser gets a retryable 409 (either
+`INSUFFICIENT_CREDITS` from the post-write balance check, or `CREDIT_CONFLICT`
+from a Postgres serialization abort — both are handled).
+
+**Credits are category-scoped.** A hotel hour and a chauffeur hour are not
+interchangeable at par; crossing categories goes through `exchangeAgent`, whose
+rate is anchored on the ratio of real average listing prices. The model may
+adjust that anchor by at most ±25%, clamped server-side — the same rule the
+pricing agent follows for host min/max, and for the same reason: a hallucinated
+number must not be able to destroy value in someone's wallet.
+
+Two subtleties that are easy to get wrong and are load-bearing:
+
+- Destination hours on an exchange are priced off the **gross** conversion, not
+  the post-fee hours. Dividing by net inflates the unit value by exactly the
+  commission and hands it back, making the fee cosmetic. (This shipped wrong
+  once and was caught by testing the money, not the intent.)
+- `Booking.totalAmount` stays **gross** with `creditValueApplied` recorded
+  separately, so receipts, CRM lifetime spend and ERP revenue keep their
+  meaning. Cash actually charged is `totalAmount − creditValueApplied`, on
+  `Payment.amount`.
+
+Gifts (`TRANSFER_IN`/`OUT`) are free; only priced trades carry the 1%/1%
+commission, via `computeTradeFee` in `@gihtcx/shared` — which delegates to the
+booking fee maths so there is one rounding rule everywhere.
 
 ## A2B / B2A autonomy
 

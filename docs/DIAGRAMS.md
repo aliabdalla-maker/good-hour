@@ -14,11 +14,13 @@ flowchart LR
     Traveller((Traveller))
     Supplier((Supplier / Host))
     Admin((Admin))
+    Owner((Owner-operator))
     Pricing[["🤖 Pricing Agent"]]
     Negotiation[["🤖 Negotiation Agent"]]
     Assistant[["🤖 Assistant Agent"]]
+    Exchange[["🤖 Exchange Agent"]]
     Stripe{{Stripe}}
-    OpenAI{{OpenAI}}
+    LLM{{"Groq (OpenAI-compatible)"}}
 
     Traveller --> UC1[Browse / search listings]
     Traveller --> UC2[Book instantly & pay]
@@ -42,15 +44,32 @@ flowchart LR
     Admin --> UC17[Manage CRM: stage, tags, notes]
     Admin --> UC18[Audit agent decisions]
 
+    Owner --> UC24[View ERP: P&L, payouts, liability]
+    Owner --> UC18
+
+    Traveller --> UC19[Buy time credits]
+    Traveller --> UC20[Redeem credits on a booking]
+    Traveller --> UC21[Gift credits to someone]
+    Traveller --> UC22[Exchange credits across categories]
+    Traveller --> UC23[View wallet & ledger history]
+
     UC2 --> Stripe
     UC4 --> Stripe
+    UC19 --> Stripe
     Pricing -.suggests rate.-> UC2
-    Pricing --> OpenAI
+    Pricing --> LLM
     Negotiation -.ranks offers.-> UC3
-    Negotiation --> OpenAI
+    Negotiation --> LLM
     Assistant -.answers / navigates.-> UC8
-    Assistant --> OpenAI
+    Assistant --> LLM
+    Exchange -.quotes fair rate.-> UC22
+    Exchange --> LLM
+    UC20 -.reduces cash due.-> UC2
 ```
+
+Note `Owner-operator` is not a role — it is a single hard-coded email
+(`ERP_ADMIN_EMAIL`), enforced server-side by the `requireEmail` guard. Every
+other `Admin` is denied the ERP console.
 
 ## 2. Sequence: instant booking + payment
 
@@ -180,7 +199,111 @@ sequenceDiagram
     end
 ```
 
-## 6. Class diagram — core domain model
+## 6. Sequence: buying time credits (credits granted only on payment)
+
+The wallet is credited from the **webhook**, never from the request that
+started checkout — otherwise abandoning payment would hand out free hours.
+
+```mermaid
+sequenceDiagram
+    actor T as Traveller
+    participant Web as Next.js Web
+    participant API as Fastify API
+    participant DB as Postgres
+    participant S as Stripe
+
+    T->>Web: /wallet → "Buy 4 ROOM hours"
+    Web->>API: POST /credits/purchase {category, hours}
+    API->>DB: mean baseHourlyRate of ACTIVE rooms in category
+    Note over API: computeTradeFee(unitValue × hours)<br/>subtotal + 1% buyer fee
+    API->>DB: INSERT CreditPurchase (status PENDING)
+    API->>S: paymentIntents.create(metadata.creditPurchaseId)
+    API->>DB: store stripePaymentIntentId
+    API-->>Web: {total, clientSecret}
+    Note over Web: wallet balance is still unchanged here
+
+    T->>S: completes card payment
+    S->>API: POST /payments/webhook (payment_intent.succeeded)
+    Note over API: routes on metadata.creditPurchaseId —<br/>without it this would 404 on the Payment table
+    API->>DB: grantedAt set? → return (idempotent, Stripe retries)
+    API->>DB: INSERT CreditLedgerEntry (+hours, kind PURCHASE)
+    API->>DB: CreditPurchase → SUCCEEDED, grantedAt = now
+    API->>DB: INSERT OutboxEvent credits.purchased
+    API-->>S: 200
+```
+
+## 7. Sequence: redeeming credits on a booking
+
+Credits cut the **cash** due. The supplier is still paid in full; the platform
+settles the difference from the liability it took on when the hours were sold.
+
+```mermaid
+sequenceDiagram
+    actor T as Traveller
+    participant API as Fastify API
+    participant Ledger as credits/ledger
+    participant DB as Postgres
+    participant S as Stripe
+
+    T->>API: POST /bookings {roomId, times, redeemCreditHours: 4}
+    API->>DB: room + availability check
+    Note over API: reject if redeem > hours booked —<br/>a credit buys an hour, not a discount
+    API->>Ledger: getBalanceFor(user, category)
+    API->>DB: hold slots + INSERT Booking<br/>(totalAmount stays GROSS,<br/>creditValueApplied recorded separately)
+
+    API->>Ledger: applyLedgerWrites([-4h REDEEM])
+    Note over Ledger: Serializable txn; balance checked<br/>AFTER insert so concurrent spends<br/>cannot both commit
+    alt debit loses the race
+        Ledger-->>API: 409 INSUFFICIENT_CREDITS
+        API->>DB: releaseExpiredReservation (frees slots)
+        API-->>T: 409 — nothing charged, nothing held
+    else debit succeeds
+        Note over API: cashDue = travellerTotal − creditValueApplied
+        alt cashDue > 0
+            API->>S: paymentIntents.create(cashDue)
+            API-->>T: clientSecret → checkout
+        else fully credit-funded
+            API->>DB: Booking → CONFIRMED, slots → BOOKED
+            Note over API: nothing to charge, so don't park it<br/>in PENDING_PAYMENT for the expiry job to kill
+            API-->>T: confirmed immediately
+        end
+    end
+```
+
+On cancellation **or** unpaid expiry, `refundRedeemedCredits(bookingId)` returns
+the hours (idempotent — it no-ops if a REFUND row already exists).
+
+## 8. Sequence: exchanging credits across categories
+
+```mermaid
+sequenceDiagram
+    actor T as Traveller
+    participant API as Fastify API
+    participant Ag as exchangeAgent
+    participant LLM as Groq
+    participant DB as Postgres
+
+    T->>API: GET /credits/exchange-quote?from=ROOM&to=CAR&hours=4
+    API->>Ag: quoteExchange
+    Ag->>DB: mean ACTIVE rate per category
+    Note over Ag: marketRate = fromRate / toRate<br/>(anchored on real money)
+    Ag->>LLM: forced tool call quote_exchange_rate
+    alt model answers
+        LLM-->>Ag: {adjustmentFactor, reasoning, confidence}
+        Note over Ag: clamped to ±25% server-side —<br/>never trust the model with someone's wallet
+    else timeout / error / no key
+        Note over Ag: fall back to pure market rate
+    end
+    Ag->>DB: INSERT AgentDecisionLog (EXCHANGE)
+    Ag-->>T: {rate, hoursOut, feeHours, reasoning}
+
+    T->>API: POST /credits/exchange {from, to, hours}
+    Note over API: quote is RE-FETCHED, never taken<br/>from the client — a stale or edited<br/>favourable rate must not be replayable
+    API->>DB: applyLedgerWrites([−hours EXCHANGE_OUT, +hoursOut EXCHANGE_IN])
+    Note over API: destination hours priced off the GROSS<br/>conversion, so the 1% commission is real<br/>(dividing by net would refund it)
+```
+
+## 9. Class diagram — core domain model
 
 ```mermaid
 classDiagram
@@ -250,6 +373,25 @@ classDiagram
     class CrmNote {
         +String body
     }
+    class CreditLedgerEntry {
+        +ListingCategory category
+        +Decimal hours "signed: + credit, − debit"
+        +CreditEntryKind kind
+        +Decimal unitValue "money per hour at write time"
+        +String correlationId "ties both halves of a transfer/exchange"
+        +String relatedBookingId
+        +String counterpartyUserId
+    }
+    class CreditPurchase {
+        +ListingCategory category
+        +Decimal hours
+        +Decimal unitValue
+        +Decimal subtotal
+        +Decimal buyerFee "1%"
+        +Decimal total
+        +CreditPurchaseStatus status
+        +DateTime grantedAt "idempotency guard for Stripe retries"
+    }
 
     User "1" --> "*" Property : supplierId
     Property "1" --> "*" Room
@@ -267,9 +409,22 @@ classDiagram
     Booking "1" --> "*" AvailabilitySlot
     User "1" --> "*" CrmNote
     User "1" --> "*" AgentDecisionLog : (via subjectId, loose ref)
+    User "1" --> "*" CreditLedgerEntry
+    User "1" --> "*" CreditPurchase
+    CreditPurchase "1" --> "*" CreditLedgerEntry : grants
+    Booking "1" --> "*" CreditLedgerEntry : (via relatedBookingId, loose ref)
 ```
 
-## 7. Software architecture (container view)
+`CreditLedgerEntry` is **append-only and has no balance column** — a balance is
+always `SUM(hours)` for a `(userId, category)` pair. Nothing in that table is
+ever updated or deleted; corrections are new rows.
+
+`Booking.creditHoursRedeemed` / `creditValueApplied` record what credits
+covered. `totalAmount` stays **gross** so receipts, CRM lifetime spend and ERP
+revenue keep their existing meaning; the cash actually charged lives on
+`Payment.amount`.
+
+## 10. Software architecture (container view)
 
 ```mermaid
 flowchart TB

@@ -75,6 +75,50 @@ forms make it easy to paste a trailing newline, and Stripe rejects a
 whitespace-contaminated webhook secret outright with an error that is
 otherwise indistinguishable from a wrong secret.
 
+### Time-credit economy: reconciling the ledger
+
+The wallet has no balance column — every balance is a `SUM` over
+`credit_ledger_entries`. That makes these queries authoritative, not a cache.
+
+```sql
+-- Per-user, per-category balances (the same thing /credits/wallet returns)
+select "userId", category, sum(hours) as balance
+from credit_ledger_entries
+group by "userId", category
+having sum(hours) <> 0
+order by balance desc;
+
+-- Total outstanding liability: hours sold but not yet redeemed
+select sum(hours) as outstanding_hours,
+       sum(hours * "unitValue") as outstanding_value
+from credit_ledger_entries;
+
+-- Any negative balance is a BUG, not a business state. Should always be empty.
+select "userId", category, sum(hours) as balance
+from credit_ledger_entries
+group by "userId", category
+having sum(hours) < 0;
+```
+
+That last query is the single most useful integrity check in the system. The
+ledger's `Serializable` debit path exists specifically to keep it empty; if it
+ever returns a row, stop and investigate before touching anything else.
+
+```sql
+-- Both halves of a transfer/exchange share a correlationId. Each pair should
+-- net to ~0 hours for a transfer, and to the fee for an exchange.
+select "correlationId", array_agg(kind), sum(hours)
+from credit_ledger_entries
+where "correlationId" is not null
+group by "correlationId";
+
+-- Purchases that took money but never granted hours (should be empty;
+-- pending ones are just abandoned checkouts).
+select id, "userId", hours, status, "createdAt"
+from credit_purchases
+where status = 'SUCCEEDED' and "grantedAt" is null;
+```
+
 ### Checking whether an AI agent is really calling the model or on fallback
 
 ```sql
@@ -83,10 +127,21 @@ from agent_decision_logs
 order by "createdAt" desc limit 20;
 ```
 
-`modelUsed` starting with `fallback-` (e.g. `fallback-static-rate`,
-`fallback-lowest-price`) means OpenAI errored, timed out, or has no key
-configured for that call — check billing/quota. The assistant's `/assistant/chat`
-response also carries `aiPowered: boolean` for the same purpose.
+`modelUsed` starting with `fallback-` (`fallback-static-rate`,
+`fallback-lowest-price`, `fallback-market-rate`) means the provider errored,
+timed out, or has no key configured for that call. The assistant's
+`/assistant/chat` response also carries `aiPowered: boolean` for the same
+purpose.
+
+Expect a large historical block of `fallback-static-rate` rows: they predate
+the switch from the (quota-exhausted) OpenAI account to Groq. Judge health by
+the *recent* rows, not the lifetime split:
+
+```sql
+select "modelUsed", count(*), max("createdAt") as last_seen
+from agent_decision_logs
+group by "modelUsed" order by last_seen desc;
+```
 
 ## Incident playbooks
 
@@ -140,6 +195,52 @@ select status, count(*) from outbox_events group by status;
 - Rows stuck in `PROCESSING`: the relay auto-reclaims anything untouched
   for >60s on its next tick — if it's been longer than that and still
   stuck, the worker process likely crashed mid-dispatch; restart it.
+
+### A user says they paid for time credits but their wallet is empty
+
+Credits are granted by the **webhook**, not by the request that started
+checkout — so the gap is almost always webhook delivery, not the ledger.
+
+1. Did the payment actually succeed? Find it in Stripe by amount/customer and
+   check the intent has `metadata.creditPurchaseId`. No metadata means the
+   intent was created by the *booking* path, not a credit top-up.
+2. Is the purchase row still `PENDING`?
+   `select id, status, "grantedAt" from credit_purchases where "userId" = '…';`
+   `PENDING` + a succeeded Stripe intent = the webhook never landed. Replay it
+   from the Stripe dashboard ("Resend") — granting is idempotent on
+   `grantedAt`, so a replay cannot double-credit.
+3. `SUCCEEDED` with a null `grantedAt` should be impossible (they're written
+   together). If you see it, the ledger insert threw after the status update —
+   investigate before hand-fixing.
+4. Never insert a ledger row by hand to "fix" a balance without a matching
+   `creditPurchaseId` or `note`. The ledger is the audit trail; an
+   unattributed row makes the liability figure unexplainable.
+
+### A wallet shows a negative balance
+
+This should be unreachable — the debit path runs in a `Serializable`
+transaction that asserts a non-negative balance *after* insert, so a debit that
+would overdraw is rolled back. If the integrity query in "reconciling the
+ledger" returns a row:
+
+1. Don't paper over it with a correcting credit yet — find the debit first:
+   `select * from credit_ledger_entries where "userId" = '…' and category = '…' order by "createdAt";`
+2. Check whether the writes went through `applyLedgerWrites` at all. A direct
+   `prisma.creditLedgerEntry.create` somewhere would bypass the balance
+   assertion entirely; that's the bug, not the data.
+3. Only then write a correcting entry, with a `note` explaining it.
+
+### The 1% exchange commission is earning nothing
+
+Symptom: `credit_ledger_entries` shows `EXCHANGE_IN`/`EXCHANGE_OUT` pairs, but
+a wallet's total estimated value is unchanged across the swap.
+
+This was a real bug once. The destination hours must be priced off the **gross**
+conversion (`hoursOut + feeHours`); dividing the surrendered value by the *net*
+`hoursOut` inflates the unit value by exactly the fee and refunds it, making the
+commission cosmetic. Check `exchangeCredits` in
+`packages/api/src/modules/credits/service.ts`. A correct exchange loses ~1% of
+value; a 0% loss means the regression is back.
 
 ### Migration drift caught in CI
 
