@@ -160,10 +160,18 @@ HTTPS.
 **Cost**: the `free` DB/Redis and `starter` services (~$7/mo each) are fine to
 start; upgrade the database plan before real traffic (free Postgres expires).
 
-## Alternative: Railway / Fly.io
+## Alternative: other container hosts
 
-Both can also build the three Dockerfiles and provide managed Postgres + Redis.
-Same shape as Render; the `render.yaml` maps directly to their configs.
+Any host that builds a Dockerfile and offers managed Postgres + Redis (Fly.io,
+Railway, etc.) fits the same shape — `render.yaml` maps fairly directly onto
+their configs. Two things to carry across, both of which have caused real
+outages on this project:
+
+- `NEXT_PUBLIC_*` vars are **build-time**, so they must be set on the web
+  service *before* the image is built, and changing one needs a rebuild.
+- Point the web build at a hostname that actually resolves. A pretty API
+  subdomain you haven't provisioned yet will break every API call in the
+  browser while the API itself looks perfectly healthy.
 
 ## Firewall
 

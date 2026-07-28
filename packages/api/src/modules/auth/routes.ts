@@ -4,7 +4,7 @@ import { registerSchema, loginSchema, userPublicSchema } from "@gihtcx/shared";
 import { config } from "../../config";
 import { getUserById, loginUser, registerUser, toPublicUser } from "./service";
 
-// web and api are deployed on different Railway subdomains (different sites,
+// web and api are deployed on different hosts (different sites,
 // not just different origins) -- a browser never attaches a SameSite=Lax
 // cookie to a cross-site fetch, so every "authenticated" request would 401
 // regardless of a successful login. "none" (which requires Secure) is the

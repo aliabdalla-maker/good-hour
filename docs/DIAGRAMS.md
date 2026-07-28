@@ -303,9 +303,8 @@ flowchart TB
         Jenkins[Jenkinsfile<br/>mirrors CI/CD]
     end
 
-    subgraph "Deploy targets (pick one)"
-        Render[Render Blueprint<br/>render.yaml]
-        RailwayT[Railway<br/>services + Postgres + Redis]
+    subgraph "Deploy targets"
+        Render[Render Blueprint<br/>render.yaml — LIVE]
         VPS[VPS + Docker Compose<br/>+ Caddy auto-HTTPS]
     end
 
@@ -326,7 +325,6 @@ flowchart TB
     Actions --> GHCR
     GitHub -.-> Jenkins
     GHCR -.-> Render
-    GHCR -.-> RailwayT
     GHCR -.-> VPS
 ```
 

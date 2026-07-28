@@ -8,7 +8,7 @@ import { z } from "zod";
 // already present (e.g. injected by docker-compose) are not overridden.
 loadDotenv({ path: path.resolve(__dirname, "../../../.env") });
 
-// Dashboard env-var forms (Railway, Render, ...) make it easy to paste in a
+// Dashboard env-var forms make it easy to paste in a
 // trailing space or newline without noticing -- Stripe's SDK in particular
 // rejects a whitespace-contaminated webhook secret outright. Trim every
 // credential/secret value so a stray character from copy-pasting can't

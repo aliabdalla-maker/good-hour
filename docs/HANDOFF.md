@@ -18,50 +18,69 @@ pricing, offer negotiation) with a full decision audit trail.
 - **GitHub**: `github.com/aliabdalla-maker/good-hour` (private), branch `main`.
   Push to `main` auto-runs CI (lint/typecheck/test/build + Docker build
   matrix) and CD (publishes `good-hour-{api,web,worker}` images to GHCR).
-- **Deploy config, three ways** (pick the one actually in use — check the
-  next section):
+- **Deploy config, two ways** (Render is what's actually live):
   - `render.yaml` — Render Blueprint (managed Postgres/Redis, one-click).
-  - Railway — no committed IaC file; deployed via direct CLI commands
-    (`railway up --service <name>`) using a **local, gitignored-but-untracked**
-    `railway.json` that gets its `build.dockerfilePath` swapped per service
-    before each deploy. **This file must stay untracked, not gitignored** —
-    `railway up` respects `.gitignore` by default, so gitignoring it breaks
-    the upload (this bit us once; see git history "un-ignore railway.json").
+    **This is the live deployment.** Auto-deploys on push to `main`.
   - `docker-compose.prod.yml` + `deploy/Caddyfile` — self-hosted VPS path,
     auto-HTTPS, no apex domain (CNAME-only: `www` + `api` subdomains).
 
+  Railway was the live host earlier in the project's history and has been
+  fully decommissioned — see "Migration off Railway" below.
+
 ## Current live state (as of this handoff)
 
-- **Deployed on Railway**, project `good-hour` (id
-  `53564066-69b5-473a-91f3-b3192657aac1`), three services (`api`, `worker`,
-  `web`) plus managed Postgres + Redis. All migrated and seeded.
-  - Temporary URLs (until custom domain is attached):
-    `https://api-production-e6a5b.up.railway.app`,
-    `https://web-production-9d926.up.railway.app`.
-- **Domain `goodhour.shop` is registered at GoDaddy but NOT yet pointed at
-  the app.** GoDaddy's own "Website Builder"/Airo placeholder is still what
-  resolves at the apex and `www`. **Blocker:** `railway domain <custom-domain>`
-  fails with a bare `Unauthorized` via the CLI, even though `whoami`,
-  `status`, and generating Railway-provided subdomains all work fine on the
-  same session — this looks like an account-level restriction on custom
-  domains specifically (not a code or DNS issue). Try attaching the domain
-  from **Railway's dashboard** (Settings → Networking → Custom Domain) on
-  both `web` (→ `www.goodhour.shop`) and `api` (→ `api.goodhour.shop`); if
-  that also fails, it's a Railway support ticket, not an engineering task.
-  Once Railway shows a CNAME target, update GoDaddy DNS (two CNAMEs, no
-  apex — see `DEPLOY.md`) and flip `WEB_ORIGIN` / `API_PUBLIC_URL` /
-  `NEXT_PUBLIC_API_URL` from the temporary Railway URLs to the real domain,
-  then redeploy `web` (build-time var) and restart `api`/`worker` (runtime var).
-- **OpenAI key intermittently hits `429 quota exceeded`** on the configured
-  account — every agent (pricing, negotiation, assistant) has a graceful
-  fallback for this (static rate / lowest-price ranking / keyword reply), so
-  the app never hard-fails, but "is the AI actually running or on fallback"
-  is only visible in `AgentDecisionLog.modelUsed` (`"fallback-*"` vs a real
-  model name) or the assistant reply's `aiPowered` field. Check OpenAI
-  billing if agent quality looks degraded.
+- **Deployed on Render** via `render.yaml`: `goodhour-api`, `goodhour-worker`,
+  `goodhour-web`, plus managed Postgres (`goodhour-db`) and Redis
+  (`goodhour-redis`). Auto-deploys from `main`.
+- **Domain is live**: `goodhour.shop` and `www.goodhour.shop` both serve from
+  Render over HTTPS (root A record → Render's IP, `www` CNAME; apex redirects
+  to `www`). GoDaddy holds DNS.
+- **`api.goodhour.shop` does NOT exist** — no DNS record, no custom domain on
+  `goodhour-api`. It was referenced in `render.yaml` as `NEXT_PUBLIC_API_URL`
+  for a while, which silently broke *every* browser API call in production
+  (search, register, login, booking) because `NEXT_PUBLIC_*` is inlined at
+  build time. The web build now points at `https://goodhour-api.onrender.com`.
+  If you want the pretty subdomain, add the custom domain on `goodhour-api`
+  **and** the matching GoDaddy CNAME **before** pointing the build at it.
+- **LLM provider is Groq, not OpenAI.** The original OpenAI account is out of
+  quota (`429 insufficient_quota`). `OPENAI_BASE_URL=https://api.groq.com/openai/v1`
+  points the OpenAI SDK at Groq; model `openai/gpt-oss-120b`. Note
+  `llama-3.3-70b-versatile` was tried and **fails** on the assistant's
+  multi-tool prompt (`400 Failed to call a function`) despite passing simpler
+  single-tool tests — don't switch to it without re-testing the real payloads.
+  Every agent still has a graceful fallback; "real model or fallback" is
+  visible in `AgentDecisionLog.modelUsed` (`"fallback-*"`) or the assistant's
+  `aiPowered` field.
+- **Stripe is live in test mode** and the webhook is configured against the
+  Render API URL — verified end-to-end (real test-card payment →
+  webhook → booking flipped to `CONFIRMED` with no manual step).
+- **Gemini / "Nano Banana" image generation is blocked** on Google Cloud
+  billing (`limit: 0` on `gemini-2.5-flash-preview-image`) — a hard $0
+  free-tier quota, not a transient rate limit. Listing photos are real static
+  files in `packages/web/public/listings/`, not generated.
 - Contact email/company footer is live (`admin@softwareequality.com`,
   Equality Software Ltd, Co. No. 15006381) — pulled from
   `www.softwareequality.com` verbatim, not fabricated.
+- **ERP console** at `/admin/erp` is restricted to a single hardcoded address
+  (`ERP_ADMIN_EMAIL` in `packages/shared/src/enums.ts`), enforced server-side
+  by the `requireEmail` guard — *not* the broader `ADMIN` role. Email lookups
+  in this app are case-sensitive with no normalisation anywhere, so that
+  constant must match the stored value's exact casing.
+
+## Migration off Railway
+
+Railway (project `good-hour`) hosted this app earlier and is no longer used.
+Before decommissioning, Render's database was verified to be a strict
+superset of Railway's — every model compared by row count *and* by row id,
+with zero ids present on Railway that were missing on Render.
+
+Two gotchas worth knowing if you ever need to read the old Railway data:
+- `DATABASE_URL` on Railway services points at `postgres.railway.internal`,
+  which only resolves **inside** Railway's network. From outside, use the
+  Postgres service's `DATABASE_PUBLIC_URL` (TCP proxy on `*.proxy.rlwy.net`).
+- A comparison script that treats a failed query as "no difference" will
+  happily report "in sync" when it actually connected to nothing. Assert on
+  successful counts, not on the absence of a reported gap.
 
 ## Known gaps (real, not hidden)
 
@@ -72,13 +91,17 @@ pricing, offer negotiation) with a full decision audit trail.
   historically the first thing to break on a disk-constrained dev box — if
   a future session hits `ENOSPC` installing deps, `node:test` (already in
   use, zero extra deps) is the fallback test runner, not vitest.
-- The assistant's tool set is read-only (`search_listings`, `navigate`) —
-  it cannot create bookings, submit reviews, or spend money. That's a
-  deliberate safety boundary, not an oversight; see
+- The assistant can `search_listings`, `navigate`, and `propose_booking` —
+  the last one only *pre-fills* a booking form the user must still confirm.
+  It cannot complete a booking or spend money. That's a deliberate safety
+  boundary, not an oversight; see
   `packages/api/src/modules/assistant/service.ts`'s system prompt.
-- Twilio SMS and the Stripe webhook secret are unconfigured in most
-  environments (optional; features degrade gracefully — see
-  `featureFlags` in `packages/api/src/config.ts`).
+- Twilio SMS is unconfigured (optional; degrades gracefully — see
+  `featureFlags` in `packages/api/src/config.ts`). The Stripe webhook secret
+  **is** configured on Render.
+- Smoobu integration is real and HMAC-signed, but the connected Smoobu
+  account contains only one placeholder property with no usable rate data —
+  the code path is tested, there's just nothing meaningful to import yet.
 
 ## If you're picking this up to keep building
 

@@ -37,40 +37,43 @@ recommended (it creates real demo listings visible to real users).
 
 ### Deploying a code change
 
-**GitHub Actions / Render**: push to `main`. CD publishes new images; Render
-auto-redeploys from the GHCR image if configured to track it, or redeploy
-manually from the Render dashboard.
+**Render** (the live deploy — see `HANDOFF.md`): just push to `main`. Render's
+Blueprint auto-sync rebuilds `goodhour-api`, `goodhour-worker`, and
+`goodhour-web` from `render.yaml`. CI also runs on the same push, and CD
+publishes images to GHCR (not what Render deploys from — Render builds the
+Dockerfiles itself).
 
-**Railway** (current live deploy, see `HANDOFF.md`): no GitHub-linked
-auto-deploy is configured — deploys are pushed from a local checkout via the
-CLI:
+There is no CLI step. To force a rebuild without a code change, use "Manual
+Deploy" on the service in the Render dashboard.
+
+**`goodhour-web` is special: every `NEXT_PUBLIC_*` var is inlined into the JS
+bundle at build time.** Changing one is not a runtime config change — the
+service must be *rebuilt* for it to take effect, and the value that matters is
+whatever was set when the build ran. This has bitten this project hard once
+already: `NEXT_PUBLIC_API_URL` pointed at a hostname with no DNS record, and
+every browser API call in production failed while the API itself was perfectly
+healthy. When debugging "the site can't reach the API", check the value baked
+into the served chunk, not just the dashboard:
 
 ```bash
-railway login              # or --browserless on a headless box (device code)
-# railway.json must exist, untracked, pointing at the right service's Dockerfile:
-#   { "build": { "builder": "DOCKERFILE", "dockerfilePath": "packages/api/Dockerfile" }, ... }
-railway up --service api --detach --json
-railway deployment list --service api --json   # poll for status: BUILDING -> DEPLOYING -> SUCCESS/FAILED
-railway logs <deploymentId> --service api -d   # -d = deployment/build logs (omit -d for runtime logs)
+# find the chunk, then grep it — the URL is NOT in the page HTML
+curl -s https://www.goodhour.shop/search | grep -o '/_next/static/chunks/[^"]*\.js'
+curl -s https://www.goodhour.shop/_next/static/chunks/<chunk>.js | grep -o 'https://[a-z.-]*onrender.com'
 ```
-
-Repeat with `packages/worker/Dockerfile` / `packages/web/Dockerfile` for the
-other two services. **`web` additionally needs its `NEXT_PUBLIC_*` vars set
-on the service *before* deploying** — they're inlined into the JS bundle at
-build time, so changing them requires a rebuild (`railway up` again), not
-just a variable update.
 
 ### Rotating a secret
 
-```bash
-railway variable set KEY=newvalue --service api      # runtime var: restarts, no rebuild
-railway variable set KEY=newvalue --service worker
-# For a NEXT_PUBLIC_* var on web, you must also rebuild:
-railway up --service web --detach --json
-```
+Render dashboard → the service → Environment → edit the value. Runtime vars
+(`STRIPE_SECRET_KEY`, `OPENAI_API_KEY`, …) restart the service; no rebuild.
+A `NEXT_PUBLIC_*` var on `goodhour-web` additionally needs a Manual Deploy.
 
-Never `--json` a command that touches secret values in a place the output
-gets logged/shared — the CLI itself warns raw values are echoed.
+Secrets marked `sync: false` in `render.yaml` are dashboard-managed on
+purpose — the Blueprint declares them but never carries their values.
+
+Note `packages/api/src/config.ts` trims every credential on load. Dashboard
+forms make it easy to paste a trailing newline, and Stripe rejects a
+whitespace-contaminated webhook secret outright with an error that is
+otherwise indistinguishable from a wrong secret.
 
 ### Checking whether an AI agent is really calling the model or on fallback
 
@@ -93,10 +96,13 @@ Expected behaviour: the `booking-expiry` BullMQ job (per-booking, scheduled at
 creation for `reservationExpiresAt`) releases the held `AvailabilitySlot`s and
 flips the booking to `EXPIRED`. If it hasn't:
 
-1. Confirm the `worker` process/service is actually running (`railway status`
-   / check the service is Live, not crashed).
-2. Check Redis is reachable from the worker (`REDIS_URL` correct, private
-   network intact on Railway).
+1. Confirm `goodhour-worker` is actually Live in the Render dashboard, not
+   crashed or suspended. Fastest proof it's alive without opening the
+   dashboard: `select status, count(*) from outbox_events group by status` —
+   a healthy worker leaves ~zero `PENDING` and a recent `processedAt`.
+2. Check Redis is reachable from the worker (`REDIS_URL` correct; the
+   `goodhour-redis` keyvalue service has `ipAllowList: []`, i.e. reachable
+   only from other Render services — that's intentional, not a fault).
 3. Manually run `releaseExpiredReservation(bookingId)`
    (`packages/api/src/modules/booking/service.ts`) via a one-off script if a
    backlog needs clearing immediately.
@@ -107,9 +113,14 @@ flips the booking to `EXPIRED`. If it hasn't:
    endpoint's signing secret in the Stripe dashboard (Developers → Webhooks
    → the `https://<api-domain>/payments/webhook` endpoint) — a mismatch
    fails signature verification silently from the payer's point of view.
-2. Confirm the endpoint URL in Stripe matches the *current* API domain —
-   this breaks silently after any domain/URL change (e.g. moving off the
-   temporary Railway URL onto the real domain) until you update it.
+2. Confirm the endpoint URL in Stripe matches the *current* API domain
+   (`https://goodhour-api.onrender.com/payments/webhook`) — this breaks
+   silently after any domain/host change until you update it in Stripe.
+   Note a signature failure surfaces as a bare **500**, not a 400: Fastify's
+   default handler returns 500 for any uncaught error without a 4xx
+   `statusCode`, so "500" tells you nothing about whether the secret is
+   right. Read the actual Render logs for the `StripeSignatureVerificationError`
+   message — it names the real cause, including whitespace in the secret.
 3. Payment/webhook handling is idempotent — replaying the same event from
    the Stripe dashboard ("Resend") is safe.
 
@@ -146,11 +157,21 @@ install; before retrying, reclaim space first:
 --force`. If ESLint/ts-node-adjacent deps won't fit, the test suite runs on
 Node's built-in `node:test` + `tsx` already — no vitest dependency to fight.
 
-### A Railway deploy fails immediately after a `.gitignore` change
+### The site loads but every API call fails
 
-If `railway up` starts using the default builder (Railpack) instead of the
-Dockerfile you configured, check `railway.json` isn't newly gitignored —
-`railway up` respects `.gitignore` for what it uploads. This exact regression
-happened once (see git history) from an overly broad `git add -A` re-adding
-`railway.json` to `.gitignore` during cleanup. `railway.json` must stay
-**untracked but not ignored**.
+Almost always the build-time API URL, not the API. Check in this order:
+
+1. Is the API itself up? `curl https://goodhour-api.onrender.com/health`.
+2. Does the hostname the *bundle* points at actually resolve?
+   `curl -s "https://dns.google/resolve?name=<host>&type=A"` — a `Status: 3`
+   means NXDOMAIN, i.e. the build is calling a hostname that doesn't exist.
+3. Does CORS allow the site's origin? `curl -i -X OPTIONS <api>/search -H
+   "Origin: https://www.goodhour.shop" -H "Access-Control-Request-Method: GET"`
+   should return `access-control-allow-origin` for that exact origin.
+
+Symptom tell: a *network*-level failure (bad hostname, CORS block) surfaces in
+the UI as the generic fallback copy, because the thrown error isn't an
+`ApiError` with a real HTTP status. A bare "Registration failed" or "couldn't
+complete that search" therefore means the request never got an HTTP response —
+whereas a genuine 4xx renders the API's own message. That distinction is the
+fastest way to tell "API is broken" from "API is unreachable".
