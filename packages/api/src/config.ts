@@ -34,9 +34,6 @@ const envSchema = z.object({
   // Points the OpenAI SDK at an OpenAI-compatible endpoint instead (e.g.
   // Groq's https://api.groq.com/openai/v1) -- unset uses OpenAI itself.
   OPENAI_BASE_URL: optionalTrimmed(),
-  // Google AI Studio key for Gemini image generation ("Nano Banana").
-  GEMINI_API_KEY: optionalTrimmed(),
-  GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
   STRIPE_SECRET_KEY: optionalTrimmed(),
   STRIPE_WEBHOOK_SECRET: optionalTrimmed(),
   // Smoobu (vacation rental channel manager) HMAC API credentials, used to
@@ -66,7 +63,6 @@ export const config = loadConfig();
 export const featureFlags = {
   aiPricingEnabled: Boolean(config.OPENAI_API_KEY),
   aiNegotiationEnabled: Boolean(config.OPENAI_API_KEY),
-  imageGenEnabled: Boolean(config.GEMINI_API_KEY),
   paymentsEnabled: Boolean(config.STRIPE_SECRET_KEY),
   smoobuEnabled: Boolean(config.SMOOBU_API_KEY && config.SMOOBU_API_SECRET),
   emailEnabled: Boolean(config.RESEND_API_KEY),

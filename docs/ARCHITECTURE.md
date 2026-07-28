@@ -48,7 +48,6 @@ watch for it. Adding the rule is a genuine, small, unstarted improvement.
 | `sourcing` | URL/feed/Smoobu listing import | `/sourcing` |
 | `crm` | Admin customer console | `/crm` |
 | `erp` | Owner-only financial/ops overview | `/erp` |
-| `image-agent` | Listing photo generation | `/image-agent` |
 | `agent-log` | Shared AgentDecisionLog helper | — |
 
 ## Time-credit economy (`modules/credits`)

@@ -54,10 +54,20 @@ pricing, offer negotiation) with a full decision audit trail.
 - **Stripe is live in test mode** and the webhook is configured against the
   Render API URL — verified end-to-end (real test-card payment →
   webhook → booking flipped to `CONFIRMED` with no manual step).
-- **Gemini / "Nano Banana" image generation is blocked** on Google Cloud
-  billing (`limit: 0` on `gemini-2.5-flash-preview-image`) — a hard $0
-  free-tier quota, not a transient rate limit. Listing photos are real static
-  files in `packages/web/public/listings/`, not generated.
+- **AI image generation has been removed.** The Gemini / "Nano Banana"
+  integration was blocked by a hard $0 free-tier quota (`limit: 0` on
+  `gemini-2.5-flash-preview-image`) and was dropped rather than left as dead
+  config. The `image-agent` module, `geminiClient`, `GEMINI_*` env vars and the
+  generate button are all gone. Listing photos are static files in
+  `packages/web/public/listings/` or a pasted URL.
+  - `Room.imageIsAiGenerated` survives as a **manual supplier declaration**
+    (browse/search still label it), so a host using an outside tool can be
+    honest about it.
+  - `AgentType.IMAGE` remains in the Prisma enum on purpose: six historical
+    `AgentDecisionLog` rows reference it. Postgres cannot drop an in-use enum
+    value, and deleting audit history to tidy a schema would be the wrong
+    trade. Expect `IMAGE` to appear in the ERP agent-ops table as a closed
+    chapter with no new rows.
 - Contact email/company footer is live (`admin@softwareequality.com`,
   Equality Software Ltd, Co. No. 15006381) — pulled from
   `www.softwareequality.com` verbatim, not fabricated.

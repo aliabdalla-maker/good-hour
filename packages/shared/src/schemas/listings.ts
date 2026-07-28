@@ -32,7 +32,11 @@ export const createRoomSchema = z.object({
   capacity: z.number().int().min(1).max(20),
   amenities: z.array(z.string()).default([]),
   imageUrl: imageUrlValue.optional(),
-  /** True when imageUrl came from the Nano Banana generate button, not a pasted URL. */
+  /**
+   * Supplier's declaration that the photo was AI-generated, so browse/search
+   * can label it. Nothing on the platform generates images any more — this is
+   * now a manual honesty checkbox for a host who used an outside tool.
+   */
   imageIsAiGenerated: z.boolean().default(false),
   baseHourlyRate: z.number().positive(),
   currency: z.string().length(3).default("GBP"),

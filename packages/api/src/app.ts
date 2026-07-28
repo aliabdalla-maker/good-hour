@@ -20,7 +20,6 @@ import verificationModule from "./modules/verification";
 import messagesModule from "./modules/messages";
 import assistantModule from "./modules/assistant";
 import crmModule from "./modules/crm";
-import imageAgentModule from "./modules/image-agent";
 import erpModule from "./modules/erp";
 import creditsModule from "./modules/credits";
 import walletModule from "./modules/wallet";
@@ -75,7 +74,6 @@ export function buildApp() {
   app.register(messagesModule);
   app.register(assistantModule);
   app.register(crmModule);
-  app.register(imageAgentModule);
   app.register(erpModule);
   app.register(creditsModule);
   app.register(walletModule);
