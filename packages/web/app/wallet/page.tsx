@@ -1,0 +1,467 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CreditWallet, ExchangeQuote, ListingCategory } from "@gihtcx/shared";
+import { LISTING_CATEGORIES } from "@gihtcx/shared";
+import { api, ApiError } from "../../lib/apiClient";
+import { RequireAuth } from "../../components/RequireAuth";
+import { Card } from "../../components/ui/Card";
+import { Spinner } from "../../components/ui/Spinner";
+import { EmptyState } from "../../components/ui/EmptyState";
+import { AnimatedNumber } from "../../components/ui/AnimatedNumber";
+import { AiBadge, ConfidenceMeter } from "../../components/ai/AiBadge";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  ROOM: "🏨 Room hours",
+  CAR: "🚗 Car hours",
+  TRAVEL_SERVICE: "🧭 Travel hours",
+};
+
+const KIND_LABELS: Record<string, string> = {
+  PURCHASE: "Purchased",
+  REDEEM: "Redeemed on a booking",
+  TRANSFER_IN: "Received",
+  TRANSFER_OUT: "Sent",
+  EXCHANGE_IN: "Exchanged in",
+  EXCHANGE_OUT: "Exchanged out",
+  TRADE_FEE: "Exchange fee",
+  REFUND: "Returned",
+  EXPIRY: "Expired",
+};
+
+export default function WalletPage() {
+  return (
+    <RequireAuth>
+      <WalletInner />
+    </RequireAuth>
+  );
+}
+
+function WalletInner() {
+  const qc = useQueryClient();
+  const { data, isPending, error, refetch } = useQuery<CreditWallet>({
+    queryKey: ["wallet"],
+    queryFn: () => api.get<CreditWallet>("/credits/wallet"),
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["wallet"] });
+  };
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center py-24 text-slate-500">
+        <Spinner /> <span className="ml-2 text-sm">Loading your wallet…</span>
+      </div>
+    );
+  }
+  if (error || !data) {
+    return (
+      <EmptyState
+        icon="⚠️"
+        title="We couldn't load your wallet"
+        description="Something went wrong on our side. Please try again in a moment."
+        action={
+          <button
+            onClick={() => refetch()}
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+          >
+            Try again
+          </button>
+        }
+      />
+    );
+  }
+
+  return (
+    <div>
+      <h1 className="mb-1 text-2xl font-semibold">Time wallet</h1>
+      <p className="mb-6 text-sm text-slate-500">
+        Every hour you buy is yours to keep, spend, gift or exchange — not tied to a single booking.
+      </p>
+
+      {/* Headline balances */}
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div
+          className="animate-fade-in-up rounded-2xl p-4 text-white shadow-card"
+          style={{ backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" }}
+        >
+          <p className="text-xs uppercase tracking-wide text-white/80">Hours held</p>
+          <p className="mt-1 text-2xl font-semibold">
+            <AnimatedNumber value={data.totalHours} decimals={2} />
+          </p>
+        </div>
+        <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card" style={{ animationDelay: "60ms" }}>
+          <p className="text-xs uppercase tracking-wide text-slate-400">Estimated value</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            {data.currency} <AnimatedNumber value={data.totalEstimatedValue} decimals={2} />
+          </p>
+        </div>
+        <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card" style={{ animationDelay: "120ms" }}>
+          <p className="text-xs uppercase tracking-wide text-slate-400">Buckets</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">
+            <AnimatedNumber value={data.balances.length} />
+          </p>
+        </div>
+      </div>
+
+      {/* Per-category balances */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold">Your hours</h2>
+        {data.balances.length === 0 ? (
+          <EmptyState
+            icon="⏳"
+            title="No time credits yet"
+            description="Buy hours below and redeem them against any listing in that category, whenever suits you."
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {data.balances.map((b, i) => (
+              <Card
+                key={b.category}
+                className="animate-fade-in-up p-4 transition-shadow hover:shadow-card-hover"
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                <p className="text-sm text-slate-500">{CATEGORY_LABELS[b.category] ?? b.category}</p>
+                <p className="mt-1 text-xl font-semibold">
+                  <AnimatedNumber value={b.hours} decimals={2} />
+                  <span className="text-sm font-normal text-slate-400"> hrs</span>
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  ≈ {b.currency} {b.estimatedValue.toFixed(2)} · avg {b.currency} {b.avgUnitValue.toFixed(2)}/hr
+                </p>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <BuyHours onDone={invalidate} />
+        <GiftHours wallet={data} onDone={invalidate} />
+        <ExchangeHours wallet={data} onDone={invalidate} />
+      </div>
+
+      {/* Ledger */}
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-semibold">History</h2>
+        <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+            <table className="w-full min-w-[34rem] text-sm">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-3 py-2">When</th>
+                  <th className="px-3 py-2">What</th>
+                  <th className="px-3 py-2">Bucket</th>
+                  <th className="px-3 py-2 text-right">Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recent.map((r) => (
+                  <tr key={r.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
+                    <td className="px-3 py-2 text-slate-500">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      {KIND_LABELS[r.kind] ?? r.kind}
+                      {r.counterpartyEmail && <span className="text-slate-400"> · {r.counterpartyEmail}</span>}
+                    </td>
+                    <td className="px-3 py-2 text-slate-500">{CATEGORY_LABELS[r.category] ?? r.category}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${r.hours < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                      {r.hours > 0 ? "+" : ""}
+                      {r.hours.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+                {data.recent.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
+                      Nothing here yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function useFormError() {
+  const [message, setMessage] = useState<string | null>(null);
+  const show = (err: unknown) =>
+    setMessage(err instanceof ApiError ? err.message : "Something went wrong. Please try again.");
+  return { message, show, clear: () => setMessage(null) };
+}
+
+function BuyHours({ onDone }: { onDone: () => void }) {
+  const [category, setCategory] = useState<ListingCategory>("ROOM");
+  const [hours, setHours] = useState(4);
+  const err = useFormError();
+  const [ok, setOk] = useState<string | null>(null);
+
+  const buy = useMutation({
+    mutationFn: () =>
+      api.post<{ total: number; currency: string; simulated: boolean; clientSecret: string | null }>(
+        "/credits/purchase",
+        { category, hours }
+      ),
+    onMutate: () => {
+      err.clear();
+      setOk(null);
+    },
+    onSuccess: (q: { total: number; currency: string; simulated: boolean; clientSecret: string | null }) => {
+      // A real card charge still needs Stripe Elements; until that's wired for
+      // credits, say so plainly rather than implying the hours have landed.
+      setOk(
+        q.simulated
+          ? `Reserved ${hours}h for ${q.currency} ${q.total.toFixed(2)} (test mode — no card charged).`
+          : `Payment of ${q.currency} ${q.total.toFixed(2)} created. Complete the card payment to receive your hours.`
+      );
+      onDone();
+    },
+    onError: err.show,
+  });
+
+  return (
+    <Card className="animate-fade-in-up p-4">
+      <h3 className="mb-3 font-semibold">Buy hours</h3>
+      <label className="mb-2 block text-sm">
+        Category
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as ListingCategory)}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        >
+          {LISTING_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {CATEGORY_LABELS[c] ?? c}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="mb-3 block text-sm">
+        Hours
+        <input
+          type="number"
+          min={0.25}
+          step={0.25}
+          value={hours}
+          onChange={(e) => setHours(Number(e.target.value))}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        />
+      </label>
+      <p className="mb-3 text-xs text-slate-400">Priced at the live average rate for that category, plus a 1% buyer fee.</p>
+      <button
+        onClick={() => buy.mutate()}
+        disabled={buy.isPending}
+        className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+      >
+        {buy.isPending ? "Working…" : "Buy hours"}
+      </button>
+      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+    </Card>
+  );
+}
+
+function GiftHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () => void }) {
+  const [toEmail, setToEmail] = useState("");
+  const [category, setCategory] = useState<ListingCategory>(
+    (wallet.balances[0]?.category as ListingCategory) ?? "ROOM"
+  );
+  const [hours, setHours] = useState(1);
+  const err = useFormError();
+  const [ok, setOk] = useState<string | null>(null);
+
+  const send = useMutation({
+    mutationFn: () => api.post("/credits/transfer", { toEmail, category, hours }),
+    onMutate: () => {
+      err.clear();
+      setOk(null);
+    },
+    onSuccess: () => {
+      setOk(`Sent ${hours}h to ${toEmail}.`);
+      setToEmail("");
+      onDone();
+    },
+    onError: err.show,
+  });
+
+  return (
+    <Card className="animate-fade-in-up p-4" style={{ animationDelay: "60ms" }}>
+      <h3 className="mb-3 font-semibold">Gift hours</h3>
+      <label className="mb-2 block text-sm">
+        Recipient email
+        <input
+          type="email"
+          value={toEmail}
+          onChange={(e) => setToEmail(e.target.value)}
+          placeholder="them@example.com"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        />
+      </label>
+      <label className="mb-2 block text-sm">
+        From bucket
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as ListingCategory)}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        >
+          {LISTING_CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {CATEGORY_LABELS[c] ?? c}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="mb-3 block text-sm">
+        Hours
+        <input
+          type="number"
+          min={0.25}
+          step={0.25}
+          value={hours}
+          onChange={(e) => setHours(Number(e.target.value))}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        />
+      </label>
+      <p className="mb-3 text-xs text-slate-400">Gifts are free — no platform fee on a transfer.</p>
+      <button
+        onClick={() => send.mutate()}
+        disabled={send.isPending || !toEmail}
+        className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+      >
+        {send.isPending ? "Sending…" : "Send gift"}
+      </button>
+      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+    </Card>
+  );
+}
+
+function ExchangeHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () => void }) {
+  const [fromCategory, setFrom] = useState<ListingCategory>(
+    (wallet.balances[0]?.category as ListingCategory) ?? "ROOM"
+  );
+  const [toCategory, setTo] = useState<ListingCategory>("CAR");
+  const [hours, setHours] = useState(1);
+  const [quote, setQuote] = useState<ExchangeQuote | null>(null);
+  const err = useFormError();
+  const [ok, setOk] = useState<string | null>(null);
+
+  const getQuote = useMutation({
+    mutationFn: () =>
+      api.get<ExchangeQuote>(
+        `/credits/exchange-quote?fromCategory=${fromCategory}&toCategory=${toCategory}&hours=${hours}`
+      ),
+    onMutate: () => {
+      err.clear();
+      setOk(null);
+      setQuote(null);
+    },
+    onSuccess: setQuote,
+    onError: err.show,
+  });
+
+  const doExchange = useMutation({
+    mutationFn: () =>
+      api.post<{ quote: ExchangeQuote }>("/credits/exchange", { fromCategory, toCategory, hours }),
+    onMutate: () => err.clear(),
+    onSuccess: (r: { quote: ExchangeQuote }) => {
+      setOk(`Exchanged ${hours}h into ${r.quote.hoursOut.toFixed(2)}h of ${toCategory}.`);
+      setQuote(null);
+      onDone();
+    },
+    onError: err.show,
+  });
+
+  return (
+    <Card className="animate-fade-in-up p-4" style={{ animationDelay: "120ms" }}>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold">Exchange</h3>
+        <AiBadge label="AI rate" />
+      </div>
+      <div className="mb-2 grid grid-cols-2 gap-2">
+        <label className="block text-sm">
+          From
+          <select
+            value={fromCategory}
+            onChange={(e) => setFrom(e.target.value as ListingCategory)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+          >
+            {LISTING_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm">
+          To
+          <select
+            value={toCategory}
+            onChange={(e) => setTo(e.target.value as ListingCategory)}
+            className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+          >
+            {LISTING_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label className="mb-3 block text-sm">
+        Hours to exchange
+        <input
+          type="number"
+          min={0.25}
+          step={0.25}
+          value={hours}
+          onChange={(e) => setHours(Number(e.target.value))}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+        />
+      </label>
+
+      {quote && (
+        <div className="mb-3 animate-fade-in rounded-xl border border-ai-200 bg-ai-50/60 p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-ai-800">
+              → {quote.hoursOut.toFixed(2)} hrs
+            </span>
+            <ConfidenceMeter level={quote.confidence} />
+          </div>
+          <p className="mt-1 text-xs text-ai-700">
+            Rate {quote.rate.toFixed(3)} · fee {quote.feeHours.toFixed(2)}h
+          </p>
+          <p className="mt-1 text-xs text-slate-600">{quote.reasoning}</p>
+          <p className="mt-1 text-[11px] text-slate-400">Quoted by {quote.quotedBy}</p>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => getQuote.mutate()}
+          disabled={getQuote.isPending || fromCategory === toCategory}
+          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+        >
+          {getQuote.isPending ? "Quoting…" : "Get quote"}
+        </button>
+        <button
+          onClick={() => doExchange.mutate()}
+          disabled={!quote || doExchange.isPending || quote.hoursOut <= 0}
+          className="flex-1 rounded-lg bg-ai-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-ai-700 disabled:opacity-50"
+        >
+          {doExchange.isPending ? "Exchanging…" : "Exchange"}
+        </button>
+      </div>
+      {fromCategory === toCategory && (
+        <p className="mt-2 text-xs text-slate-400">Pick two different buckets to exchange between.</p>
+      )}
+      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+    </Card>
+  );
+}

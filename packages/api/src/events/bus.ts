@@ -8,6 +8,24 @@ export type DomainEvent =
   | { type: "offer.submitted"; payload: { offerId: string; bookingRequestId: string } }
   | { type: "match.recommended"; payload: { bookingRequestId: string; offerId: string } }
   | { type: "request.expired"; payload: { bookingRequestId: string; hadOffers: boolean } }
+  | {
+      type: "credits.purchased";
+      payload: { userId: string; category: string; hours: number };
+    }
+  | {
+      type: "credits.transferred";
+      payload: { fromUserId: string; toUserId: string; category: string; hours: number };
+    }
+  | {
+      type: "credits.exchanged";
+      payload: {
+        userId: string;
+        fromCategory: string;
+        toCategory: string;
+        hoursIn: number;
+        hoursOut: number;
+      };
+    }
   | { type: "payment.succeeded"; payload: { paymentId: string; bookingId: string } }
   | { type: "payment.failed"; payload: { bookingId: string; reason: string } };
 

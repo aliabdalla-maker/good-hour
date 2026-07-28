@@ -15,3 +15,4 @@ export * from "./schemas/assistant";
 export * from "./schemas/crm";
 export * from "./schemas/imageAgent";
 export * from "./schemas/erp";
+export * from "./schemas/credits";

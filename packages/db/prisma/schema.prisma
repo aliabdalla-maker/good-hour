@@ -85,6 +85,8 @@ enum AgentType {
   PRICING
   NEGOTIATION
   IMAGE
+  /// Quotes fair exchange rates between time-credit categories.
+  EXCHANGE
 }
 
 enum NotificationChannel {
@@ -117,26 +119,53 @@ enum SourcedDraftOrigin {
   SMOOBU
 }
 
+/// Why a Universal Time Credit ledger row exists. The sign of `hours` is not
+/// implied by the kind -- read it from `hours` itself (negative = debit).
+enum CreditEntryKind {
+  /// Bought with money (granted only once Stripe confirms the payment).
+  PURCHASE
+  /// Spent against a booking, reducing the cash payable.
+  REDEEM
+  /// Received from / sent to another user as a gift (no fee, no money moves).
+  TRANSFER_IN
+  TRANSFER_OUT
+  /// Two halves of a cross-category conversion at an AI-quoted rate.
+  EXCHANGE_IN
+  EXCHANGE_OUT
+  /// Platform's cut, taken in hours, on an exchange or credit trade.
+  TRADE_FEE
+  /// Returned to the wallet because a redeemed booking was cancelled.
+  REFUND
+  /// Written off after the credit's validity window elapsed.
+  EXPIRY
+}
+
+enum CreditPurchaseStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  passwordHash      String
-  role              Role     @default(TRAVELLER)
-  isBusinessAccount Boolean  @default(false)
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  passwordHash       String
+  role               Role               @default(TRAVELLER)
+  isBusinessAccount  Boolean            @default(false)
   /// Optional mobile number for the SMS communication channel.
-  phone             String?
+  phone              String?
   /// Consent flag for marketing/campaign emails (transactional mail is always sent).
-  marketingOptIn    Boolean  @default(true)
+  marketingOptIn     Boolean            @default(true)
   /// Supplier trust: a host is "Verified" only once an admin approves them.
   verificationStatus VerificationStatus @default(UNVERIFIED)
   /// Admin note or rejection reason attached to the last verification decision.
   verificationNote   String?
   verifiedAt         DateTime?
   /// CRM: lifecycle stage + free-form tags, managed by admins in the CRM console.
-  crmStage           CrmStage @default(LEAD)
-  crmTags            String[] @default([])
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  crmStage           CrmStage           @default(LEAD)
+  crmTags            String[]           @default([])
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   properties      Property[]
   bookings        Booking[]
@@ -148,6 +177,8 @@ model User {
   reviews         Review[]
   sentMessages    Message[]
   crmNotes        CrmNote[]
+  creditEntries   CreditLedgerEntry[]
+  creditPurchases CreditPurchase[]
 
   @@map("users")
 }
@@ -190,9 +221,9 @@ model ConsentEvent {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  channel   String   // e.g. "marketing_email"
+  channel   String // e.g. "marketing_email"
   granted   Boolean
-  source    String   // "preferences" | "unsubscribe_link" | "signup"
+  source    String // "preferences" | "unsubscribe_link" | "signup"
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -211,9 +242,9 @@ model Property {
   lat         Float
   lng         Float
   amenities   String[]
-  status      String   @default("ACTIVE")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String          @default("ACTIVE")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   rooms Room[]
 
@@ -222,30 +253,30 @@ model Property {
 }
 
 model Room {
-  id             String   @id @default(cuid())
-  propertyId     String
-  property       Property @relation(fields: [propertyId], references: [id])
-  name           String
-  capacity       Int
-  amenities      String[]
+  id                 String   @id @default(cuid())
+  propertyId         String
+  property           Property @relation(fields: [propertyId], references: [id])
+  name               String
+  capacity           Int
+  amenities          String[]
   /// Optional hero photo for the listing (falls back to a gradient in the UI).
   /// May be an http(s) URL, a site-relative path, or a data:image/ URI
   /// (AI-generated photos are never resized/uploaded, just stored inline).
-  imageUrl       String?
+  imageUrl           String?
   /// True when imageUrl came from the Nano Banana generate button, so the UI
   /// can disclose it -- never silently pass off a generated photo as real.
-  imageIsAiGenerated Boolean @default(false)
-  baseHourlyRate Decimal  @db.Decimal(10, 2)
-  currency       String   @default("GBP")
-  minHours       Int      @default(2)
-  maxHours       Int      @default(24)
-  status         String   @default("ACTIVE")
+  imageIsAiGenerated Boolean  @default(false)
+  baseHourlyRate     Decimal  @db.Decimal(10, 2)
+  currency           String   @default("GBP")
+  minHours           Int      @default(2)
+  maxHours           Int      @default(24)
+  status             String   @default("ACTIVE")
   /// B2A seam: when true, this room's own supplier agent auto-submits
   /// SupplierOffers on matching open BookingRequests instead of waiting
   /// for a human to respond.
-  autoOfferEnabled Boolean @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  autoOfferEnabled   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   rateRules         RoomRateRule[]
   availabilitySlots AvailabilitySlot[]
@@ -261,16 +292,16 @@ model Room {
 /// score can't be inflated; the booking link is the proof the reviewer
 /// actually transacted (verified review).
 model Review {
-  id         String   @id @default(cuid())
-  bookingId  String   @unique
-  booking    Booking  @relation(fields: [bookingId], references: [id])
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id])
-  roomId     String
-  room       Room     @relation(fields: [roomId], references: [id])
-  rating     Int // 1..5, enforced in the API layer
-  comment    String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  rating    Int // 1..5, enforced in the API layer
+  comment   String?
+  createdAt DateTime @default(now())
 
   @@index([roomId, createdAt])
   @@map("reviews")
@@ -362,35 +393,45 @@ model SupplierOffer {
 }
 
 model Booking {
-  id              String        @id @default(cuid())
-  travellerId     String
-  traveller       User          @relation(fields: [travellerId], references: [id])
-  roomId          String
-  room            Room          @relation(fields: [roomId], references: [id])
-  startsAt        DateTime
-  endsAt          DateTime
+  id                   String         @id @default(cuid())
+  travellerId          String
+  traveller            User           @relation(fields: [travellerId], references: [id])
+  roomId               String
+  room                 Room           @relation(fields: [roomId], references: [id])
+  startsAt             DateTime
+  endsAt               DateTime
   /// Agreed room price before the platform fee (hours × rate).
-  subtotalAmount  Decimal       @db.Decimal(10, 2) @default(0)
+  subtotalAmount       Decimal        @default(0) @db.Decimal(10, 2)
   /// Total platform commission (1% of subtotal), split between both parties.
-  platformFee     Decimal       @db.Decimal(10, 2) @default(0)
+  platformFee          Decimal        @default(0) @db.Decimal(10, 2)
   /// Amount remitted to the supplier: subtotal − supplier's half of the fee.
-  supplierPayout  Decimal       @db.Decimal(10, 2) @default(0)
-  /// Amount the traveller is charged: subtotal + traveller's half of the fee.
-  totalAmount     Decimal       @db.Decimal(10, 2)
-  currency        String        @default("GBP")
-  isCorporateRate Boolean       @default(false)
-  source          BookingSource @default(DIRECT_SEARCH)
-  sourceOfferId   String?       @unique
-  sourceOffer     SupplierOffer? @relation(fields: [sourceOfferId], references: [id])
+  supplierPayout       Decimal        @default(0) @db.Decimal(10, 2)
+  /// Gross amount owed by the traveller: subtotal + traveller's half of the
+  /// fee. Stays gross even when time credits cover part of it — the cash
+  /// actually charged is this minus creditValueApplied, and lives on Payment.
+  /// Keeping this gross means receipts, CRM spend and ERP revenue all keep
+  /// their existing meaning.
+  totalAmount          Decimal        @db.Decimal(10, 2)
+  /// Time credits spent on this booking, in hours.
+  creditHoursRedeemed  Decimal        @default(0) @db.Decimal(10, 2)
+  /// Money value those credits covered, deducted from the cash charged. The
+  /// supplier is still paid in full — the platform settles this from the
+  /// credit liability it took on when those hours were sold.
+  creditValueApplied   Decimal        @default(0) @db.Decimal(10, 2)
+  currency             String         @default("GBP")
+  isCorporateRate      Boolean        @default(false)
+  source               BookingSource  @default(DIRECT_SEARCH)
+  sourceOfferId        String?        @unique
+  sourceOffer          SupplierOffer? @relation(fields: [sourceOfferId], references: [id])
   /// True when the traveller's agent auto-accepted the winning offer
   /// (A2B auto-accept) rather than a human clicking accept.
-  isAgentAccepted Boolean       @default(false)
-  status          BookingStatus @default(PENDING_PAYMENT)
+  isAgentAccepted      Boolean        @default(false)
+  status               BookingStatus  @default(PENDING_PAYMENT)
   /// While PENDING_PAYMENT the room's slots are only HELD; if payment isn't
   /// completed by this time a background job releases them and expires the booking.
   reservationExpiresAt DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   slots    AvailabilitySlot[]
   payment  Payment?
@@ -418,18 +459,18 @@ model Message {
 }
 
 model Payment {
-  id                    String   @id @default(cuid())
-  bookingId             String   @unique
-  booking               Booking  @relation(fields: [bookingId], references: [id])
-  stripePaymentIntentId String   @unique
-  amount                Decimal  @db.Decimal(10, 2)
+  id                    String    @id @default(cuid())
+  bookingId             String    @unique
+  booking               Booking   @relation(fields: [bookingId], references: [id])
+  stripePaymentIntentId String    @unique
+  amount                Decimal   @db.Decimal(10, 2)
   currency              String
   status                String
   capturedAt            DateTime?
   stripeRefundId        String?
   refundedAt            DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@map("payments")
 }
@@ -437,20 +478,20 @@ model Payment {
 /// Every pricing/negotiation agent call writes exactly one row here,
 /// giving a full audit trail of autonomous AI decisions.
 model AgentDecisionLog {
-  id                String    @id @default(cuid())
-  agentType         AgentType
-  subjectType       String
-  subjectId         String
-  inputSnapshot     Json
-  promptVersion     String
-  modelUsed         String
-  rawModelOutput    Json
-  parsedDecision    Json
-  reasoning         String?
-  latencyMs         Int
-  costEstimateUsd   Decimal?  @db.Decimal(10, 6)
-  outcomeAccepted   Boolean?
-  createdAt         DateTime  @default(now())
+  id              String    @id @default(cuid())
+  agentType       AgentType
+  subjectType     String
+  subjectId       String
+  inputSnapshot   Json
+  promptVersion   String
+  modelUsed       String
+  rawModelOutput  Json
+  parsedDecision  Json
+  reasoning       String?
+  latencyMs       Int
+  costEstimateUsd Decimal?  @db.Decimal(10, 6)
+  outcomeAccepted Boolean?
+  createdAt       DateTime  @default(now())
 
   @@index([agentType, subjectType, subjectId])
   @@map("agent_decision_logs")
@@ -460,21 +501,21 @@ model AgentDecisionLog {
 /// the user's notification feed; email/SMS rows record what was dispatched
 /// (or would have been, in dev fallback). Marketing rows respect opt-in.
 model Notification {
-  id         String               @id @default(cuid())
-  userId     String
-  user       User                 @relation(fields: [userId], references: [id])
-  channel    NotificationChannel
-  category   NotificationCategory @default(TRANSACTIONAL)
-  type       String
-  subject    String
-  body       String
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id])
+  channel     NotificationChannel
+  category    NotificationCategory @default(TRANSACTIONAL)
+  type        String
+  subject     String
+  body        String
   /// Arbitrary structured payload (e.g. bookingId) for the client to deep-link.
-  data       Json?
-  status     NotificationStatus   @default(QUEUED)
+  data        Json?
+  status      NotificationStatus   @default(QUEUED)
   /// Provider message id when a real email/SMS provider handled it.
   providerRef String?
-  readAt     DateTime?
-  createdAt  DateTime             @default(now())
+  readAt      DateTime?
+  createdAt   DateTime             @default(now())
 
   @@index([userId, createdAt])
   @@map("notifications")
@@ -484,27 +525,104 @@ model Notification {
 /// that a supplier must claim and review before it is published as bookable
 /// inventory — nothing scraped is ever auto-listed for sale.
 model SourcedListingDraft {
-  id           String             @id @default(cuid())
+  id                  String             @id @default(cuid())
   /// The supplier who imported it and is accountable for the published listing.
-  supplierId   String
-  supplier     User               @relation(fields: [supplierId], references: [id])
-  origin       SourcedDraftOrigin
-  sourceUrl    String?
-  status       SourcedDraftStatus @default(DRAFT)
+  supplierId          String
+  supplier            User               @relation(fields: [supplierId], references: [id])
+  origin              SourcedDraftOrigin
+  sourceUrl           String?
+  status              SourcedDraftStatus @default(DRAFT)
   /// Parsed/normalised fields the supplier can edit before publishing.
-  name         String
-  addressLine  String?
-  city         String?
-  country      String?
-  amenities    String[]
-  suggestedHourlyRate Decimal?    @db.Decimal(10, 2)
-  currency     String             @default("GBP")
+  name                String
+  addressLine         String?
+  city                String?
+  country             String?
+  amenities           String[]
+  suggestedHourlyRate Decimal?           @db.Decimal(10, 2)
+  currency            String             @default("GBP")
   /// Raw extracted snapshot for provenance/audit.
-  rawExtract   Json?
+  rawExtract          Json?
   publishedPropertyId String?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
   @@index([supplierId, status])
   @@map("sourced_listing_drafts")
+}
+
+// ---------------------------------------------------------------------------
+// Universal Time Credit (UTC) economy
+//
+// A purchased hour is a transferable asset, not just a prepayment. The wallet
+// is modelled as an append-only ledger: a balance is ALWAYS a SUM over
+// credit_ledger_entries, and there is deliberately no mutable balance column
+// anywhere. That makes double-spending a concurrency question we can solve
+// with one serialisable transaction, rather than a corrupted-state question we
+// can never fully recover from.
+// ---------------------------------------------------------------------------
+
+/// One movement of time credits in or out of a user's wallet. Append-only:
+/// nothing in this table is ever updated or deleted, corrections are new rows.
+model CreditLedgerEntry {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  /// Credits are category-scoped on purpose: a hotel hour and a chauffeur hour
+  /// are not interchangeable at par -- crossing categories goes through an
+  /// AI-quoted exchange rate, which is where the marketplace value lives.
+  category  ListingCategory
+  /// Signed. Positive credits the wallet, negative debits it.
+  hours     Decimal         @db.Decimal(10, 2)
+  kind      CreditEntryKind
+  /// Money value of one hour at the moment this row was written. Drives
+  /// exchange fair-value maths, cash refunds, and the ERP liability figure --
+  /// without it, credits acquired at different prices would be
+  /// indistinguishable and the outstanding liability unknowable.
+  unitValue Decimal         @db.Decimal(10, 2)
+  currency  String          @default("GBP")
+
+  // --- provenance: which one is set depends on `kind` ---
+  creditPurchaseId   String?
+  creditPurchase     CreditPurchase? @relation(fields: [creditPurchaseId], references: [id])
+  relatedBookingId   String?
+  counterpartyUserId String?
+  /// Ties the two halves of a transfer/exchange (and its fee row) together so
+  /// they can be reconciled as one logical operation.
+  correlationId      String?
+  note               String?
+  createdAt          DateTime        @default(now())
+
+  @@index([userId, category])
+  @@index([correlationId])
+  @@map("credit_ledger_entries")
+}
+
+/// A money purchase of time credits. Credits are only granted once Stripe
+/// confirms payment (see the payments webhook), never at request time.
+model CreditPurchase {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  category  ListingCategory
+  hours     Decimal         @db.Decimal(10, 2)
+  /// Price per hour paid, before fees.
+  unitValue Decimal         @db.Decimal(10, 2)
+  subtotal  Decimal         @db.Decimal(10, 2)
+  /// Buyer-side 1% platform fee, charged on top (mirrors booking fees).
+  buyerFee  Decimal         @db.Decimal(10, 2)
+  /// What the buyer actually pays: subtotal + buyerFee.
+  total     Decimal         @db.Decimal(10, 2)
+  currency  String          @default("GBP")
+
+  stripePaymentIntentId String?              @unique
+  status                CreditPurchaseStatus @default(PENDING)
+  /// Set when the ledger entry was written, so a retried webhook can't double-grant.
+  grantedAt             DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  ledgerEntries CreditLedgerEntry[]
+
+  @@index([userId, status])
+  @@map("credit_purchases")
 }

@@ -54,7 +54,21 @@ export const erpAiInsightsSchema = z.object({
 });
 export type ErpAiInsights = z.infer<typeof erpAiInsightsSchema>;
 
+/**
+ * Time credits sold but not yet redeemed. This is a liability, not revenue:
+ * the money is in the bank but the platform still owes the holder an hour of
+ * inventory. Reporting it as earned would overstate the business.
+ */
+export const erpCreditEconomySchema = z.object({
+  outstandingHours: z.number(),
+  outstandingValue: z.number(),
+  creditsSoldValue: z.number(),
+  creditFeeRevenue: z.number(),
+});
+export type ErpCreditEconomy = z.infer<typeof erpCreditEconomySchema>;
+
 export const erpOverviewSchema = z.object({
+  creditEconomy: erpCreditEconomySchema,
   financial: erpFinancialSchema,
   bookingPipeline: erpBookingPipelineSchema,
   supplierLedger: z.array(erpSupplierLedgerRowSchema),

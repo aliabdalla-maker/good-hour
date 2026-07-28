@@ -9,6 +9,7 @@ import { getRoomById } from "../listings";
 import { createPaymentIntentForBooking, refundBookingPayment } from "../payments";
 import { getSuggestedRateForRoom } from "../pricing-agent";
 import { recordAgentOutcome } from "../agent-log";
+import { getBalanceFor, redeemForBooking, refundRedeemedCredits } from "../credits";
 import { assertTransitionAllowed } from "./stateMachine";
 import { ensureSlotsGenerated, isRangeFullyOpen } from "./slotService";
 
@@ -82,6 +83,30 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
   const fee = computeFeeBreakdown(subtotal);
   const reservationExpiresAt = new Date(Date.now() + config.RESERVATION_HOLD_MINUTES * 60 * 1000);
 
+  // A time credit entitles the holder to one hour of inventory, so redemption
+  // is capped at the hours actually being booked. Validating the balance here
+  // (before any slots are held) keeps the common rejection cheap; the
+  // authoritative check is the ledger's own post-write balance assertion.
+  const redeemHours = input.redeemCreditHours;
+  if (redeemHours > 0) {
+    if (redeemHours > hours) {
+      throw new AppError(
+        400,
+        `You can redeem at most ${hours} credit hours on a ${hours}-hour booking`,
+        "TOO_MANY_CREDIT_HOURS"
+      );
+    }
+    const available = await getBalanceFor(travellerId, room.property.category);
+    if (available < redeemHours) {
+      throw new AppError(
+        409,
+        `You only have ${available} ${room.property.category} credit hours available`,
+        "INSUFFICIENT_CREDITS"
+      );
+    }
+  }
+  const creditValueApplied = Math.round(redeemHours * hourlyRate * 100) / 100;
+
   const booking = await prisma.$transaction(async (tx) => {
     const claimed = await tx.availabilitySlot.updateMany({
       where: { roomId: room.id, startsAt: { gte: startsAt, lt: endsAt }, status: "OPEN" },
@@ -101,6 +126,8 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
         platformFee: fee.platformFee,
         supplierPayout: fee.supplierPayout,
         totalAmount: fee.travellerTotal,
+        creditHoursRedeemed: redeemHours,
+        creditValueApplied,
         currency: room.currency,
         isCorporateRate: input.isCorporateRate,
         source: "DIRECT_SEARCH",
@@ -119,10 +146,41 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
     return created;
   });
 
+  // Debit the wallet only once the slots are genuinely held. If the debit
+  // loses a Serializable race with another spend, release the reservation
+  // rather than leaving a booking the traveller can't pay for with credits
+  // they no longer have.
+  if (redeemHours > 0) {
+    try {
+      await redeemForBooking(travellerId, room.property.category, redeemHours, booking.id, hourlyRate);
+    } catch (error) {
+      // Same release path the expiry job uses; the booking is still
+      // PENDING_PAYMENT at this point, which is exactly its precondition.
+      await releaseExpiredReservation(booking.id);
+      throw error;
+    }
+  }
+
+  // Cash due is the gross traveller total less whatever credits covered. A
+  // fully credit-funded booking has nothing left to charge.
+  const cashDue = Math.round((fee.travellerTotal - creditValueApplied) * 100) / 100;
+
   await scheduleReservationExpiry(booking.id);
 
-  // The traveller is charged the subtotal plus their half of the platform fee.
-  const { clientSecret } = await createPaymentIntentForBooking(booking.id, fee.travellerTotal, room.currency);
+  const { clientSecret } =
+    cashDue > 0
+      ? await createPaymentIntentForBooking(booking.id, cashDue, room.currency)
+      : { clientSecret: null as string | null };
+
+  // Nothing to pay means nothing to wait for — confirm immediately instead of
+  // parking it in PENDING_PAYMENT until the expiry job kills a paid booking.
+  if (cashDue <= 0) {
+    await prisma.$transaction([
+      prisma.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } }),
+      prisma.availabilitySlot.updateMany({ where: { bookingId: booking.id }, data: { status: "BOOKED" } }),
+    ]);
+    await domainEvents.publish({ type: "booking.confirmed", payload: { bookingId: booking.id } });
+  }
 
   await domainEvents.publish({ type: "booking.created", payload: { bookingId: booking.id, travellerId } });
 
@@ -147,6 +205,10 @@ export async function releaseExpiredReservation(bookingId: string) {
       data: { status: "OPEN", bookingId: null },
     }),
   ]);
+
+  // Credits were debited when the booking was created, so an unpaid expiry has
+  // to hand them back — otherwise abandoning checkout silently burns them.
+  await refundRedeemedCredits(bookingId);
 
   await domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
 }
@@ -245,6 +307,11 @@ export async function cancelBooking(bookingId: string, travellerId: string) {
   if (wasPaid) {
     await refundBookingPayment(bookingId);
   }
+
+  // Credits spent on this booking go back to the wallet. Runs for any
+  // cancelled booking, not just paid ones: a part-credit booking cancelled
+  // before payment still had its wallet debited at creation time. Idempotent.
+  await refundRedeemedCredits(bookingId);
 
   await domainEvents.publish({ type: "booking.cancelled", payload: { bookingId } });
 }

@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import type { RoomPublic, PricingDecision, BookingPublic, ReviewPublic } from "@gihtcx/shared";
+import type { RoomPublic, PricingDecision, BookingPublic, ReviewPublic, CreditWallet } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { Card } from "../../../components/ui/Card";
 import { Button } from "../../../components/ui/Button";
@@ -71,8 +71,28 @@ function RoomDetail() {
   const [startsAt, setStartsAt] = useState(prefilledStart ?? defaultDateTime(2));
   const [endsAt, setEndsAt] = useState(prefilledEnd ?? defaultDateTime(6));
   const [useAiSuggestedRate, setUseAiSuggestedRate] = useState(false);
+  const [redeemCreditHours, setRedeemCreditHours] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Only signed-in users have a wallet; a 401 here is expected for anonymous
+  // visitors, so this query stays quiet and the control just doesn't render.
+  const { data: wallet } = useQuery<CreditWallet>({
+    queryKey: ["wallet"],
+    queryFn: () => api.get<CreditWallet>("/credits/wallet"),
+    retry: false,
+  });
+
+  const bookedHours =
+    startsAt && endsAt
+      ? Math.max(0, (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 3_600_000)
+      : 0;
+  // Category lives on the parent property, and is only present on the
+  // room-detail endpoint's response — hence the optional chain.
+  const walletHoursForCategory =
+    wallet?.balances.find((b) => b.category === room?.property?.category)?.hours ?? 0;
+  // A credit buys an hour of inventory, so it can never exceed the hours booked.
+  const maxRedeemable = Math.min(walletHoursForCategory, bookedHours);
 
   async function handleBook(e: React.FormEvent) {
     e.preventDefault();
@@ -84,6 +104,7 @@ function RoomDetail() {
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(endsAt).toISOString(),
         useAiSuggestedRate,
+        redeemCreditHours: Math.min(redeemCreditHours, maxRedeemable),
       });
       if (booking.clientSecret) sessionStorage.setItem(`clientSecret:${booking.id}`, booking.clientSecret);
       router.push(`/booking/${booking.id}/checkout`);
@@ -198,6 +219,30 @@ function RoomDetail() {
                 <input type="checkbox" checked={useAiSuggestedRate} onChange={(e) => setUseAiSuggestedRate(e.target.checked)} />
                 Use the AI-optimised rate instead of the host rate
               </label>
+            )}
+            {maxRedeemable > 0 && (
+              <div className="rounded-lg bg-brand-50 p-3 text-sm">
+                <label className="flex flex-wrap items-center gap-2 text-brand-900">
+                  <span>Use time credits</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={maxRedeemable}
+                    step={0.25}
+                    value={redeemCreditHours}
+                    onChange={(e) =>
+                      setRedeemCreditHours(Math.min(Number(e.target.value) || 0, maxRedeemable))
+                    }
+                    className="w-20 rounded border border-brand-300 px-2 py-1"
+                  />
+                  <span className="text-brand-700">of {maxRedeemable.toFixed(2)} hrs available</span>
+                </label>
+                {redeemCreditHours > 0 && (
+                  <p className="mt-1 animate-fade-in text-xs text-brand-700">
+                    {redeemCreditHours.toFixed(2)}h covered by credits — only the remainder is charged.
+                  </p>
+                )}
+              </div>
             )}
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" disabled={submitting}>

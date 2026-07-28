@@ -86,7 +86,7 @@ function ErpInner() {
     return <p className="py-24 text-center text-sm text-red-600">Couldn&apos;t load the ERP overview.</p>;
   }
 
-  const { financial, bookingPipeline, supplierLedger, agentOps, crm, bidding, aiInsights } = data;
+  const { financial, bookingPipeline, supplierLedger, agentOps, crm, bidding, creditEconomy, aiInsights } = data;
   const fmt = (n: number) => `${financial.currency} ${n.toFixed(2)}`;
 
   return (
@@ -126,6 +126,39 @@ function ErpInner() {
         <StatCard label="Supplier payouts" value={financial.supplierPayoutsTotal} fmt={fmt} delay={120} />
         <StatCard label="Refunded" value={financial.refundedTotal} fmt={fmt} delay={180} />
       </div>
+
+      {/* Time-credit economy */}
+      <section
+        className="mb-8 animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover"
+        style={{ animationDelay: "180ms" }}
+      >
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Time-credit economy</h2>
+          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+            Outstanding hours are a liability, not revenue
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div>
+            <p className="text-slate-400">Hours outstanding</p>
+            <p className="text-xl font-semibold text-slate-900">
+              <AnimatedNumber value={creditEconomy.outstandingHours} decimals={2} />
+            </p>
+          </div>
+          <div>
+            <p className="text-slate-400">Liability value</p>
+            <p className="text-xl font-semibold text-amber-700">{fmt(creditEconomy.outstandingValue)}</p>
+          </div>
+          <div>
+            <p className="text-slate-400">Credits sold</p>
+            <p className="text-xl font-semibold text-slate-900">{fmt(creditEconomy.creditsSoldValue)}</p>
+          </div>
+          <div>
+            <p className="text-slate-400">Credit fee revenue</p>
+            <p className="text-xl font-semibold text-brand-700">{fmt(creditEconomy.creditFeeRevenue)}</p>
+          </div>
+        </div>
+      </section>
 
       {/* CRM + bidding integration */}
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

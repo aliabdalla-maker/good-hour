@@ -43,6 +43,12 @@ export const createBookingSchema = z.object({
   isCorporateRate: z.boolean().default(false),
   /** Lock in the pricing agent's current suggested rate instead of the host's static base rate. */
   useAiSuggestedRate: z.boolean().default(false),
+  /**
+   * Time credits to spend on this booking, reducing the cash payable. Must be
+   * credits of the listing's own category and can't exceed the booked hours —
+   * a credit buys an hour, it isn't a general-purpose discount.
+   */
+  redeemCreditHours: z.number().min(0).max(10_000).default(0),
 });
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 

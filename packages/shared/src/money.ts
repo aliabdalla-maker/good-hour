@@ -45,3 +45,40 @@ export function computeFeeBreakdown(subtotal: number): FeeBreakdown {
     supplierPayout: toMajor(subtotalMinor - supplierFeeMinor),
   };
 }
+
+/**
+ * The same 1%-each-side commission expressed in trade-neutral language, for
+ * transactions that aren't a traveller booking a supplier's room: buying time
+ * credits, trading credits with another user, or selling any other
+ * good/product/service through the marketplace.
+ *
+ * Deliberately delegates to computeFeeBreakdown rather than re-deriving the
+ * arithmetic — one implementation of the fee maths, one place to change the
+ * rate, and the integer-pence rounding stays identical across every surface.
+ */
+export interface TradeFeeBreakdown {
+  /** Agreed price of the traded item, before any fee. */
+  subtotal: number;
+  /** Buyer-side 1%, charged on top of the agreed price. */
+  buyerFee: number;
+  /** Seller-side 1%, deducted from the seller's proceeds. */
+  sellerFee: number;
+  /** Total platform revenue on the trade (2% of subtotal). */
+  platformFee: number;
+  /** What the buyer pays: subtotal + buyerFee. */
+  buyerTotal: number;
+  /** What the seller receives: subtotal − sellerFee. */
+  sellerProceeds: number;
+}
+
+export function computeTradeFee(subtotal: number): TradeFeeBreakdown {
+  const f = computeFeeBreakdown(subtotal);
+  return {
+    subtotal: f.subtotal,
+    buyerFee: f.travellerFee,
+    sellerFee: f.supplierFee,
+    platformFee: f.platformFee,
+    buyerTotal: f.travellerTotal,
+    sellerProceeds: f.supplierPayout,
+  };
+}

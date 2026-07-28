@@ -36,6 +36,8 @@ export function NavBar() {
     { href: "/requests/new", label: "Request a match" },
   ];
   const roleLinks = [
+    // The time wallet belongs to every signed-in account, not a single role.
+    ...(user ? [{ href: "/wallet", label: "Time wallet" }] : []),
     ...(user?.role === "SUPPLIER"
       ? [
           { href: "/dashboard/supplier", label: "Supplier dashboard" },
