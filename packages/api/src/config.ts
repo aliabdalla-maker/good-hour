@@ -8,12 +8,20 @@ import { z } from "zod";
 // already present (e.g. injected by docker-compose) are not overridden.
 loadDotenv({ path: path.resolve(__dirname, "../../../.env") });
 
+// Dashboard env-var forms (Railway, Render, ...) make it easy to paste in a
+// trailing space or newline without noticing -- Stripe's SDK in particular
+// rejects a whitespace-contaminated webhook secret outright. Trim every
+// credential/secret value so a stray character from copy-pasting can't
+// silently break signature verification or auth.
+const trimmed = () => z.string().transform((v) => v.trim());
+const optionalTrimmed = () => z.string().transform((v) => v.trim()).optional();
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   API_PORT: z.coerce.number().int().positive().default(4000),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
-  REDIS_URL: z.string().min(1, "REDIS_URL is required"),
-  JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters"),
+  DATABASE_URL: trimmed().pipe(z.string().min(1, "DATABASE_URL is required")),
+  REDIS_URL: trimmed().pipe(z.string().min(1, "REDIS_URL is required")),
+  JWT_SECRET: trimmed().pipe(z.string().min(16, "JWT_SECRET must be at least 16 characters")),
   COOKIE_NAME: z.string().default("gihtcx_session"),
   // Comma-separated list of allowed browser origins for CORS (credentialed).
   WEB_ORIGIN: z.string().default("http://localhost:3000"),
@@ -21,27 +29,27 @@ const envSchema = z.object({
   API_PUBLIC_URL: z.string().default("http://localhost:4000"),
   // Minutes an unpaid booking holds its slots before they're auto-released.
   RESERVATION_HOLD_MINUTES: z.coerce.number().int().positive().default(15),
-  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: optionalTrimmed(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
   // Points the OpenAI SDK at an OpenAI-compatible endpoint instead (e.g.
   // Groq's https://api.groq.com/openai/v1) -- unset uses OpenAI itself.
-  OPENAI_BASE_URL: z.string().optional(),
+  OPENAI_BASE_URL: optionalTrimmed(),
   // Google AI Studio key for Gemini image generation ("Nano Banana").
-  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_API_KEY: optionalTrimmed(),
   GEMINI_IMAGE_MODEL: z.string().default("gemini-2.5-flash-image"),
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_SECRET_KEY: optionalTrimmed(),
+  STRIPE_WEBHOOK_SECRET: optionalTrimmed(),
   // Smoobu (vacation rental channel manager) HMAC API credentials, used to
   // import the platform's connected properties as review-before-publish
   // sourcing drafts, the same as a URL/feed import.
-  SMOOBU_API_KEY: z.string().optional(),
-  SMOOBU_API_SECRET: z.string().optional(),
+  SMOOBU_API_KEY: optionalTrimmed(),
+  SMOOBU_API_SECRET: optionalTrimmed(),
   // --- Communication channels (all optional; fall back to console logging) ---
-  RESEND_API_KEY: z.string().optional(),
+  RESEND_API_KEY: optionalTrimmed(),
   EMAIL_FROM: z.string().default("Good Hours <onboarding@resend.dev>"),
-  TWILIO_ACCOUNT_SID: z.string().optional(),
-  TWILIO_AUTH_TOKEN: z.string().optional(),
-  TWILIO_FROM_NUMBER: z.string().optional(),
+  TWILIO_ACCOUNT_SID: optionalTrimmed(),
+  TWILIO_AUTH_TOKEN: optionalTrimmed(),
+  TWILIO_FROM_NUMBER: optionalTrimmed(),
 });
 
 function loadConfig() {
