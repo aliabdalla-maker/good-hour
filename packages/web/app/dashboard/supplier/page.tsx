@@ -100,7 +100,7 @@ function EarningsSection() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div
           className="rounded-2xl p-5 text-white shadow-card"
-          style={{ backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" }}
+          style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
         >
           <p className="text-xs uppercase tracking-wide text-white/80">Total earned</p>
           <p className="mt-1 text-3xl font-semibold">{money(data.totalEarned)}</p>

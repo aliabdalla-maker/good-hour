@@ -434,7 +434,7 @@ function StatCard({
       className={`animate-fade-in-up rounded-2xl p-4 shadow-card transition-transform hover:-translate-y-0.5 hover:shadow-card-hover ${gradient ? "text-white" : "border border-slate-200 bg-white"}`}
       style={{
         animationDelay: `${delay}ms`,
-        ...(gradient ? { backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" } : {}),
+        ...(gradient ? { backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" } : {}),
       }}
     >
       <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-500"}`}>{label}</p>

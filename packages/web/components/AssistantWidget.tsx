@@ -70,7 +70,7 @@ export function AssistantWidget() {
         onClick={() => setOpen(true)}
         aria-label="Open the Good Hours assistant"
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-2xl text-white shadow-card-hover transition-transform hover:scale-105 animate-scale-in"
-        style={{ backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 55%,#7c3aed)" }}
+        style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
       >
         ✦
       </button>
@@ -86,7 +86,7 @@ export function AssistantWidget() {
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 text-white"
-        style={{ backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 55%,#7c3aed)" }}
+        style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">✦</span>

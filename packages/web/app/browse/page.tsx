@@ -54,7 +54,7 @@ export default function BrowsePage() {
           className="relative overflow-hidden rounded-2xl p-8 text-white shadow-card sm:p-10"
           style={{
             backgroundImage:
-              "linear-gradient(120deg, #0f766e 0%, #14b8a6 40%, #7c3aed 100%)",
+              "linear-gradient(120deg, #0f766e 0%, #115e59 40%, #6d28d9 100%)",
             backgroundSize: "200% 200%",
           }}
         >

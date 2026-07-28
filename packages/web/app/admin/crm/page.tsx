@@ -97,7 +97,7 @@ function StatCard({ label, value, gradient }: { label: string; value: number; gr
   return (
     <div
       className={`rounded-2xl p-4 shadow-card ${gradient ? "text-white" : "border border-slate-200 bg-white"}`}
-      style={gradient ? { backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" } : undefined}
+      style={gradient ? { backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" } : undefined}
     >
       <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-500"}`}>{label}</p>
       <p className={`mt-1 text-2xl font-semibold ${gradient ? "" : "text-slate-900"}`}>{value}</p>
