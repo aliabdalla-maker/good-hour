@@ -64,6 +64,8 @@ export async function searchRooms(query: SearchQueryInput): Promise<SearchResult
       currency: room.currency,
       hours,
       estimatedTotal: Math.round(effectiveRate * hours * 100) / 100,
+      imageUrl: room.imageUrl,
+      imageIsAiGenerated: room.imageIsAiGenerated,
     });
   }
 

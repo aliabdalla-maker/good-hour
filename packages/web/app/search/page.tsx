@@ -6,6 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import type { SearchResult } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
 import { humanizeTag } from "../../lib/humanize";
+import { ListingImage } from "../../components/ui/ListingImage";
+import { InteractiveCard } from "../../components/ui/Card";
+import { SkeletonGrid } from "../../components/ui/Skeleton";
+import { EmptyState } from "../../components/ui/EmptyState";
 
 function defaultDateTime(hoursFromNow: number) {
   const d = new Date(Date.now() + hoursFromNow * 60 * 60 * 1000);
@@ -20,7 +24,7 @@ export default function SearchPage() {
   const [includeAiPrice, setIncludeAiPrice] = useState(true);
   const [submittedQuery, setSubmittedQuery] = useState({ city, startsAt, endsAt, includeAiPrice });
 
-  const { data: results, isFetching, error } = useQuery<SearchResult[]>({
+  const { data: results, isFetching, error, refetch } = useQuery<SearchResult[]>({
     queryKey: ["search", submittedQuery],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -73,37 +77,79 @@ export default function SearchPage() {
         </button>
       </form>
 
-      {isFetching && <p className="text-slate-500">Searching...</p>}
-      {error && <p className="text-red-600">Failed to search. Is the API running?</p>}
+      {isFetching && <SkeletonGrid count={4} />}
+      {error && !isFetching && (
+        <EmptyState
+          icon="⚠️"
+          title="We couldn't complete that search"
+          description="Something went wrong on our side. Please try again in a moment."
+          action={
+            <button
+              onClick={() => refetch()}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+            >
+              Try again
+            </button>
+          }
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {results?.map((room) => (
-          <Link
-            key={room.roomId}
-            href={`/room/${room.roomId}`}
-            className="rounded border border-slate-200 bg-white p-4 hover:border-slate-400"
-          >
-            <p className="text-xs uppercase tracking-wide text-slate-400">{room.city}</p>
-            <h2 className="text-lg font-medium">{room.roomName}</h2>
-            <p className="text-sm text-slate-500">{room.propertyName}</p>
-            <p className="mt-2 text-sm">Capacity: {room.capacity} · {room.hours}h</p>
-            <p className="mt-1 text-sm text-slate-500">{room.amenities.map(humanizeTag).join(", ")}</p>
-            <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-lg font-semibold">
-                {room.currency} {room.estimatedTotal.toFixed(2)}
-              </span>
-              {room.aiSuggestedHourlyRate !== null && (
-                <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
-                  AI rate: {room.currency} {room.aiSuggestedHourlyRate.toFixed(2)}/hr
-                </span>
-              )}
-            </div>
-          </Link>
-        ))}
-        {results && results.length === 0 && !isFetching && (
-          <p className="text-slate-500">Nothing available for that search. Try widening the time range.</p>
-        )}
+        {!isFetching &&
+          results?.map((room, idx) => (
+            <Link key={room.roomId} href={`/room/${room.roomId}`}>
+              <InteractiveCard
+                className="group h-full animate-fade-in-up overflow-hidden"
+                style={{ animationDelay: `${Math.min(idx, 6) * 70}ms` }}
+              >
+                <div className="relative h-36 overflow-hidden">
+                  <ListingImage
+                    src={room.imageUrl}
+                    alt={room.roomName}
+                    seed={room.roomName}
+                    className="transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" />
+                  <span className="absolute bottom-2 left-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                    {room.city}
+                  </span>
+                  {room.imageIsAiGenerated && (
+                    <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+                      ✨ AI-generated photo
+                    </span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h2 className="text-lg font-medium">{room.roomName}</h2>
+                  <p className="text-sm text-slate-500">{room.propertyName}</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Capacity: {room.capacity} · {room.hours}h
+                  </p>
+                  {room.amenities.length > 0 && (
+                    <p className="mt-1 text-sm text-slate-400">{room.amenities.map(humanizeTag).join(", ")}</p>
+                  )}
+                  <div className="mt-3 flex flex-wrap items-baseline gap-2">
+                    <span className="text-lg font-semibold">
+                      {room.currency} {room.estimatedTotal.toFixed(2)}
+                    </span>
+                    {room.aiSuggestedHourlyRate !== null && (
+                      <span className="rounded bg-ai-50 px-2 py-0.5 text-xs font-medium text-ai-700">
+                        ✦ AI rate: {room.currency} {room.aiSuggestedHourlyRate.toFixed(2)}/hr
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </InteractiveCard>
+            </Link>
+          ))}
       </div>
+
+      {results && results.length === 0 && !isFetching && !error && (
+        <EmptyState
+          title="Nothing available for those times"
+          description="Try widening the time range, or search a different city."
+        />
+      )}
     </div>
   );
 }

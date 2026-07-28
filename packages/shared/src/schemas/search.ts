@@ -31,5 +31,9 @@ export const searchResultSchema = z.object({
   currency: z.string(),
   hours: z.number(),
   estimatedTotal: z.number(),
+  imageUrl: z.string().nullable(),
+  /// Mirrors Room.imageIsAiGenerated so search cards can disclose a generated
+  /// photo, exactly as the browse cards already do.
+  imageIsAiGenerated: z.boolean(),
 });
 export type SearchResult = z.infer<typeof searchResultSchema>;

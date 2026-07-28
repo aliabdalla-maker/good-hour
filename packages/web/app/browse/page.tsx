@@ -40,7 +40,7 @@ function rateRange(property: PropertyWithRooms) {
 
 export default function BrowsePage() {
   const [filter, setFilter] = useState<"ALL" | ListingCategory>("ALL");
-  const { data: properties, isPending, error } = useQuery<PropertyWithRooms[]>({
+  const { data: properties, isPending, error, refetch } = useQuery<PropertyWithRooms[]>({
     queryKey: ["catalog"],
     queryFn: () => api.get<PropertyWithRooms[]>("/listings/catalog"),
   });
@@ -115,7 +115,21 @@ export default function BrowsePage() {
       </div>
 
       {isPending && <SkeletonGrid count={4} />}
-      {error && <EmptyState icon="⚠️" title="Couldn't load listings" description="Is the API running?" />}
+      {error && (
+        <EmptyState
+          icon="⚠️"
+          title="We couldn't load listings"
+          description="Something went wrong on our side. Please try again in a moment."
+          action={
+            <button
+              onClick={() => refetch()}
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+            >
+              Try again
+            </button>
+          }
+        />
+      )}
 
       <div className="grid grid-cols-1 gap-6">
         {visible?.map((property, idx) => {
