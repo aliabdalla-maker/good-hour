@@ -11,8 +11,8 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             <span
               className={cn(
                 "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                state === "done" && "bg-brand-600 text-white",
-                state === "active" && "bg-brand-600 text-white ring-4 ring-brand-100",
+                state === "done" && "bg-brand-700 text-white",
+                state === "active" && "bg-brand-700 text-white ring-4 ring-brand-100",
                 state === "upcoming" && "bg-slate-200 text-slate-500"
               )}
               aria-current={state === "active" ? "step" : undefined}
@@ -22,13 +22,13 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             <span
               className={cn(
                 "text-xs font-medium",
-                state === "upcoming" ? "text-slate-400" : "text-slate-700"
+                state === "upcoming" ? "text-slate-500" : "text-slate-700"
               )}
             >
               {step}
             </span>
             {i < steps.length - 1 && (
-              <span className={cn("h-px flex-1", i < current ? "bg-brand-500" : "bg-slate-200")} />
+              <span className={cn("h-px flex-1", i < current ? "bg-brand-700" : "bg-slate-200")} />
             )}
           </li>
         );

@@ -66,7 +66,7 @@ function WalletInner() {
         action={
           <button
             onClick={() => refetch()}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
           >
             Try again
           </button>
@@ -98,13 +98,13 @@ function WalletInner() {
           </p>
         </div>
         <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card" style={{ animationDelay: "60ms" }}>
-          <p className="text-xs uppercase tracking-wide text-slate-400">Estimated value</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Estimated value</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">
             {data.currency} <AnimatedNumber value={data.totalEstimatedValue} decimals={2} />
           </p>
         </div>
         <div className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card" style={{ animationDelay: "120ms" }}>
-          <p className="text-xs uppercase tracking-wide text-slate-400">Buckets</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Buckets</p>
           <p className="mt-1 text-2xl font-semibold text-slate-900">
             <AnimatedNumber value={data.balances.length} />
           </p>
@@ -131,9 +131,9 @@ function WalletInner() {
                 <p className="text-sm text-slate-500">{CATEGORY_LABELS[b.category] ?? b.category}</p>
                 <p className="mt-1 text-xl font-semibold">
                   <AnimatedNumber value={b.hours} decimals={2} />
-                  <span className="text-sm font-normal text-slate-400"> hrs</span>
+                  <span className="text-sm font-normal text-slate-500"> hrs</span>
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-500">
                   ≈ {b.currency} {b.estimatedValue.toFixed(2)} · avg {b.currency} {b.avgUnitValue.toFixed(2)}/hr
                 </p>
               </Card>
@@ -154,7 +154,7 @@ function WalletInner() {
         <div className="overflow-x-auto">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
             <table className="w-full min-w-[34rem] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">When</th>
                   <th className="px-3 py-2">What</th>
@@ -168,7 +168,7 @@ function WalletInner() {
                     <td className="px-3 py-2 text-slate-500">{new Date(r.createdAt).toLocaleString()}</td>
                     <td className="px-3 py-2">
                       {KIND_LABELS[r.kind] ?? r.kind}
-                      {r.counterpartyEmail && <span className="text-slate-400"> · {r.counterpartyEmail}</span>}
+                      {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
                     <td className="px-3 py-2 text-slate-500">{CATEGORY_LABELS[r.category] ?? r.category}</td>
                     <td className={`px-3 py-2 text-right font-medium ${r.hours < 0 ? "text-red-600" : "text-emerald-700"}`}>
@@ -179,7 +179,7 @@ function WalletInner() {
                 ))}
                 {data.recent.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
+                    <td colSpan={4} className="px-3 py-6 text-center text-slate-500">
                       Nothing here yet.
                     </td>
                   </tr>
@@ -307,7 +307,7 @@ function MoneySection() {
                     onClick={() => setAmount(v)}
                     className={`flex-1 rounded-lg border px-2 py-1 text-xs transition ${
                       amount === v
-                        ? "border-brand-500 bg-brand-500 text-white"
+                        ? "border-brand-700 bg-brand-700 text-white"
                         : "border-slate-200 text-slate-600 hover:border-slate-300"
                     }`}
                   >
@@ -315,13 +315,13 @@ function MoneySection() {
                   </button>
                 ))}
               </div>
-              <p className="mb-3 text-xs text-slate-400">
+              <p className="mb-3 text-xs text-slate-500">
                 No fee to add money — funding your own account isn&apos;t a trade.
               </p>
               <button
                 onClick={() => start.mutate()}
                 disabled={start.isPending || amount < MIN_TOPUP_AMOUNT}
-                className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+                className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
               >
                 {start.isPending ? "Working…" : "Continue to card"}
               </button>
@@ -336,7 +336,7 @@ function MoneySection() {
         <div className="mt-3 overflow-x-auto">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
             <table className="w-full min-w-[30rem] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">When</th>
                   <th className="px-3 py-2">What</th>
@@ -349,7 +349,7 @@ function MoneySection() {
                     <td className="px-3 py-2 text-slate-500">{new Date(r.createdAt).toLocaleString()}</td>
                     <td className="px-3 py-2">
                       {WALLET_KIND_LABELS[r.kind] ?? r.kind}
-                      {r.counterpartyEmail && <span className="text-slate-400"> · {r.counterpartyEmail}</span>}
+                      {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
                     <td className={`px-3 py-2 text-right font-medium ${r.amount < 0 ? "text-red-600" : "text-emerald-700"}`}>
                       {r.amount > 0 ? "+" : ""}
@@ -430,11 +430,11 @@ function BuyHours({ onDone }: { onDone: () => void }) {
           className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
         />
       </label>
-      <p className="mb-3 text-xs text-slate-400">Priced at the live average rate for that category, plus a {BUYER_FEE_LABEL} buyer fee.</p>
+      <p className="mb-3 text-xs text-slate-500">Priced at the live average rate for that category, plus a {BUYER_FEE_LABEL} buyer fee.</p>
       <button
         onClick={() => buy.mutate()}
         disabled={buy.isPending}
-        className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+        className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
       >
         {buy.isPending ? "Working…" : "Buy hours"}
       </button>
@@ -505,7 +505,7 @@ function GiftHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () => voi
           className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
         />
       </label>
-      <p className="mb-3 text-xs text-slate-400">Gifts are free — no platform fee on a transfer.</p>
+      <p className="mb-3 text-xs text-slate-500">Gifts are free — no platform fee on a transfer.</p>
       <button
         onClick={() => send.mutate()}
         disabled={send.isPending || !toEmail}
@@ -615,7 +615,7 @@ function ExchangeHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () =>
             Rate {quote.rate.toFixed(3)} · fee {quote.feeHours.toFixed(2)}h
           </p>
           <p className="mt-1 text-xs text-slate-600">{quote.reasoning}</p>
-          <p className="mt-1 text-[11px] text-slate-400">Quoted by {quote.quotedBy}</p>
+          <p className="mt-1 text-[11px] text-slate-500">Quoted by {quote.quotedBy}</p>
         </div>
       )}
 
@@ -636,7 +636,7 @@ function ExchangeHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () =>
         </button>
       </div>
       {fromCategory === toCategory && (
-        <p className="mt-2 text-xs text-slate-400">Pick two different buckets to exchange between.</p>
+        <p className="mt-2 text-xs text-slate-500">Pick two different buckets to exchange between.</p>
       )}
       {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
       {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}

@@ -79,7 +79,7 @@ export default function MarketListingPage() {
         title="Listing not found"
         description="It may have been removed or sold out."
         action={
-          <Link href="/market" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+          <Link href="/market" className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white">
             Back to marketplace
           </Link>
         }
@@ -112,9 +112,9 @@ export default function MarketListingPage() {
               <h1 className="text-2xl font-semibold">{listing.title}</h1>
               {listing.sellerVerified && <Badge tone="success">✓ Verified seller</Badge>}
             </div>
-            <p className="mt-1 text-sm capitalize text-slate-400">{listing.category}</p>
+            <p className="mt-1 text-sm capitalize text-slate-500">{listing.category}</p>
             <p className="mt-4 whitespace-pre-wrap text-sm text-slate-700">{listing.description}</p>
-            <p className="mt-4 text-xs text-slate-400">
+            <p className="mt-4 text-xs text-slate-500">
               Sold by {listing.sellerHandle}
               {listing.sellerVerified && " · verified"}
             </p>
@@ -125,7 +125,7 @@ export default function MarketListingPage() {
       <Card className="animate-fade-in-up self-start p-5" style={{ animationDelay: "60ms" }}>
         <p className="text-2xl font-semibold">
           {listing.currency} {listing.price.toFixed(2)}
-          <span className="text-sm font-normal text-slate-400"> {PRICING_UNIT_LABELS[listing.pricingUnit]}</span>
+          <span className="text-sm font-normal text-slate-500"> {PRICING_UNIT_LABELS[listing.pricingUnit]}</span>
         </p>
         {listing.stock !== null && (
           <p className="mt-1 text-xs text-slate-500">{listing.stock} available</p>
@@ -189,7 +189,7 @@ export default function MarketListingPage() {
                   {listing.currency} {quote.buyerTotal.toFixed(2)}
                 </span>
               </div>
-              <p className="pt-1 text-xs text-slate-400">
+              <p className="pt-1 text-xs text-slate-500">
                 The seller receives {listing.currency} {quote.sellerProceeds.toFixed(2)} after their {SELLER_FEE_LABEL} fee.
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function MarketListingPage() {
                 ))}
               </div>
               {user && paymentMethod === "WALLET" && (
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-500">
                   Balance: {wallet?.currency ?? "GBP"} {(wallet?.balance ?? 0).toFixed(2)}
                 </p>
               )}
@@ -233,7 +233,7 @@ export default function MarketListingPage() {
             <button
               onClick={() => buy.mutate()}
               disabled={buy.isPending || isOwn || soldOut}
-              className="mt-4 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+              className="mt-4 w-full rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
             >
               {buy.isPending ? "Placing order…" : `Buy · ${listing.currency} ${quote.buyerTotal.toFixed(2)}`}
             </button>

@@ -74,12 +74,12 @@ function TravellerDashboardPageInner() {
                 <p className="font-semibold">
                   {booking.currency} {booking.totalAmount.toFixed(2)}
                 </p>
-                <p className="text-xs uppercase text-slate-400">{booking.status}</p>
+                <p className="text-xs uppercase text-slate-500">{booking.status}</p>
               </div>
             </Link>
             <div className="mt-2">
               {REVIEWABLE.has(booking.status) && (
-                <Link href={`/booking/${booking.id}/receipt`} className="text-sm font-medium text-brand-600 underline">
+                <Link href={`/booking/${booking.id}/receipt`} className="text-sm font-medium text-brand-700 underline">
                   View receipt
                 </Link>
               )}

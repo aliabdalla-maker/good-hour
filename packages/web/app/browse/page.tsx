@@ -83,13 +83,13 @@ export default function BrowsePage() {
                 href="/requests/new"
                 className="group rounded-xl bg-white/10 p-4 text-white ring-1 ring-white/25 backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/15"
               >
-                <h2 className="flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-500 px-2 py-0.5 text-[11px]">AI reverse auction</span></h2>
+                <h2 className="flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-[11px]">AI reverse auction</span></h2>
                 <p className="mt-1 text-sm text-white/80">Post what you need — hosts &amp; their agents bid for you.</p>
               </Link>
             </div>
           </div>
         </div>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-500">
           A {(BUYER_FEE_RATE * 100).toFixed(0)}% platform fee is charged to the traveller and a {(SELLER_FEE_RATE * 100).toFixed(0)}% fee to the host on every booking.
         </p>
       </section>
@@ -104,7 +104,7 @@ export default function BrowsePage() {
               onClick={() => setFilter(f.key)}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                 active
-                  ? "border-brand-500 bg-brand-500 text-white"
+                  ? "border-brand-700 bg-brand-700 text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
               }`}
             >
@@ -123,7 +123,7 @@ export default function BrowsePage() {
           action={
             <button
               onClick={() => refetch()}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
             >
               Try again
             </button>
@@ -142,7 +142,7 @@ export default function BrowsePage() {
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">{property.city}, {property.country}</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{property.city}, {property.country}</p>
                   <h2 className="text-lg font-semibold">{property.name}</h2>
                   <p className="text-sm text-slate-500">{property.addressLine}</p>
                 </div>
@@ -181,7 +181,7 @@ export default function BrowsePage() {
                         </div>
                         <p className="mt-1 text-xs text-slate-500">Capacity {room.capacity} · {room.minHours}-{room.maxHours}h</p>
                         {room.amenities.length > 0 && (
-                          <p className="mt-1 text-xs text-slate-400">{room.amenities.map(humanizeTag).join(", ")}</p>
+                          <p className="mt-1 text-xs text-slate-500">{room.amenities.map(humanizeTag).join(", ")}</p>
                         )}
                       </div>
                     </InteractiveCard>

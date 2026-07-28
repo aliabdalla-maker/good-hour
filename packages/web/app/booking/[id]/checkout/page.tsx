@@ -104,7 +104,7 @@ function CheckoutPageInner() {
           </div>
         )}
 
-        <p className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
+        <p className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-500">
           <span aria-hidden="true">🔒</span> Payments secured by Stripe · funds held until check-in
         </p>
       </Card>

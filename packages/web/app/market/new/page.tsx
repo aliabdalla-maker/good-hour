@@ -115,7 +115,7 @@ function NewListingInner() {
               placeholder="What exactly is included? Be specific — buyers commit based on this."
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
-            <span className="mt-1 block text-xs text-slate-400">{description.length} / 4000 (min 10)</span>
+            <span className="mt-1 block text-xs text-slate-500">{description.length} / 4000 (min 10)</span>
           </label>
 
           <div className="mb-3 grid grid-cols-2 gap-3">
@@ -147,7 +147,7 @@ function NewListingInner() {
           </div>
 
           <label className="mb-4 block text-sm">
-            Stock {kind === "SERVICE" && <span className="text-slate-400">(leave blank for unlimited)</span>}
+            Stock {kind === "SERVICE" && <span className="text-slate-500">(leave blank for unlimited)</span>}
             <input
               type="number"
               min={0}
@@ -162,7 +162,7 @@ function NewListingInner() {
           <button
             onClick={() => create.mutate()}
             disabled={!canSubmit || create.isPending}
-            className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
           >
             {create.isPending ? "Publishing…" : "Publish listing"}
           </button>
@@ -186,7 +186,7 @@ function NewListingInner() {
               <span>GBP {quote.sellerProceeds.toFixed(2)}</span>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs text-slate-500">
             The buyer pays GBP {quote.buyerTotal.toFixed(2)} — {BUYER_FEE_LABEL} each side. Proceeds land in your wallet
             when the order is paid.
           </p>
@@ -201,7 +201,7 @@ function NewListingInner() {
                   <Link href={`/market/${l.id}`} className="truncate hover:underline">
                     {l.title}
                   </Link>
-                  <span className="shrink-0 text-xs text-slate-400">
+                  <span className="shrink-0 text-xs text-slate-500">
                     {l.currency} {l.price.toFixed(2)}
                     {l.status !== "ACTIVE" && ` · ${l.status.toLowerCase()}`}
                   </span>

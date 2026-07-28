@@ -2,7 +2,7 @@ import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes,
 import { cn } from "../../lib/cn";
 
 const CONTROL =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:border-brand-500";
 
 export function Field({
   label,
@@ -19,7 +19,7 @@ export function Field({
     <label className="flex flex-col gap-1 text-sm">
       {label && <span className="font-medium text-slate-700">{label}</span>}
       {children}
-      {hint && !error && <span className="text-xs text-slate-400">{hint}</span>}
+      {hint && !error && <span className="text-xs text-slate-500">{hint}</span>}
       {error && <span className="text-xs text-red-600">{error}</span>}
     </label>
   );

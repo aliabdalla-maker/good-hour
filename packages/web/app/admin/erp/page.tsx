@@ -151,21 +151,21 @@ function ErpInner() {
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
           <div>
-            <p className="text-slate-400">Hours outstanding</p>
+            <p className="text-slate-500">Hours outstanding</p>
             <p className="text-xl font-semibold text-slate-900">
               <AnimatedNumber value={creditEconomy.outstandingHours} decimals={2} />
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Liability value</p>
+            <p className="text-slate-500">Liability value</p>
             <p className="text-xl font-semibold text-amber-700">{fmt(creditEconomy.outstandingValue)}</p>
           </div>
           <div>
-            <p className="text-slate-400">Credits sold</p>
+            <p className="text-slate-500">Credits sold</p>
             <p className="text-xl font-semibold text-slate-900">{fmt(creditEconomy.creditsSoldValue)}</p>
           </div>
           <div>
-            <p className="text-slate-400">Credit fee revenue</p>
+            <p className="text-slate-500">Credit fee revenue</p>
             <p className="text-xl font-semibold text-brand-700">{fmt(creditEconomy.creditFeeRevenue)}</p>
           </div>
         </div>
@@ -185,33 +185,33 @@ function ErpInner() {
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
             <div>
-              <p className="text-slate-400">Active products</p>
+              <p className="text-slate-500">Active products</p>
               <p className="text-xl font-semibold text-slate-900">
                 <AnimatedNumber value={marketplace.activeProducts} />
               </p>
             </div>
             <div>
-              <p className="text-slate-400">Active services</p>
+              <p className="text-slate-500">Active services</p>
               <p className="text-xl font-semibold text-slate-900">
                 <AnimatedNumber value={marketplace.activeServices} />
               </p>
             </div>
             <div>
-              <p className="text-slate-400">Paid orders</p>
+              <p className="text-slate-500">Paid orders</p>
               <p className="text-xl font-semibold text-slate-900">
                 <AnimatedNumber value={marketplace.paidOrders} />
               </p>
             </div>
             <div>
-              <p className="text-slate-400">GMV</p>
+              <p className="text-slate-500">GMV</p>
               <p className="text-lg font-semibold text-slate-900">{fmt(marketplace.grossMerchandiseValue)}</p>
             </div>
             <div>
-              <p className="text-slate-400">Commission</p>
+              <p className="text-slate-500">Commission</p>
               <p className="text-lg font-semibold text-brand-700">{fmt(marketplace.commissionRevenue)}</p>
             </div>
             <div>
-              <p className="text-slate-400">Seller proceeds</p>
+              <p className="text-slate-500">Seller proceeds</p>
               <p className="text-lg font-semibold text-slate-900">{fmt(marketplace.sellerProceedsTotal)}</p>
             </div>
           </div>
@@ -229,15 +229,15 @@ function ErpInner() {
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-slate-400">Held in user wallets</p>
+              <p className="text-slate-500">Held in user wallets</p>
               <p className="text-xl font-semibold text-amber-700">{fmt(wallet.heldBalance)}</p>
             </div>
             <div>
-              <p className="text-slate-400">Lifetime topped up</p>
+              <p className="text-slate-500">Lifetime topped up</p>
               <p className="text-xl font-semibold text-slate-900">{fmt(wallet.lifetimeToppedUp)}</p>
             </div>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-500">
             Top-ups carry no platform fee — funding an account isn&apos;t a trade. Commission is taken on
             the marketplace transaction and on time-credit purchases.
           </p>
@@ -254,7 +254,7 @@ function ErpInner() {
             </Link>
           </div>
           <p className="mb-3 text-2xl font-semibold text-slate-900">
-            <AnimatedNumber value={crm.total} /> <span className="text-sm font-normal text-slate-400">contacts</span>
+            <AnimatedNumber value={crm.total} /> <span className="text-sm font-normal text-slate-500">contacts</span>
           </p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(crm.byStage).map(([stage, count]) => (
@@ -274,19 +274,19 @@ function ErpInner() {
           </div>
           <div className="mb-3 grid grid-cols-2 gap-2 text-sm">
             <div>
-              <p className="text-slate-400">Offers submitted</p>
+              <p className="text-slate-500">Offers submitted</p>
               <p className="font-semibold text-slate-900"><AnimatedNumber value={bidding.totalOffers} /></p>
             </div>
             <div>
-              <p className="text-slate-400">Agent-submitted</p>
+              <p className="text-slate-500">Agent-submitted</p>
               <p className="font-semibold text-slate-900"><AnimatedNumber value={bidding.agentSubmittedOffers} /></p>
             </div>
             <div>
-              <p className="text-slate-400">Avg offers / request</p>
+              <p className="text-slate-500">Avg offers / request</p>
               <p className="font-semibold text-slate-900"><AnimatedNumber value={bidding.avgOffersPerRequest} decimals={2} /></p>
             </div>
             <div>
-              <p className="text-slate-400">Match rate</p>
+              <p className="text-slate-500">Match rate</p>
               <p className="font-semibold text-slate-900"><AnimatedNumber value={bidding.matchRate * 100} decimals={0} />%</p>
             </div>
           </div>
@@ -297,7 +297,7 @@ function ErpInner() {
               </span>
             ))}
             {Object.keys(bidding.requestsByStatus).length === 0 && (
-              <span className="text-xs text-slate-400">No booking requests yet.</span>
+              <span className="text-xs text-slate-500">No booking requests yet.</span>
             )}
           </div>
         </section>
@@ -309,7 +309,7 @@ function ErpInner() {
           <h2 className="mb-3 text-lg font-semibold">Booking pipeline</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">Status</th>
                   <th className="px-3 py-2 text-right">Count</th>
@@ -326,7 +326,7 @@ function ErpInner() {
                 ))}
                 {Object.keys(bookingPipeline).length === 0 && (
                   <tr>
-                    <td colSpan={2} className="px-3 py-6 text-center text-slate-400">
+                    <td colSpan={2} className="px-3 py-6 text-center text-slate-500">
                       No bookings yet.
                     </td>
                   </tr>
@@ -341,7 +341,7 @@ function ErpInner() {
           <h2 className="mb-3 text-lg font-semibold">Agent ops</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">Agent</th>
                   <th className="px-3 py-2 text-right">Decisions</th>
@@ -364,7 +364,7 @@ function ErpInner() {
                 ))}
                 {agentOps.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-3 py-6 text-center text-slate-400">
+                    <td colSpan={4} className="px-3 py-6 text-center text-slate-500">
                       No agent decisions logged yet.
                     </td>
                   </tr>
@@ -380,7 +380,7 @@ function ErpInner() {
         <h2 className="mb-3 text-lg font-semibold">Supplier payout ledger</h2>
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">Supplier</th>
                 <th className="px-3 py-2">Verification</th>
@@ -401,7 +401,7 @@ function ErpInner() {
               ))}
               {supplierLedger.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-slate-400">
+                  <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
                     No suppliers yet.
                   </td>
                 </tr>
@@ -411,7 +411,7 @@ function ErpInner() {
         </div>
       </section>
 
-      <p className="mt-6 text-xs text-slate-400">Generated {new Date(data.generatedAt).toLocaleString()}</p>
+      <p className="mt-6 text-xs text-slate-500">Generated {new Date(data.generatedAt).toLocaleString()}</p>
     </div>
   );
 }
@@ -437,7 +437,7 @@ function StatCard({
         ...(gradient ? { backgroundImage: "linear-gradient(135deg,#0d9488,#14b8a6 60%,#7c3aed)" } : {}),
       }}
     >
-      <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-400"}`}>{label}</p>
+      <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-500"}`}>{label}</p>
       <p className={`mt-1 text-xl font-semibold ${gradient ? "" : "text-slate-900"}`}>
         {financialPrefix(fmt)}
         <AnimatedNumber value={value} decimals={2} />

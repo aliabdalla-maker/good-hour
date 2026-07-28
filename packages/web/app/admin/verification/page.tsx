@@ -39,7 +39,7 @@ function AdminVerificationPageInner() {
               <div>
                 <p className="font-medium">{s.email}</p>
                 {s.note && <p className="text-sm text-slate-500">{s.note}</p>}
-                <p className="text-xs text-slate-400">Submitted {new Date(s.submittedAt).toLocaleString()}</p>
+                <p className="text-xs text-slate-500">Submitted {new Date(s.submittedAt).toLocaleString()}</p>
               </div>
               <div className="flex gap-2">
                 <button

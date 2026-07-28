@@ -110,7 +110,7 @@ function BookingRequestOffersPageInner() {
                 )}
               </p>
               {offer.message && <p className="text-sm text-slate-500">{offer.message}</p>}
-              <p className="text-xs text-slate-400">Status: {offer.status}</p>
+              <p className="text-xs text-slate-500">Status: {offer.status}</p>
             </div>
             {user?.id === bookingRequest.travellerId && bookingRequest.status === "OPEN" && offer.status !== "REJECTED" && (
               <button

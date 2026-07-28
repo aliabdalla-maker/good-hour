@@ -165,7 +165,7 @@ function RoomDetail() {
           <Stars rating={room.avgRating} count={room.reviewCount} />
 
           <div>
-            <p className="text-xs uppercase text-slate-400">Host rate</p>
+            <p className="text-xs uppercase text-slate-500">Host rate</p>
             <p className="text-xl font-semibold text-slate-900">
               {room.currency} {room.baseHourlyRate.toFixed(2)}<span className="text-sm font-normal text-slate-500">/hr</span>
             </p>
@@ -181,9 +181,9 @@ function RoomDetail() {
               </div>
               <p className="text-sm text-slate-500">{room.property.addressLine}</p>
               {room.property.amenities.length > 0 && (
-                <p className="mt-1 text-xs text-slate-400">Property: {room.property.amenities.map(humanizeTag).join(", ")}</p>
+                <p className="mt-1 text-xs text-slate-500">Property: {room.property.amenities.map(humanizeTag).join(", ")}</p>
               )}
-              <p className="mt-2 text-xs text-slate-400">Free cancellation while the booking is unpaid.</p>
+              <p className="mt-2 text-xs text-slate-500">Free cancellation while the booking is unpaid.</p>
             </Card>
           )}
 
@@ -264,12 +264,12 @@ function RoomDetail() {
               <Card key={r.id} className="p-4">
                 <div className="flex items-center justify-between">
                   <Stars rating={r.rating} />
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-500">
                     {new Date(r.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 {r.comment && <p className="mt-2 text-sm text-slate-600">“{r.comment}”</p>}
-                <p className="mt-2 text-xs text-slate-400">— {r.authorName}, verified guest</p>
+                <p className="mt-2 text-xs text-slate-500">— {r.authorName}, verified guest</p>
               </Card>
             ))}
           </div>

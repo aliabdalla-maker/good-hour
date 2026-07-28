@@ -115,7 +115,7 @@ export function AssistantWidget() {
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                m.role === "user" ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-700"
+                m.role === "user" ? "bg-brand-700 text-white" : "border border-slate-200 bg-white text-slate-700"
               }`}
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
@@ -137,7 +137,7 @@ export function AssistantWidget() {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400">Thinking…</div>
+            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">Thinking…</div>
           </div>
         )}
       </div>
@@ -159,7 +159,7 @@ export function AssistantWidget() {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-full bg-brand-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           Send
         </button>

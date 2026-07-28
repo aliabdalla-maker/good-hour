@@ -55,7 +55,7 @@ function OrdersInner() {
         action={
           <button
             onClick={() => refetch()}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
           >
             Try again
           </button>
@@ -80,7 +80,7 @@ function OrdersInner() {
           title="No orders yet"
           description="Anything you buy or sell on the marketplace shows up here."
           action={
-            <Link href="/market" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+            <Link href="/market" className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white">
               Browse the marketplace
             </Link>
           }
@@ -111,7 +111,7 @@ function OrderTable({
       <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
           <table className="w-full min-w-[38rem] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">When</th>
                 <th className="px-3 py-2">Listing</th>

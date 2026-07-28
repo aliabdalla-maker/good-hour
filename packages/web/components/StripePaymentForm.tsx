@@ -45,7 +45,7 @@ function PayButton({ onSucceeded, label }: { onSucceeded: () => void; label: str
       >
         {submitting ? "Processing..." : label}
       </button>
-      <p className="text-xs text-slate-400">Test card: 4242 4242 4242 4242, any future date, any CVC.</p>
+      <p className="text-xs text-slate-500">Test card: 4242 4242 4242 4242, any future date, any CVC.</p>
     </form>
   );
 }

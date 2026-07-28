@@ -107,7 +107,7 @@ function NotificationsPageInner() {
               </span>
             </div>
             <p className="mt-1 text-sm text-slate-600">{n.body}</p>
-            <p className="mt-1 text-xs text-slate-400">{new Date(n.createdAt).toLocaleString()}</p>
+            <p className="mt-1 text-xs text-slate-500">{new Date(n.createdAt).toLocaleString()}</p>
           </div>
         ))}
         {notifications && notifications.length === 0 && (

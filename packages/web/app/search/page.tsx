@@ -86,7 +86,7 @@ export default function SearchPage() {
           action={
             <button
               onClick={() => refetch()}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
             >
               Try again
             </button>
@@ -126,7 +126,7 @@ export default function SearchPage() {
                     Capacity: {room.capacity} · {room.hours}h
                   </p>
                   {room.amenities.length > 0 && (
-                    <p className="mt-1 text-sm text-slate-400">{room.amenities.map(humanizeTag).join(", ")}</p>
+                    <p className="mt-1 text-sm text-slate-500">{room.amenities.map(humanizeTag).join(", ")}</p>
                   )}
                   <div className="mt-3 flex flex-wrap items-baseline gap-2">
                     <span className="text-lg font-semibold">

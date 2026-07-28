@@ -59,7 +59,7 @@ export default function MarketPage() {
             </Link>
             <Link
               href="/market/new"
-              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+              className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
             >
               Sell something
             </Link>
@@ -105,7 +105,7 @@ export default function MarketPage() {
             onClick={() => setKind(t.key)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               kind === t.key
-                ? "border-brand-500 bg-brand-500 text-white"
+                ? "border-brand-700 bg-brand-700 text-white"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`}
           >
@@ -148,7 +148,7 @@ export default function MarketPage() {
           action={
             <button
               onClick={() => refetch()}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
             >
               Try again
             </button>
@@ -169,7 +169,7 @@ export default function MarketPage() {
             user ? (
               <Link
                 href="/market/new"
-                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+                className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
               >
                 Sell something
               </Link>
@@ -206,10 +206,10 @@ export default function MarketPage() {
                     <h2 className="font-medium leading-tight">{l.title}</h2>
                     {l.sellerVerified && <Badge tone="success">✓</Badge>}
                   </div>
-                  <p className="mt-1 text-xs capitalize text-slate-400">{l.category}</p>
+                  <p className="mt-1 text-xs capitalize text-slate-500">{l.category}</p>
                   <p className="mt-2 line-clamp-2 text-sm text-slate-600">{l.description}</p>
                   {l.stock !== null && (
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-slate-500">
                       {l.stock > 0 ? `${l.stock} available` : "Sold out"}
                     </p>
                   )}
@@ -220,7 +220,7 @@ export default function MarketPage() {
       </div>
 
       {data && data.total > data.listings.length && (
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-500">
           Showing {data.listings.length} of {data.total} — narrow your search to see more.
         </p>
       )}

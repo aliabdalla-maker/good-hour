@@ -50,7 +50,7 @@ function ReceiptPageInner() {
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div>
             <p className="text-lg font-semibold">Good Hours</p>
-            <p className="text-xs text-slate-400">goodhour.shop</p>
+            <p className="text-xs text-slate-500">goodhour.shop</p>
           </div>
           <div className="text-right text-xs text-slate-500">
             <p>Receipt #{r.bookingId.slice(-8).toUpperCase()}</p>
@@ -60,7 +60,7 @@ function ReceiptPageInner() {
         </div>
 
         <div className="border-b border-slate-100 py-4">
-          <p className="text-xs uppercase tracking-wide text-slate-400">{CATEGORY_LABEL[r.category]}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">{CATEGORY_LABEL[r.category]}</p>
           <p className="font-medium">{r.itemName}</p>
           <p className="text-sm text-slate-500">{r.hostName} · {r.city}</p>
           <p className="mt-1 text-sm text-slate-500">
@@ -77,7 +77,7 @@ function ReceiptPageInner() {
           </div>
         </div>
 
-        <p className="border-t border-slate-100 pt-4 text-center text-xs text-slate-400">
+        <p className="border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
           Thank you for booking with Good Hours. This receipt is your proof of purchase.
         </p>
       </div>

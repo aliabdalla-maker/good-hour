@@ -8,7 +8,7 @@ export function Stars({
   showEmpty?: boolean;
 }) {
   if (rating == null || (count != null && count === 0)) {
-    return showEmpty ? <span className="text-xs text-slate-400">No reviews yet</span> : null;
+    return showEmpty ? <span className="text-xs text-slate-500">No reviews yet</span> : null;
   }
   const full = Math.round(rating);
   return (

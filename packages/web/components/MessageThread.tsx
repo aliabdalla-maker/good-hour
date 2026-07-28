@@ -48,18 +48,18 @@ function Thread({ bookingId }: { bookingId: string }) {
             <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[80%] rounded-lg px-3 py-1.5 text-sm ${
-                  m.mine ? "bg-brand-500 text-white" : "bg-white text-slate-700 border border-slate-200"
+                  m.mine ? "bg-brand-700 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
                 <p>{m.body}</p>
-                <p className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-slate-400"}`}>
+                <p className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-slate-500"}`}>
                   {m.senderRole} · {new Date(m.createdAt).toLocaleString()}
                 </p>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-xs text-slate-400">No messages yet. Say hello to coordinate your booking.</p>
+          <p className="text-xs text-slate-500">No messages yet. Say hello to coordinate your booking.</p>
         )}
       </div>
       <form

@@ -107,14 +107,14 @@ function EarningsSection() {
           <p className="mt-1 text-xs text-white/75">from confirmed &amp; completed bookings</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Active bookings</p>
-          <p className="mt-1 text-3xl font-semibold text-brand-600">{data.confirmedCount}</p>
-          <p className="mt-1 text-xs text-slate-400">confirmed &amp; upcoming</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Active bookings</p>
+          <p className="mt-1 text-3xl font-semibold text-brand-700">{data.confirmedCount}</p>
+          <p className="mt-1 text-xs text-slate-500">confirmed &amp; upcoming</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-          <p className="text-xs uppercase tracking-wide text-slate-400">Total bookings</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Total bookings</p>
           <p className="mt-1 text-3xl font-semibold text-slate-900">{data.bookings.length}</p>
-          <p className="mt-1 text-xs text-slate-400">all time</p>
+          <p className="mt-1 text-xs text-slate-500">all time</p>
         </div>
       </div>
 
@@ -126,11 +126,11 @@ function EarningsSection() {
               <div key={b.id} className="flex items-center justify-between py-2 text-sm">
                 <div>
                   <p className="font-medium">{b.itemName}</p>
-                  <p className="text-xs text-slate-400">{new Date(b.startsAt).toLocaleString()}</p>
+                  <p className="text-xs text-slate-500">{new Date(b.startsAt).toLocaleString()}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-slate-800">{money(b.payout)}</p>
-                  <span className="text-[11px] uppercase tracking-wide text-slate-400">{b.status}</span>
+                  <span className="text-[11px] uppercase tracking-wide text-slate-500">{b.status}</span>
                 </div>
               </div>
             ))}
@@ -266,7 +266,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
             )}
           </li>
         ))}
-        {property.rooms.length === 0 && <li className="text-slate-400">No rooms yet</li>}
+        {property.rooms.length === 0 && <li className="text-slate-500">No rooms yet</li>}
       </ul>
 
       {showForm ? (
@@ -309,7 +309,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
                   <button
                     type="button"
                     onClick={() => { setImageUrl(""); setImageIsAiGenerated(false); }}
-                    className="w-fit text-xs text-slate-400 hover:text-red-500"
+                    className="w-fit text-xs text-slate-500 hover:text-red-500"
                   >
                     Remove photo
                   </button>

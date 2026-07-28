@@ -186,7 +186,7 @@ function SourcingPageInner() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">{d.name}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500">
                   {d.origin === "URL" ? d.sourceUrl : d.origin === "SMOOBU" ? "Smoobu" : d.origin === "FEED" ? "Feed import" : "Manual"} ·{" "}
                   {d.suggestedHourlyRate ? `${d.currency} ${d.suggestedHourlyRate.toFixed(2)}/hr` : "no rate parsed"}
                 </p>
@@ -195,7 +195,7 @@ function SourcingPageInner() {
                 <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="rounded border border-slate-300 px-3 py-1 hover:border-slate-500">
                   {expanded === d.id ? "Cancel" : "Review & publish"}
                 </button>
-                <button onClick={() => discard(d.id)} className="rounded px-3 py-1 text-slate-400 hover:text-red-600">Discard</button>
+                <button onClick={() => discard(d.id)} className="rounded px-3 py-1 text-slate-500 hover:text-red-600">Discard</button>
               </div>
             </div>
             {expanded === d.id && <PublishForm draft={d} onDone={() => { setExpanded(null); refresh(); }} />}
