@@ -32,11 +32,36 @@ export const erpAgentOpsRowSchema = z.object({
 });
 export type ErpAgentOpsRow = z.infer<typeof erpAgentOpsRowSchema>;
 
+export const erpCrmSnapshotSchema = z.object({
+  total: z.number().int(),
+  byStage: z.record(z.string(), z.number().int()),
+});
+export type ErpCrmSnapshot = z.infer<typeof erpCrmSnapshotSchema>;
+
+export const erpBiddingPipelineSchema = z.object({
+  requestsByStatus: z.record(z.string(), z.number().int()),
+  totalOffers: z.number().int(),
+  agentSubmittedOffers: z.number().int(),
+  avgOffersPerRequest: z.number(),
+  matchRate: z.number(),
+});
+export type ErpBiddingPipeline = z.infer<typeof erpBiddingPipelineSchema>;
+
+export const erpAiInsightsSchema = z.object({
+  summary: z.string(),
+  recommendations: z.array(z.string()),
+  generatedBy: z.string(),
+});
+export type ErpAiInsights = z.infer<typeof erpAiInsightsSchema>;
+
 export const erpOverviewSchema = z.object({
   financial: erpFinancialSchema,
   bookingPipeline: erpBookingPipelineSchema,
   supplierLedger: z.array(erpSupplierLedgerRowSchema),
   agentOps: z.array(erpAgentOpsRowSchema),
+  crm: erpCrmSnapshotSchema,
+  bidding: erpBiddingPipelineSchema,
+  aiInsights: erpAiInsightsSchema,
   generatedAt: z.string(),
 });
 export type ErpOverview = z.infer<typeof erpOverviewSchema>;

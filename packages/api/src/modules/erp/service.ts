@@ -1,5 +1,6 @@
 import { prisma } from "@gihtcx/db";
 import type { ErpOverview } from "@gihtcx/shared";
+import { generateAiInsights } from "./insights";
 
 // Bookings in these states represent real, recognised revenue -- unlike
 // PENDING_PAYMENT (not yet paid) or CANCELLED/EXPIRED (never collected).
@@ -96,13 +97,46 @@ async function getAgentOps(): Promise<ErpOverview["agentOps"]> {
   }));
 }
 
+/** CRM stage breakdown -- queried directly rather than via the crm module, since ERP only needs the summary, not full contact records. */
+async function getCrmSnapshot(): Promise<ErpOverview["crm"]> {
+  const groups = await prisma.user.groupBy({ by: ["crmStage"], _count: { _all: true } });
+  const byStage = Object.fromEntries(groups.map((g) => [g.crmStage, g._count._all]));
+  const total = groups.reduce((sum, g) => sum + g._count._all, 0);
+  return { total, byStage };
+}
+
+/** Reverse-bidding (BookingRequest/SupplierOffer) throughput -- the C2B/B2A/A2B side of the marketplace. */
+async function getBiddingPipeline(): Promise<ErpOverview["bidding"]> {
+  const [requestGroups, totalOffers, agentSubmittedOffers] = await Promise.all([
+    prisma.bookingRequest.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.supplierOffer.count(),
+    prisma.supplierOffer.count({ where: { isAgentSubmitted: true } }),
+  ]);
+
+  const requestsByStatus = Object.fromEntries(requestGroups.map((g) => [g.status, g._count._all]));
+  const totalRequests = requestGroups.reduce((sum, g) => sum + g._count._all, 0);
+  const matched = requestsByStatus.MATCHED ?? 0;
+
+  return {
+    requestsByStatus,
+    totalOffers,
+    agentSubmittedOffers,
+    avgOffersPerRequest: totalRequests > 0 ? Math.round((totalOffers / totalRequests) * 100) / 100 : 0,
+    matchRate: totalRequests > 0 ? Math.round((matched / totalRequests) * 1000) / 1000 : 0,
+  };
+}
+
 export async function getErpOverview(): Promise<ErpOverview> {
-  const [financial, bookingPipeline, supplierLedger, agentOps] = await Promise.all([
+  const [financial, bookingPipeline, supplierLedger, agentOps, crm, bidding] = await Promise.all([
     getFinancial(),
     getBookingPipeline(),
     getSupplierLedger(),
     getAgentOps(),
+    getCrmSnapshot(),
+    getBiddingPipeline(),
   ]);
 
-  return { financial, bookingPipeline, supplierLedger, agentOps, generatedAt: new Date().toISOString() };
+  const aiInsights = await generateAiInsights({ financial, bookingPipeline, supplierLedger, agentOps, crm, bidding });
+
+  return { financial, bookingPipeline, supplierLedger, agentOps, crm, bidding, aiInsights, generatedAt: new Date().toISOString() };
 }
