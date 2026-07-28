@@ -67,8 +67,28 @@ export const erpCreditEconomySchema = z.object({
 });
 export type ErpCreditEconomy = z.infer<typeof erpCreditEconomySchema>;
 
+/** Products & services marketplace: GMV, commission earned, catalogue size. */
+export const erpMarketplaceSchema = z.object({
+  activeProducts: z.number().int(),
+  activeServices: z.number().int(),
+  paidOrders: z.number().int(),
+  grossMerchandiseValue: z.number(),
+  commissionRevenue: z.number(),
+  sellerProceedsTotal: z.number(),
+});
+export type ErpMarketplace = z.infer<typeof erpMarketplaceSchema>;
+
+/** Money sitting in user wallets — a liability, like unredeemed hours. */
+export const erpWalletSchema = z.object({
+  heldBalance: z.number(),
+  lifetimeToppedUp: z.number(),
+});
+export type ErpWallet = z.infer<typeof erpWalletSchema>;
+
 export const erpOverviewSchema = z.object({
   creditEconomy: erpCreditEconomySchema,
+  marketplace: erpMarketplaceSchema,
+  wallet: erpWalletSchema,
   financial: erpFinancialSchema,
   bookingPipeline: erpBookingPipelineSchema,
   supplierLedger: z.array(erpSupplierLedgerRowSchema),

@@ -33,11 +33,12 @@ export function NavBar() {
   const primaryLinks = [
     { href: "/browse", label: "Browse" },
     { href: "/search", label: "Search by time" },
+    { href: "/market", label: "Products & services" },
     { href: "/requests/new", label: "Request a match" },
   ];
   const roleLinks = [
-    // The time wallet belongs to every signed-in account, not a single role.
-    ...(user ? [{ href: "/wallet", label: "Time wallet" }] : []),
+    // The wallet belongs to every signed-in account, not a single role.
+    ...(user ? [{ href: "/wallet", label: "Wallet" }] : []),
     ...(user?.role === "SUPPLIER"
       ? [
           { href: "/dashboard/supplier", label: "Supplier dashboard" },

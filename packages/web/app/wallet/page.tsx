@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CreditWallet, ExchangeQuote, ListingCategory } from "@gihtcx/shared";
-import { LISTING_CATEGORIES } from "@gihtcx/shared";
+import type { CreditWallet, ExchangeQuote, ListingCategory, MoneyWallet } from "@gihtcx/shared";
+import { LISTING_CATEGORIES, MIN_TOPUP_AMOUNT } from "@gihtcx/shared";
 import { api, ApiError } from "../../lib/apiClient";
+import { StripePaymentForm } from "../../components/StripePaymentForm";
 import { RequireAuth } from "../../components/RequireAuth";
 import { Card } from "../../components/ui/Card";
 import { Spinner } from "../../components/ui/Spinner";
@@ -76,10 +77,14 @@ function WalletInner() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold">Time wallet</h1>
+      <h1 className="mb-1 text-2xl font-semibold">Wallet</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Every hour you buy is yours to keep, spend, gift or exchange — not tied to a single booking.
+        Money and hours in one place. Every hour you buy is yours to keep, spend, gift or exchange —
+        not tied to a single booking.
       </p>
+
+      <MoneySection />
+      <h2 className="mb-3 mt-10 text-lg font-semibold">Time credits</h2>
 
       {/* Headline balances */}
       <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -185,6 +190,179 @@ function WalletInner() {
         </div>
       </section>
     </div>
+  );
+}
+
+const WALLET_KIND_LABELS: Record<string, string> = {
+  TOPUP: "Topped up",
+  PURCHASE: "Marketplace purchase",
+  SALE_PROCEEDS: "Sale proceeds",
+  REFUND: "Refund",
+  FEE: "Platform fee",
+  PAYOUT: "Withdrawal",
+};
+
+/** Money balance + card top-up. Separate query from the credit wallet so one failing doesn't blank the other. */
+function MoneySection() {
+  const qc = useQueryClient();
+  const [amount, setAmount] = useState(25);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const err = useFormError();
+
+  const { data, isPending } = useQuery<MoneyWallet>({
+    queryKey: ["money-wallet"],
+    queryFn: () => api.get<MoneyWallet>("/wallet"),
+  });
+
+  const start = useMutation({
+    mutationFn: () =>
+      api.post<{ clientSecret: string | null; simulated: boolean; amount: number; currency: string }>(
+        "/wallet/topup",
+        { amount }
+      ),
+    onMutate: () => {
+      err.clear();
+      setNotice(null);
+      setClientSecret(null);
+    },
+    onSuccess: (q) => {
+      if (q.clientSecret) {
+        setClientSecret(q.clientSecret);
+      } else {
+        // No Stripe keys configured — say so rather than implying money landed.
+        setNotice(
+          `Test mode: a ${q.currency} ${q.amount.toFixed(2)} top-up was created but no card was charged, so the balance is unchanged.`
+        );
+      }
+    },
+    onError: err.show,
+  });
+
+  const currency = data?.currency ?? "GBP";
+
+  return (
+    <section>
+      <h2 className="mb-3 text-lg font-semibold">Money</h2>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <div
+          className="animate-fade-in-up rounded-2xl p-4 text-white shadow-card lg:col-span-2"
+          style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#14b8a6 55%,#0ea5e9)" }}
+        >
+          <p className="text-xs uppercase tracking-wide text-white/80">Wallet balance</p>
+          <p className="mt-1 text-3xl font-semibold">
+            {currency} {isPending ? "—" : <AnimatedNumber value={data?.balance ?? 0} decimals={2} />}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-white/80">
+            <span>
+              Earned from sales: {currency} {(data?.lifetimeEarnings ?? 0).toFixed(2)}
+            </span>
+            <span>
+              Spent: {currency} {(data?.lifetimeSpend ?? 0).toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        <Card className="animate-fade-in-up p-4" style={{ animationDelay: "60ms" }}>
+          <h3 className="mb-3 font-semibold">Top up</h3>
+          {clientSecret ? (
+            <>
+              <p className="mb-2 text-sm text-slate-600">
+                Adding {currency} {amount.toFixed(2)}
+              </p>
+              <StripePaymentForm
+                clientSecret={clientSecret}
+                label={`Top up ${currency} ${amount.toFixed(2)}`}
+                onSucceeded={() => {
+                  setClientSecret(null);
+                  setNotice("Payment received — your balance updates once the confirmation lands.");
+                  // The webhook credits the ledger, so refetch shortly after.
+                  setTimeout(() => qc.invalidateQueries({ queryKey: ["money-wallet"] }), 1500);
+                }}
+              />
+              <button
+                onClick={() => setClientSecret(null)}
+                className="mt-2 text-xs text-slate-500 underline-offset-2 hover:underline"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <label className="mb-3 block text-sm">
+                Amount ({currency})
+                <input
+                  type="number"
+                  min={MIN_TOPUP_AMOUNT}
+                  step={1}
+                  value={amount}
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
+                />
+              </label>
+              <div className="mb-3 flex gap-2">
+                {[10, 25, 50, 100].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setAmount(v)}
+                    className={`flex-1 rounded-lg border px-2 py-1 text-xs transition ${
+                      amount === v
+                        ? "border-brand-500 bg-brand-500 text-white"
+                        : "border-slate-200 text-slate-600 hover:border-slate-300"
+                    }`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+              <p className="mb-3 text-xs text-slate-400">
+                No fee to add money — funding your own account isn&apos;t a trade.
+              </p>
+              <button
+                onClick={() => start.mutate()}
+                disabled={start.isPending || amount < MIN_TOPUP_AMOUNT}
+                className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
+              >
+                {start.isPending ? "Working…" : "Continue to card"}
+              </button>
+            </>
+          )}
+          {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
+          {notice && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{notice}</p>}
+        </Card>
+      </div>
+
+      {data && data.recent.length > 0 && (
+        <div className="mt-3 overflow-x-auto">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
+            <table className="w-full min-w-[30rem] text-sm">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-3 py-2">When</th>
+                  <th className="px-3 py-2">What</th>
+                  <th className="px-3 py-2 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recent.slice(0, 8).map((r) => (
+                  <tr key={r.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
+                    <td className="px-3 py-2 text-slate-500">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="px-3 py-2">
+                      {WALLET_KIND_LABELS[r.kind] ?? r.kind}
+                      {r.counterpartyEmail && <span className="text-slate-400"> · {r.counterpartyEmail}</span>}
+                    </td>
+                    <td className={`px-3 py-2 text-right font-medium ${r.amount < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                      {r.amount > 0 ? "+" : ""}
+                      {r.amount.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

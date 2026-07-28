@@ -86,7 +86,18 @@ function ErpInner() {
     return <p className="py-24 text-center text-sm text-red-600">Couldn&apos;t load the ERP overview.</p>;
   }
 
-  const { financial, bookingPipeline, supplierLedger, agentOps, crm, bidding, creditEconomy, aiInsights } = data;
+  const {
+    financial,
+    bookingPipeline,
+    supplierLedger,
+    agentOps,
+    crm,
+    bidding,
+    creditEconomy,
+    marketplace,
+    wallet,
+    aiInsights,
+  } = data;
   const fmt = (n: number) => `${financial.currency} ${n.toFixed(2)}`;
 
   return (
@@ -159,6 +170,79 @@ function ErpInner() {
           </div>
         </div>
       </section>
+
+      {/* Marketplace + money-wallet liability */}
+      <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section
+          className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover"
+          style={{ animationDelay: "200ms" }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Products &amp; services</h2>
+            <Link href="/market" className="text-xs font-medium text-brand-700 hover:underline">
+              Open marketplace →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+            <div>
+              <p className="text-slate-400">Active products</p>
+              <p className="text-xl font-semibold text-slate-900">
+                <AnimatedNumber value={marketplace.activeProducts} />
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400">Active services</p>
+              <p className="text-xl font-semibold text-slate-900">
+                <AnimatedNumber value={marketplace.activeServices} />
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400">Paid orders</p>
+              <p className="text-xl font-semibold text-slate-900">
+                <AnimatedNumber value={marketplace.paidOrders} />
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400">GMV</p>
+              <p className="text-lg font-semibold text-slate-900">{fmt(marketplace.grossMerchandiseValue)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400">Commission</p>
+              <p className="text-lg font-semibold text-brand-700">{fmt(marketplace.commissionRevenue)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400">Seller proceeds</p>
+              <p className="text-lg font-semibold text-slate-900">{fmt(marketplace.sellerProceedsTotal)}</p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover"
+          style={{ animationDelay: "260ms" }}
+        >
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold">Money wallets</h2>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+              Held balances are a liability
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-slate-400">Held in user wallets</p>
+              <p className="text-xl font-semibold text-amber-700">{fmt(wallet.heldBalance)}</p>
+            </div>
+            <div>
+              <p className="text-slate-400">Lifetime topped up</p>
+              <p className="text-xl font-semibold text-slate-900">{fmt(wallet.lifetimeToppedUp)}</p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-slate-400">
+            Top-ups carry no platform fee — funding an account isn&apos;t a trade. Commission is taken on
+            the marketplace transaction and on time-credit purchases.
+          </p>
+        </section>
+      </div>
 
       {/* CRM + bidding integration */}
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

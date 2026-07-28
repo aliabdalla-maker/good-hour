@@ -179,6 +179,11 @@ model User {
   crmNotes        CrmNote[]
   creditEntries   CreditLedgerEntry[]
   creditPurchases CreditPurchase[]
+  walletEntries   WalletLedgerEntry[]
+  walletTopUps    WalletTopUp[]
+  marketListings  MarketplaceListing[]
+  ordersAsBuyer   MarketplaceOrder[]   @relation("MarketplaceOrdersAsBuyer")
+  ordersAsSeller  MarketplaceOrder[]   @relation("MarketplaceOrdersAsSeller")
 
   @@map("users")
 }
@@ -625,4 +630,187 @@ model CreditPurchase {
 
   @@index([userId, status])
   @@map("credit_purchases")
+}
+
+// ---------------------------------------------------------------------------
+// Money wallet
+//
+// Same discipline as the time-credit ledger: append-only, no balance column,
+// balances are always a SUM. Money and hours are deliberately separate ledgers
+// rather than one polymorphic table -- they have different units, different
+// rounding rules (pence vs quarter-hours) and different failure consequences,
+// and merging them would mean every query needs a discriminator to stay correct.
+// ---------------------------------------------------------------------------
+
+/// Why a money-wallet row exists. Sign is carried by `amount`, not implied here.
+enum WalletEntryKind {
+  /// Card payment into the wallet.
+  TOPUP
+  /// Spent buying something on the marketplace.
+  PURCHASE
+  /// Received for selling something (net of the seller-side commission).
+  SALE_PROCEEDS
+  /// Returned after a cancelled/refunded order.
+  REFUND
+  /// Platform commission recorded against the wallet.
+  FEE
+  /// Withdrawal to an external account. Reserved -- payouts are NOT implemented.
+  PAYOUT
+}
+
+enum WalletTopUpStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+model WalletLedgerEntry {
+  id       String          @id @default(cuid())
+  userId   String
+  user     User            @relation(fields: [userId], references: [id])
+  /// Signed, in major units. Positive credits the wallet, negative debits it.
+  amount   Decimal         @db.Decimal(12, 2)
+  currency String          @default("GBP")
+  kind     WalletEntryKind
+
+  topUpId        String?
+  topUp          WalletTopUp? @relation(fields: [topUpId], references: [id])
+  relatedOrderId String?
+  counterpartyUserId String?
+  /// Groups the buyer debit, seller credit and fee rows of one order.
+  correlationId  String?
+  note           String?
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([correlationId])
+  @@map("wallet_ledger_entries")
+}
+
+/// A card top-up. Credited only once Stripe confirms, never at request time.
+///
+/// No platform fee is charged here: funding your own account is not a trade.
+/// The 1%-buyer/1%-seller commission applies to the marketplace transaction
+/// itself, and to buying time credits (which is buying an asset).
+model WalletTopUp {
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("GBP")
+
+  stripePaymentIntentId String?           @unique
+  status                WalletTopUpStatus @default(PENDING)
+  /// Set with the ledger row so a retried webhook cannot double-credit.
+  creditedAt            DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  ledgerEntries WalletLedgerEntry[]
+
+  @@index([userId, status])
+  @@map("wallet_top_ups")
+}
+
+// ---------------------------------------------------------------------------
+// Products & services marketplace
+// ---------------------------------------------------------------------------
+
+enum MarketplaceKind {
+  PRODUCT
+  SERVICE
+}
+
+/// How a listing is priced. Hourly service listings are what make a
+/// professional's time sellable alongside a hotel's hours.
+enum PricingUnit {
+  FIXED
+  HOURLY
+  HALF_DAY
+  DAY
+  PROJECT
+  SUBSCRIPTION_MONTH
+}
+
+enum MarketplaceListingStatus {
+  ACTIVE
+  PAUSED
+  SOLD_OUT
+}
+
+enum MarketplaceOrderStatus {
+  PENDING_PAYMENT
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+/// How the buyer settled an order.
+enum OrderPaymentMethod {
+  WALLET
+  CARD
+}
+
+model MarketplaceListing {
+  id          String                   @id @default(cuid())
+  sellerId    String
+  seller      User                     @relation(fields: [sellerId], references: [id])
+  kind        MarketplaceKind
+  title       String
+  description String
+  /// Free-form tag (e.g. "legal", "photography", "equipment") for filtering.
+  category    String
+  price       Decimal                  @db.Decimal(12, 2)
+  pricingUnit PricingUnit              @default(FIXED)
+  currency    String                   @default("GBP")
+  imageUrl    String?
+  /// Units available. Null means unmetered -- normal for a service.
+  stock       Int?
+  status      MarketplaceListingStatus @default(ACTIVE)
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  orders MarketplaceOrder[]
+
+  @@index([kind, status])
+  @@index([category])
+  @@map("marketplace_listings")
+}
+
+model MarketplaceOrder {
+  id        String             @id @default(cuid())
+  listingId String
+  listing   MarketplaceListing @relation(fields: [listingId], references: [id])
+  buyerId   String
+  buyer     User               @relation("MarketplaceOrdersAsBuyer", fields: [buyerId], references: [id])
+  sellerId  String
+  seller    User               @relation("MarketplaceOrdersAsSeller", fields: [sellerId], references: [id])
+
+  quantity  Int     @default(1)
+  /// Price per unit at the time of order, so later listing edits can't
+  /// retroactively change what someone was charged.
+  unitPrice Decimal @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+  /// 1% charged to the buyer on top.
+  buyerFee  Decimal @db.Decimal(12, 2)
+  /// 1% deducted from the seller's proceeds.
+  sellerFee Decimal @db.Decimal(12, 2)
+  /// buyerFee + sellerFee -- the platform's take (2% of subtotal).
+  platformFee    Decimal @db.Decimal(12, 2)
+  buyerTotal     Decimal @db.Decimal(12, 2)
+  sellerProceeds Decimal @db.Decimal(12, 2)
+  currency       String  @default("GBP")
+
+  status        MarketplaceOrderStatus @default(PENDING_PAYMENT)
+  paymentMethod OrderPaymentMethod     @default(WALLET)
+
+  stripePaymentIntentId String?   @unique
+  /// Set when the money actually moved, so a retried webhook can't pay twice.
+  settledAt             DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+  @@map("marketplace_orders")
 }

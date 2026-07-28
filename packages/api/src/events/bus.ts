@@ -16,6 +16,11 @@ export type DomainEvent =
       type: "credits.transferred";
       payload: { fromUserId: string; toUserId: string; category: string; hours: number };
     }
+  | { type: "wallet.topped_up"; payload: { userId: string; amount: number } }
+  | {
+      type: "order.paid";
+      payload: { orderId: string; buyerId: string; sellerId: string; amount: number };
+    }
   | {
       type: "credits.exchanged";
       payload: {

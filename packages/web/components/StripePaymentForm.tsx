@@ -8,7 +8,7 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-function PayButton({ onSucceeded }: { onSucceeded: () => void }) {
+function PayButton({ onSucceeded, label }: { onSucceeded: () => void; label: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
@@ -43,20 +43,31 @@ function PayButton({ onSucceeded }: { onSucceeded: () => void }) {
         disabled={!stripe || submitting}
         className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50"
       >
-        {submitting ? "Processing..." : "Pay now"}
+        {submitting ? "Processing..." : label}
       </button>
       <p className="text-xs text-slate-400">Test card: 4242 4242 4242 4242, any future date, any CVC.</p>
     </form>
   );
 }
 
-export function StripePaymentForm({ clientSecret, onSucceeded }: { clientSecret: string; onSucceeded: () => void }) {
+export function StripePaymentForm({
+  clientSecret,
+  onSucceeded,
+  label = "Pay now",
+}: {
+  clientSecret: string;
+  onSucceeded: () => void;
+  /** Button copy — "Top up" reads wrong as "Pay now" on a wallet top-up. */
+  label?: string;
+}) {
   if (!stripePromise) {
     return <p className="text-sm text-red-600">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured.</p>;
   }
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <PayButton onSucceeded={onSucceeded} />
+    // Keyed on clientSecret: Elements caches the intent, so reusing the same
+    // mounted instance for a second top-up would confirm the first one again.
+    <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret }}>
+      <PayButton onSucceeded={onSucceeded} label={label} />
     </Elements>
   );
 }

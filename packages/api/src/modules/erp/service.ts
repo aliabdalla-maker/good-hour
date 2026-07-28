@@ -2,6 +2,8 @@ import { prisma } from "@gihtcx/db";
 import type { ErpOverview } from "@gihtcx/shared";
 import { generateAiInsights } from "./insights";
 import { getOutstandingCreditLiability } from "../credits";
+import { getWalletLiability } from "../wallet";
+import { getMarketplaceStats } from "../marketplace";
 
 // Bookings in these states represent real, recognised revenue -- unlike
 // PENDING_PAYMENT (not yet paid) or CANCELLED/EXPIRED (never collected).
@@ -128,16 +130,27 @@ async function getBiddingPipeline(): Promise<ErpOverview["bidding"]> {
 }
 
 export async function getErpOverview(): Promise<ErpOverview> {
-  const [financial, bookingPipeline, supplierLedger, agentOps, crm, bidding, creditEconomy] =
-    await Promise.all([
-      getFinancial(),
-      getBookingPipeline(),
-      getSupplierLedger(),
-      getAgentOps(),
-      getCrmSnapshot(),
-      getBiddingPipeline(),
-      getOutstandingCreditLiability(),
-    ]);
+  const [
+    financial,
+    bookingPipeline,
+    supplierLedger,
+    agentOps,
+    crm,
+    bidding,
+    creditEconomy,
+    marketplace,
+    wallet,
+  ] = await Promise.all([
+    getFinancial(),
+    getBookingPipeline(),
+    getSupplierLedger(),
+    getAgentOps(),
+    getCrmSnapshot(),
+    getBiddingPipeline(),
+    getOutstandingCreditLiability(),
+    getMarketplaceStats(),
+    getWalletLiability(),
+  ]);
 
   const aiInsights = await generateAiInsights({
     financial,
@@ -147,6 +160,8 @@ export async function getErpOverview(): Promise<ErpOverview> {
     crm,
     bidding,
     creditEconomy,
+    marketplace,
+    wallet,
   });
 
   return {
@@ -157,6 +172,8 @@ export async function getErpOverview(): Promise<ErpOverview> {
     crm,
     bidding,
     creditEconomy,
+    marketplace,
+    wallet,
     aiInsights,
     generatedAt: new Date().toISOString(),
   };
