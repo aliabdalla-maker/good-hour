@@ -281,11 +281,17 @@ export async function exchangeCredits(userId: string, input: ExchangeCreditsInpu
   }
 
   const fromUnitValue = await getAvgUnitValue(userId, input.fromCategory);
-  // Value is conserved across the swap: the same money, spread over a
-  // different number of hours. Without this the wallet's total worth would
-  // jump every time someone exchanged.
+  // Price the destination hours off the GROSS conversion, not the net.
+  //
+  // Dividing the surrendered value by the post-fee hours would inflate the
+  // unit value by exactly the fee and hand it straight back — the wallet's
+  // total worth would come out unchanged and the exchange commission would be
+  // purely cosmetic. Using gross hours keeps one hour worth one hour's share
+  // of the money, so the fee genuinely costs the holder ~1% of value, which
+  // is the whole point of charging it.
   const outValue = fromUnitValue * input.hours;
-  const toUnitValue = quote.hoursOut > 0 ? round2(outValue / quote.hoursOut) : 0;
+  const grossHoursOut = quote.hoursOut + quote.feeHours;
+  const toUnitValue = grossHoursOut > 0 ? round2(outValue / grossHoursOut) : 0;
   const correlationId = randomUUID();
 
   await applyLedgerWrites([
