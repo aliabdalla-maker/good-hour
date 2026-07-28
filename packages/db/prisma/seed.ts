@@ -174,11 +174,88 @@ async function main() {
       },
     }));
 
+  // Marketplace demo catalogue — products and services alongside the hourly
+  // booking inventory. Every description is prefixed "[Demo listing]" so a
+  // visitor is never misled into thinking they can really hire this person;
+  // delete these before real sellers trade here.
+  const DEMO_LISTINGS = [
+    {
+      kind: "SERVICE" as const,
+      title: "Cybersecurity consulting",
+      description:
+        "[Demo listing] Threat modelling, penetration-test triage and remediation planning. Billed by the hour.",
+      category: "cybersecurity",
+      price: 145,
+      pricingUnit: "HOURLY" as const,
+      stock: null,
+    },
+    {
+      kind: "SERVICE" as const,
+      title: "Commercial contract review",
+      description:
+        "[Demo listing] Fixed-fee review of a commercial agreement with a written summary of risks and redlines.",
+      category: "legal",
+      price: 400,
+      pricingUnit: "PROJECT" as const,
+      stock: null,
+    },
+    {
+      kind: "SERVICE" as const,
+      title: "Event photography",
+      description:
+        "[Demo listing] Full-day coverage, edited gallery delivered within five working days.",
+      category: "photography",
+      price: 750,
+      pricingUnit: "DAY" as const,
+      stock: null,
+    },
+    {
+      kind: "SERVICE" as const,
+      title: "English to French translation",
+      description:
+        "[Demo listing] Certified translation of business and legal documents, priced per hour of work.",
+      category: "translation",
+      price: 55,
+      pricingUnit: "HOURLY" as const,
+      stock: null,
+    },
+    {
+      kind: "PRODUCT" as const,
+      title: "Conference AV kit hire",
+      description:
+        "[Demo listing] Projector, screen, wireless mics and a technician for setup. Collected from central London.",
+      category: "equipment",
+      price: 180,
+      pricingUnit: "DAY" as const,
+      stock: 4,
+    },
+    {
+      kind: "PRODUCT" as const,
+      title: "Airport lounge day pass",
+      description:
+        "[Demo listing] Single-entry lounge access, valid 12 months from purchase. Digital voucher.",
+      category: "travel",
+      price: 42,
+      pricingUnit: "FIXED" as const,
+      stock: 25,
+    },
+  ];
+
+  for (const l of DEMO_LISTINGS) {
+    const exists = await prisma.marketplaceListing.findFirst({
+      where: { sellerId: supplier.id, title: l.title },
+    });
+    if (!exists) {
+      await prisma.marketplaceListing.create({ data: { ...l, sellerId: supplier.id } });
+    }
+  }
+
   console.log("Seeded demo data:", {
     supplier: supplier.email,
     traveller: traveller.email,
     admin: admin.email,
     properties: [property.name, fleet.name, desk.name],
+    marketplaceListings: DEMO_LISTINGS.length,
   });
 }
 
