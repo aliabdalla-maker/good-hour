@@ -215,7 +215,7 @@ sequenceDiagram
     T->>Web: /wallet → "Buy 4 ROOM hours"
     Web->>API: POST /credits/purchase {category, hours}
     API->>DB: mean baseHourlyRate of ACTIVE rooms in category
-    Note over API: computeTradeFee(unitValue × hours)<br/>subtotal + 1% buyer fee
+    Note over API: computeTradeFee(unitValue × hours)<br/>subtotal + buyer fee
     API->>DB: INSERT CreditPurchase (status PENDING)
     API->>S: paymentIntents.create(metadata.creditPurchaseId)
     API->>DB: store stripePaymentIntentId
@@ -300,7 +300,7 @@ sequenceDiagram
     T->>API: POST /credits/exchange {from, to, hours}
     Note over API: quote is RE-FETCHED, never taken<br/>from the client — a stale or edited<br/>favourable rate must not be replayable
     API->>DB: applyLedgerWrites([−hours EXCHANGE_OUT, +hoursOut EXCHANGE_IN])
-    Note over API: destination hours priced off the GROSS<br/>conversion, so the 1% commission is real<br/>(dividing by net would refund it)
+    Note over API: destination hours priced off the GROSS<br/>conversion, so the commission is real<br/>(dividing by net would refund it)
 ```
 
 ## 9. Class diagram — core domain model
@@ -387,7 +387,7 @@ classDiagram
         +Decimal hours
         +Decimal unitValue
         +Decimal subtotal
-        +Decimal buyerFee "1%"
+        +Decimal buyerFee "buyer-side rate"
         +Decimal total
         +CreditPurchaseStatus status
         +DateTime grantedAt "idempotency guard for Stripe retries"

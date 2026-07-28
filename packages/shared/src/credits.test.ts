@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { computeTradeFee, BUYER_FEE_RATE, SELLER_FEE_RATE } from "./money";
 import { creditHoursSchema, exchangeQuoteQuerySchema } from "./schemas/credits";
 
-test("charges 1% to the buyer and 1% to the seller on any trade", () => {
+test("charges the buyer fee on top and the seller fee from proceeds on any trade", () => {
   const f = computeTradeFee(100);
   assert.equal(f.subtotal, 100);
-  assert.equal(f.buyerFee, 1);
-  assert.equal(f.sellerFee, 1);
-  assert.equal(f.buyerTotal, 101);
-  assert.equal(f.sellerProceeds, 99);
-  assert.equal(f.platformFee, 2);
+  assert.equal(f.buyerFee, 10);
+  assert.equal(f.sellerFee, 10);
+  assert.equal(f.buyerTotal, 110);
+  assert.equal(f.sellerProceeds, 90);
+  assert.equal(f.platformFee, 20);
 });
 
 test("trade fee matches the advertised rates for arbitrary amounts", () => {
@@ -18,8 +18,9 @@ test("trade fee matches the advertised rates for arbitrary amounts", () => {
     const f = computeTradeFee(subtotal);
     assert.equal(f.buyerFee, Math.round(subtotal * 100 * BUYER_FEE_RATE) / 100);
     assert.equal(f.sellerFee, Math.round(subtotal * 100 * SELLER_FEE_RATE) / 100);
-    // The platform's take is always exactly the two halves, never a rounded
-    // 2% of the subtotal — those differ by a penny at some amounts.
+    // The platform's take is always exactly the two halves summed, never the
+    // combined rate applied to the subtotal — those differ by a penny at some
+    // amounts because each side rounds independently.
     assert.equal(f.platformFee, Math.round((f.buyerFee + f.sellerFee) * 100) / 100);
   }
 });

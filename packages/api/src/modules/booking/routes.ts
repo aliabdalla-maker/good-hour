@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { createBookingSchema, bookingPublicSchema, receiptViewSchema, supplierEarningsSchema } from "@gihtcx/shared";
-import { cancelBooking, createDirectBooking, getBookingById, getReceipt, getSupplierEarnings, listBookingsForTraveller, toPublicBooking } from "./service";
+import { cancelBooking, createDirectBooking, getBookingForViewer, getReceipt, getSupplierEarnings, listBookingsForTraveller, toPublicBooking } from "./service";
 
 export default async function bookingRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -49,7 +49,10 @@ export default async function bookingRoutes(app: FastifyInstance) {
       schema: { params: z.object({ bookingId: z.string() }), response: { 200: bookingPublicSchema } },
     },
     async (request, reply) => {
-      const booking = await getBookingById(request.params.bookingId);
+      // A session alone is not authorization. Without this, any registered
+      // account could read any booking's financials by id — the sibling
+      // /receipt and /cancel routes always checked ownership; this one didn't.
+      const booking = await getBookingForViewer(request.params.bookingId, request.currentUser!.sub);
       return reply.send(toPublicBooking(booking));
     }
   );

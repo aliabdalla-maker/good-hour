@@ -3,7 +3,8 @@ import { z } from "zod";
 import { AppError } from "../../plugins/errorHandler";
 import { simulatePaymentSucceeded } from "./service";
 import { constructWebhookEvent, handleWebhookEvent } from "./webhookHandler";
-import { featureFlags } from "../../config";
+import { config, featureFlags } from "../../config";
+import { getBookingForViewer } from "../booking";
 
 export default async function paymentsRoutes(app: FastifyInstance) {
   // Scoped to this plugin only (Fastify plugin encapsulation): Stripe needs
@@ -30,6 +31,12 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       schema: { params: z.object({ bookingId: z.string() }) },
     },
     async (request, reply) => {
+      // Never reachable in production, whatever the Stripe config says. Before
+      // this, a single missing STRIPE_SECRET_KEY turned "confirm any booking
+      // without paying" into a live, authenticated endpoint.
+      if (config.NODE_ENV === "production") {
+        throw new AppError(404, "Not found", "NOT_FOUND");
+      }
       if (featureFlags.paymentsEnabled) {
         throw new AppError(
           400,
@@ -37,7 +44,11 @@ export default async function paymentsRoutes(app: FastifyInstance) {
           "SIMULATION_DISABLED"
         );
       }
-      await simulatePaymentSucceeded((request.params as { bookingId: string }).bookingId);
+      // Ownership check: this confirms a booking and promotes its slots, so it
+      // must not work on someone else's booking even in development.
+      const { bookingId } = request.params as { bookingId: string };
+      await getBookingForViewer(bookingId, request.currentUser!.sub);
+      await simulatePaymentSucceeded(bookingId);
       return reply.status(204).send();
     }
   );

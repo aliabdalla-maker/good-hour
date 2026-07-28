@@ -38,7 +38,7 @@ worth, for the time-credit wallet.
   (`hoursOut: 0`, `quotedBy: "unavailable"`) rather than defaulting to 1:1 —
   a par swap between unpriced categories would hand someone a windfall or rob
   them.
-- The 1% commission is taken in hours of the destination category
+- The 10% commission is taken in hours of the destination category
   (`feeHours`). The exchange itself re-fetches the quote server-side rather
   than trusting one supplied by the client, so a stale or hand-edited
   favourable rate can't be replayed.

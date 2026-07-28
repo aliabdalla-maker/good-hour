@@ -73,7 +73,7 @@ pricing, offer negotiation) with a full decision audit trail.
   `www.softwareequality.com` verbatim, not fabricated.
 - **Time-credit economy is live** (`modules/credits`, `/wallet`). Buy hours with
   money, redeem them against a booking, gift them to another account, or
-  exchange them across categories at an AI-quoted rate. The 1%-buyer/1%-seller
+  exchange them across categories at an AI-quoted rate. The 10%-buyer/10%-seller
   commission now covers credit trades as well as bookings, via
   `computeTradeFee`. See `ARCHITECTURE.md` § Time-credit economy for the three
   design decisions that carry the weight, and `OPERATIONS.md` for the ledger
@@ -126,8 +126,8 @@ Two gotchas worth knowing if you ever need to read the old Railway data:
   implying the hours have landed. Wiring Elements there is the obvious next
   step; the server side is finished and the webhook grant path is tested.
 - **Peer-to-peer credit sale/auction isn't built.** Gifting (free) and
-  cross-category exchange (1%) exist. Selling hours to another user *for money*
-  is where the 1%-both-sides rule gets its fullest expression, and it's the
+  cross-category exchange (10%) exist. Selling hours to another user *for money*
+  is where the 10%-both-sides rule gets its fullest expression, and it's the
   natural next feature — `computeTradeFee` already returns both sides.
 - Credit `unitValue` is a weighted average over inflows, rounded to 2dp. On
   very small balances that rounding shows up as a few pence of drift in the

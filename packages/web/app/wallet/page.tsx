@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreditWallet, ExchangeQuote, ListingCategory, MoneyWallet } from "@gihtcx/shared";
-import { LISTING_CATEGORIES, MIN_TOPUP_AMOUNT } from "@gihtcx/shared";
+import { LISTING_CATEGORIES, MIN_TOPUP_AMOUNT , BUYER_FEE_LABEL } from "@gihtcx/shared";
 import { api, ApiError } from "../../lib/apiClient";
 import { StripePaymentForm } from "../../components/StripePaymentForm";
 import { RequireAuth } from "../../components/RequireAuth";
@@ -430,7 +430,7 @@ function BuyHours({ onDone }: { onDone: () => void }) {
           className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
         />
       </label>
-      <p className="mb-3 text-xs text-slate-400">Priced at the live average rate for that category, plus a 1% buyer fee.</p>
+      <p className="mb-3 text-xs text-slate-400">Priced at the live average rate for that category, plus a {BUYER_FEE_LABEL} buyer fee.</p>
       <button
         onClick={() => buy.mutate()}
         disabled={buy.isPending}

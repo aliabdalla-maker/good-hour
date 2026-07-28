@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeTradeFee } from "./money";
+import { computeTradeFee, BUYER_FEE_RATE } from "./money";
 import {
   createMarketplaceListingSchema,
   marketplaceSearchQuerySchema,
@@ -11,22 +11,22 @@ import { topUpWalletSchema, MIN_TOPUP_AMOUNT } from "./schemas/wallet";
 
 const pence = (n: number) => Math.round(n * 100);
 
-test("an order charges 1% to the buyer and 1% to the seller", () => {
+test("an order charges the buyer fee on top and the seller fee from proceeds", () => {
   const q = computeTradeFee(200);
-  assert.equal(q.buyerTotal, 202);
-  assert.equal(q.sellerProceeds, 198);
-  assert.equal(q.platformFee, 4);
+  assert.equal(q.buyerTotal, 220);
+  assert.equal(q.sellerProceeds, 180);
+  assert.equal(q.platformFee, 40);
 });
 
 test("multi-quantity orders fee on the line total, not per unit", () => {
-  // 3 x 19.99 = 59.97; fee is 1% of the total (0.60), not 3 x 1% of 19.99 (0.60
-  // here by luck, but the rounding differs at other prices — assert the rule).
+  // 3 x 19.99 = 59.97; the fee is charged on the LINE TOTAL, not per unit —
+  // per-unit rounding drifts from line-total rounding at many prices.
   const unit = 19.99;
   const qty = 3;
   const line = Math.round(unit * qty * 100) / 100;
   const q = computeTradeFee(line);
   assert.equal(pence(q.subtotal), pence(line));
-  assert.equal(pence(q.buyerFee), Math.round(pence(line) * 0.01));
+  assert.equal(pence(q.buyerFee), Math.round(pence(line) * BUYER_FEE_RATE));
 });
 
 test("every pricing unit has a human label", () => {

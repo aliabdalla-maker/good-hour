@@ -10,7 +10,7 @@ import type {
   MoneyWallet,
   OrderPaymentMethod,
 } from "@gihtcx/shared";
-import { PRICING_UNIT_LABELS, computeTradeFee } from "@gihtcx/shared";
+import { PRICING_UNIT_LABELS, computeTradeFee , BUYER_FEE_LABEL, SELLER_FEE_LABEL } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { useCurrentUser } from "../../../lib/useCurrentUser";
 import { Card } from "../../../components/ui/Card";
@@ -114,7 +114,10 @@ export default function MarketListingPage() {
             </div>
             <p className="mt-1 text-sm capitalize text-slate-400">{listing.category}</p>
             <p className="mt-4 whitespace-pre-wrap text-sm text-slate-700">{listing.description}</p>
-            <p className="mt-4 text-xs text-slate-400">Sold by {listing.sellerEmail}</p>
+            <p className="mt-4 text-xs text-slate-400">
+              Sold by {listing.sellerHandle}
+              {listing.sellerVerified && " · verified"}
+            </p>
           </div>
         </div>
       </div>
@@ -175,7 +178,7 @@ export default function MarketListingPage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Buyer fee (1%)</span>
+                <span className="text-slate-500">Buyer fee ({BUYER_FEE_LABEL})</span>
                 <span>
                   {listing.currency} {quote.buyerFee.toFixed(2)}
                 </span>
@@ -187,7 +190,7 @@ export default function MarketListingPage() {
                 </span>
               </div>
               <p className="pt-1 text-xs text-slate-400">
-                The seller receives {listing.currency} {quote.sellerProceeds.toFixed(2)} after their 1% fee.
+                The seller receives {listing.currency} {quote.sellerProceeds.toFixed(2)} after their {SELLER_FEE_LABEL} fee.
               </p>
             </div>
 

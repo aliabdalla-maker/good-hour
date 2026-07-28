@@ -90,6 +90,9 @@ export default async function biddingRoutes(app: FastifyInstance) {
   server.get(
     "/requests/:requestId",
     {
+      // Was unauthenticated: exposed the traveller's maxBudget and
+      // autoAcceptEnabled to anyone holding a request id.
+      preHandler: [app.authenticate],
       schema: { params: z.object({ requestId: z.string() }), response: { 200: bookingRequestPublicSchema } },
     },
     async (request, reply) => {
@@ -101,6 +104,9 @@ export default async function biddingRoutes(app: FastifyInstance) {
   server.get(
     "/requests/:requestId/offers",
     {
+      // Was unauthenticated: a supplier could read every rival's offeredTotal
+      // and undercut it by a penny, which destroys the auction's integrity.
+      preHandler: [app.authenticate],
       schema: { params: z.object({ requestId: z.string() }), response: { 200: z.array(supplierOfferPublicSchema) } },
     },
     async (request, reply) => {

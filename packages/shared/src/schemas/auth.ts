@@ -1,10 +1,12 @@
 import { z } from "zod";
-import { ROLES } from "../enums";
+import { ROLES, SELF_REGISTERABLE_ROLES } from "../enums";
 
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
-  role: z.enum(ROLES).default("TRAVELLER"),
+  // NOT the full ROLES list — see SELF_REGISTERABLE_ROLES. Allowing "ADMIN"
+  // here was a privilege-escalation hole on an unauthenticated endpoint.
+  role: z.enum(SELF_REGISTERABLE_ROLES).default("TRAVELLER"),
   isBusinessAccount: z.boolean().default(false),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;

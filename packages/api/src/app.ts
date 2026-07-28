@@ -35,6 +35,11 @@ export function buildApp() {
     // exceeds that. Matches the imageUrl cap in listings.ts with headroom
     // for the rest of the JSON body.
     bodyLimit: 5 * 1024 * 1024,
+    // Behind Render's proxy every request arrives from the proxy's address, so
+    // without this the rate limiter keyed all traffic on one bucket: a single
+    // client at 100 req/min could 429 every other user, and 10 bad logins from
+    // anywhere locked out logins globally.
+    trustProxy: true,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);

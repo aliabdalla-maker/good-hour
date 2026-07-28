@@ -1,13 +1,36 @@
 /**
- * Platform commission taken on every booking. Both sides of the marketplace
- * are charged 1% of the agreed room price: the traveller (buyer) pays 1% on
- * top, and the supplier (seller) gives up 1% from their payout. Net platform
- * revenue is therefore 2% of the subtotal.
+ * Platform commission taken on every transaction. Both sides are charged 10%
+ * of the agreed price: the buyer pays 10% on top, and the seller gives up 10%
+ * from their proceeds. Net platform revenue is 20% of the subtotal.
+ *
+ * Why 20% and not the 2% this launched with: at 2%, the commission was smaller
+ * than the card-processing cost on most of the actual inventory. With Stripe UK
+ * at roughly 1.5% + 20p, break-even sat around a £41 subtotal — and four of the
+ * six live listings lose money at their own minimum booking duration. Hourly
+ * booking is structurally small-ticket, so a 2% take rate was payment-processor
+ * pricing, not marketplace pricing. 20% is in line with comparable marketplaces
+ * (Fiverr ~20%, Airbnb ~15%, Booking.com 15-25%) and clears processing costs at
+ * every realistic basket size.
+ *
+ * Changing these two constants is sufficient: every fee on the platform —
+ * bookings, time-credit purchases, credit exchanges and marketplace orders —
+ * derives from computeFeeBreakdown / computeTradeFee below.
  */
-export const BUYER_FEE_RATE = 0.01; // 1% charged to the traveller, added on top
-export const SELLER_FEE_RATE = 0.01; // 1% charged to the supplier, taken from payout
-/** Combined platform take (buyer + seller side) = 2% of subtotal. */
+export const BUYER_FEE_RATE = 0.1; // 10% charged to the buyer, added on top
+export const SELLER_FEE_RATE = 0.1; // 10% charged to the seller, taken from proceeds
+/** Combined platform take (buyer + seller side) = 20% of subtotal. */
 export const PLATFORM_FEE_RATE = BUYER_FEE_RATE + SELLER_FEE_RATE;
+
+/**
+ * Pre-formatted percentage labels for user-facing copy.
+ *
+ * Every "10%" a customer reads must come from here. Hardcoding the number in
+ * page copy is how the UI ends up advertising a rate the code no longer
+ * charges — which is worse than an ugly string, because customers act on it.
+ */
+export const BUYER_FEE_LABEL = `${(BUYER_FEE_RATE * 100).toFixed(0)}%`;
+export const SELLER_FEE_LABEL = `${(SELLER_FEE_RATE * 100).toFixed(0)}%`;
+export const PLATFORM_FEE_LABEL = `${(PLATFORM_FEE_RATE * 100).toFixed(0)}%`;
 
 export interface FeeBreakdown {
   /** Agreed room price: hours × hourly rate. */

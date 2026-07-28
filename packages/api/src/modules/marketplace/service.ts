@@ -20,6 +20,17 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 
 type ListingRow = Awaited<ReturnType<typeof prisma.marketplaceListing.findFirst>>;
 
+/**
+ * Derives a display handle from an email without revealing it: the local part
+ * is truncated and masked, so "alice.smith@example.com" shows as "ali…th".
+ * Enough for a buyer to tell two sellers apart, useless for harvesting.
+ */
+function sellerHandleFrom(email: string): string {
+  const local = email.split("@")[0] ?? "seller";
+  if (local.length <= 4) return local;
+  return `${local.slice(0, 3)}…${local.slice(-2)}`;
+}
+
 function toPublic(
   l: NonNullable<ListingRow>,
   seller: { email: string; verificationStatus: string }
@@ -27,7 +38,7 @@ function toPublic(
   return {
     id: l.id,
     sellerId: l.sellerId,
-    sellerEmail: seller.email,
+    sellerHandle: sellerHandleFrom(seller.email),
     sellerVerified: seller.verificationStatus === "VERIFIED",
     kind: l.kind,
     title: l.title,
@@ -319,13 +330,38 @@ export async function settleOrder(orderId: string): Promise<void> {
       where: { id: order.id },
       data: { status: "PAID", settledAt: new Date() },
     });
-    // Decrement metered stock and auto-retire the listing when it runs out.
-    const listing = await tx.marketplaceListing.findUnique({ where: { id: order.listingId } });
-    if (listing && listing.stock !== null) {
-      const remaining = Math.max(0, listing.stock - order.quantity);
+
+    // Conditional decrement, not read-modify-write.
+    //
+    // The old version did findUnique -> compute remaining -> update, in a
+    // default-isolation transaction and in a *different* transaction from the
+    // stock check in placeOrder. Two concurrent buyers of the last unit both
+    // passed the check and both settled, and `Math.max(0, …)` quietly clamped
+    // what should have been -1, hiding the oversell. Guarding on
+    // `stock: { gte: quantity }` makes the database arbitrate: exactly one
+    // update matches.
+    const claimed = await tx.marketplaceListing.updateMany({
+      where: { id: order.listingId, stock: { gte: order.quantity } },
+      data: { stock: { decrement: order.quantity } },
+    });
+
+    const listing = await tx.marketplaceListing.findUnique({
+      where: { id: order.listingId },
+      select: { stock: true },
+    });
+
+    // stock === null means unmetered (a service), so nothing to claim.
+    if (listing?.stock !== null && listing !== null && claimed.count === 0) {
+      throw new AppError(
+        409,
+        "That listing sold out while your payment was being processed",
+        "INSUFFICIENT_STOCK"
+      );
+    }
+    if (listing?.stock === 0) {
       await tx.marketplaceListing.update({
-        where: { id: listing.id },
-        data: { stock: remaining, ...(remaining === 0 ? { status: "SOLD_OUT" as const } : {}) },
+        where: { id: order.listingId },
+        data: { status: "SOLD_OUT" },
       });
     }
   });

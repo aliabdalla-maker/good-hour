@@ -2,7 +2,7 @@
 
 Book rooms, cars and travel services **by the hour** from verified hosts — pay
 instantly or run an AI reverse auction. Multi-vertical listings, verified reviews,
-per-booking messaging, receipts, an agentic on-page AI concierge, split 1%/1%
+per-booking messaging, receipts, an agentic on-page AI concierge, split 10%/10%
 fees, and a durable event backbone. See `docs/ARCHITECTURE.md` and
 `docs/AGENT_DECISIONS.md` for how it's built.
 

@@ -12,6 +12,7 @@ const CATEGORY_LABEL: Record<ReceiptView["category"], string> = {
 };
 
 import { RequireAuth } from "../../../../components/RequireAuth";
+import { BUYER_FEE_LABEL } from "@gihtcx/shared";
 
 export default function ReceiptPage() {
   return (
@@ -69,7 +70,7 @@ function ReceiptPageInner() {
 
         <div className="py-4 text-sm">
           <Row label={`Subtotal (${r.hours}h)`} value={money(r.subtotal)} />
-          <Row label="Platform service fee (1%)" value={money(r.travellerFee)} />
+          <Row label={`Platform service fee (${BUYER_FEE_LABEL})`} value={money(r.travellerFee)} />
           <div className="mt-2 flex justify-between border-t border-slate-200 pt-2 text-base font-semibold">
             <span>Total paid</span>
             <span>{money(r.total)}</span>

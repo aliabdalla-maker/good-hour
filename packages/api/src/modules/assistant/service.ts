@@ -1,14 +1,16 @@
 import type OpenAI from "openai";
 import { prisma } from "@gihtcx/db";
 import type { AssistantChatInput, AssistantReply, AssistantAction } from "@gihtcx/shared";
+// Interpolated into SYSTEM_PROMPT so the concierge can never quote a stale rate.
+import { BUYER_FEE_LABEL, SELLER_FEE_LABEL } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { getOpenAIClient, OPENAI_MODEL } from "../../lib/openaiClient";
 
 const SYSTEM_PROMPT = `You are the Good Hours assistant — a friendly, concise concierge for an hourly marketplace.
 Good Hours lets travellers book ROOMS, CARS and TRAVEL SERVICES by the hour from verified hosts.
 Two booking modes: (1) "Book instantly" — search by city & time and pay now; (2) "Request a match" —
-post what you need and suppliers + their AI agents bid for you (reverse auction). A 1% platform fee is
-charged to the traveller and 1% to the host. Hosts get a "Verified" badge after admin approval; travellers
+post what you need and suppliers + their AI agents bid for you (reverse auction). A ${BUYER_FEE_LABEL} platform fee is
+charged to the traveller and ${SELLER_FEE_LABEL} to the host. Hosts get a "Verified" badge after admin approval; travellers
 can review confirmed bookings.
 
 Guidelines:

@@ -359,36 +359,90 @@ export async function redeemForBooking(
     },
   ]);
 
-  // The discount is the listing's own hourly rate, not the wallet's average
-  // acquisition cost: an hour credit entitles the holder to an hour of
-  // inventory, whatever they originally paid for it.
-  return round2(hours * hourlyRate);
+  return redemptionValue(hours, hourlyRate, unitValue);
+}
+
+/**
+ * Money value a redemption is worth, capped at what the hours actually cost.
+ *
+ * Credits are SOLD at the unweighted category average (marketUnitValue), so
+ * valuing redemption at the booked room's own rate was a standing arbitrage: on
+ * live inventory (ROOM average £30.25, suite £42/hr) you could buy 2h for
+ * £61.11 and draw £84.00 of inventory — a 37.5% gain, with the platform
+ * covering the gap out of a liability it only collected £61.11 for. The wider
+ * the price spread within a category, the worse it got.
+ *
+ * Taking the lower of the two keeps a credit worth an hour of typical inventory
+ * (the honest promise) without letting it mint value on the dearest room.
+ */
+function redemptionValue(hours: number, hourlyRate: number, unitValue: number): number {
+  return Math.min(round2(hours * hourlyRate), round2(hours * unitValue));
+}
+
+/**
+ * What redeeming `hours` would take off the cash price, without moving anything.
+ *
+ * The booking flow needs this figure *before* the booking row exists (to store
+ * creditValueApplied and derive cashDue), while redeemForBooking needs it after.
+ * Both go through here so the two can never disagree — computing it separately
+ * in the booking module is exactly how the cap above got silently bypassed.
+ */
+export async function quoteRedemptionValue(
+  userId: string,
+  category: ListingCategory,
+  hours: number,
+  hourlyRate: number
+): Promise<number> {
+  if (hours <= 0) return 0;
+  const unitValue = await getAvgUnitValue(userId, category);
+  return redemptionValue(hours, hourlyRate, unitValue);
 }
 
 /** Returns redeemed hours to the wallet when a booking that used them is cancelled. */
 export async function refundRedeemedCredits(bookingId: string): Promise<void> {
-  const redemptions = await prisma.creditLedgerEntry.findMany({
-    where: { relatedBookingId: bookingId, kind: "REDEEM" },
-  });
-  if (redemptions.length === 0) return;
+  // The read of REDEEM rows, the "already refunded?" check and the REFUND
+  // inserts all happen in ONE Serializable transaction.
+  //
+  // Previously these were three separate statements, so a traveller cancelling
+  // at the same moment the expiry job fired had both callers see
+  // alreadyRefunded === 0 and both insert the refund — creating hours from
+  // nothing (an 8h redemption came back as 16h). A double-click on Cancel did
+  // the same. The non-negative assertion in applyLedgerWrites can't catch this:
+  // it rejects overdrafts, not over-credits.
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const redemptions = await tx.creditLedgerEntry.findMany({
+          where: { relatedBookingId: bookingId, kind: "REDEEM" },
+        });
+        if (redemptions.length === 0) return;
 
-  const alreadyRefunded = await prisma.creditLedgerEntry.count({
-    where: { relatedBookingId: bookingId, kind: "REFUND" },
-  });
-  if (alreadyRefunded > 0) return;
+        const alreadyRefunded = await tx.creditLedgerEntry.count({
+          where: { relatedBookingId: bookingId, kind: "REFUND" },
+        });
+        if (alreadyRefunded > 0) return;
 
-  await applyLedgerWrites(
-    redemptions.map((r) => ({
-      userId: r.userId,
-      category: r.category,
-      hours: Math.abs(Number(r.hours)),
-      kind: "REFUND" as const,
-      unitValue: Number(r.unitValue),
-      currency: r.currency,
-      relatedBookingId: bookingId,
-      note: "Returned after booking cancellation",
-    }))
-  );
+        await tx.creditLedgerEntry.createMany({
+          data: redemptions.map((r) => ({
+            userId: r.userId,
+            category: r.category,
+            hours: Math.abs(Number(r.hours)),
+            kind: "REFUND" as const,
+            unitValue: Number(r.unitValue),
+            currency: r.currency,
+            relatedBookingId: bookingId,
+            note: "Returned after booking cancellation",
+          })),
+        });
+      },
+      { isolationLevel: "Serializable" }
+    );
+  } catch (error) {
+    // A serialization abort means the concurrent caller already refunded —
+    // the desired end state is reached, so this is success, not an error.
+    if ((error as { code?: string }).code === "P2034") return;
+    throw error;
+  }
 }
 
 /**

@@ -85,7 +85,7 @@ Two subtleties that are easy to get wrong and are load-bearing:
   meaning. Cash actually charged is `totalAmount − creditValueApplied`, on
   `Payment.amount`.
 
-Gifts (`TRANSFER_IN`/`OUT`) are free; only priced trades carry the 1%/1%
+Gifts (`TRANSFER_IN`/`OUT`) are free; only priced trades carry the 10%/10%
 commission, via `computeTradeFee` in `@gihtcx/shared` — which delegates to the
 booking fee maths so there is one rounding rule everywhere.
 

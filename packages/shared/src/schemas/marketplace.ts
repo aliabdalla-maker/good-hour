@@ -47,7 +47,14 @@ export type CreateMarketplaceListingInput = z.infer<typeof createMarketplaceList
 export const marketplaceListingPublicSchema = z.object({
   id: z.string(),
   sellerId: z.string(),
-  sellerEmail: z.string(),
+  /**
+   * Non-identifying display handle, NOT the seller's email.
+   *
+   * /market/search and /market/:id are unauthenticated, so returning the real
+   * address let anyone iterate the catalogue and harvest every seller's email
+   * for phishing. Buyers who need to reach a seller do so through an order.
+   */
+  sellerHandle: z.string(),
   sellerVerified: z.boolean(),
   kind: z.enum(MARKETPLACE_KINDS),
   title: z.string(),

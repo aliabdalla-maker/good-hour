@@ -9,7 +9,7 @@ import { getRoomById } from "../listings";
 import { createPaymentIntentForBooking, refundBookingPayment } from "../payments";
 import { getSuggestedRateForRoom } from "../pricing-agent";
 import { recordAgentOutcome } from "../agent-log";
-import { getBalanceFor, redeemForBooking, refundRedeemedCredits } from "../credits";
+import { getBalanceFor, quoteRedemptionValue, redeemForBooking, refundRedeemedCredits } from "../credits";
 import { assertTransitionAllowed } from "./stateMachine";
 import { ensureSlotsGenerated, isRangeFullyOpen } from "./slotService";
 
@@ -105,7 +105,14 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
       );
     }
   }
-  const creditValueApplied = Math.round(redeemHours * hourlyRate * 100) / 100;
+  // Sourced from the credits module rather than recomputed here, so the
+  // acquisition-value cap can't be bypassed by this call site.
+  const creditValueApplied = await quoteRedemptionValue(
+    travellerId,
+    room.property.category,
+    redeemHours,
+    hourlyRate
+  );
 
   const booking = await prisma.$transaction(async (tx) => {
     const claimed = await tx.availabilitySlot.updateMany({
@@ -223,6 +230,29 @@ export async function listBookingsForTraveller(travellerId: string) {
 export async function getBookingById(bookingId: string) {
   const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
   if (!booking) {
+    throw new AppError(404, "Booking not found", "NOT_FOUND");
+  }
+  return booking;
+}
+
+/**
+ * Ownership-checked read for the booking-detail route.
+ *
+ * The traveller who booked it, or the supplier who owns the room, may see it —
+ * the supplier legitimately needs it for their earnings and fulfilment views.
+ * Anyone else gets a 404 rather than a 403, so booking ids can't be probed for
+ * existence.
+ */
+export async function getBookingForViewer(bookingId: string, viewerId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { room: { include: { property: { select: { supplierId: true } } } } },
+  });
+  if (!booking) throw new AppError(404, "Booking not found", "NOT_FOUND");
+
+  const isTraveller = booking.travellerId === viewerId;
+  const isSupplier = booking.room.property.supplierId === viewerId;
+  if (!isTraveller && !isSupplier) {
     throw new AppError(404, "Booking not found", "NOT_FOUND");
   }
   return booking;

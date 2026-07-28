@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { MarketplaceKind, MarketplaceListingPublic, PricingUnit } from "@gihtcx/shared";
-import { MARKETPLACE_KINDS, PRICING_UNITS, PRICING_UNIT_LABELS, computeTradeFee } from "@gihtcx/shared";
+import { MARKETPLACE_KINDS, PRICING_UNITS, PRICING_UNIT_LABELS, computeTradeFee , BUYER_FEE_LABEL, SELLER_FEE_LABEL } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { RequireAuth } from "../../../components/RequireAuth";
 import { Card } from "../../../components/ui/Card";
@@ -178,7 +178,7 @@ function NewListingInner() {
               <span>GBP {quote.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Seller fee (1%)</span>
+              <span className="text-slate-500">Seller fee ({SELLER_FEE_LABEL})</span>
               <span className="text-red-600">− GBP {quote.sellerFee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold">
@@ -187,7 +187,7 @@ function NewListingInner() {
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-400">
-            The buyer pays GBP {quote.buyerTotal.toFixed(2)} — 1% each side. Proceeds land in your wallet
+            The buyer pays GBP {quote.buyerTotal.toFixed(2)} — {BUYER_FEE_LABEL} each side. Proceeds land in your wallet
             when the order is paid.
           </p>
         </Card>

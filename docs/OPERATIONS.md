@@ -230,7 +230,7 @@ ledger" returns a row:
    assertion entirely; that's the bug, not the data.
 3. Only then write a correcting entry, with a `note` explaining it.
 
-### The 1% exchange commission is earning nothing
+### The exchange commission is earning nothing
 
 Symptom: `credit_ledger_entries` shows `EXCHANGE_IN`/`EXCHANGE_OUT` pairs, but
 a wallet's total estimated value is unchanged across the swap.
@@ -239,7 +239,7 @@ This was a real bug once. The destination hours must be priced off the **gross**
 conversion (`hoursOut + feeHours`); dividing the surrendered value by the *net*
 `hoursOut` inflates the unit value by exactly the fee and refunds it, making the
 commission cosmetic. Check `exchangeCredits` in
-`packages/api/src/modules/credits/service.ts`. A correct exchange loses ~1% of
+`packages/api/src/modules/credits/service.ts`. A correct exchange loses ~10% of
 value; a 0% loss means the regression is back.
 
 ### Migration drift caught in CI

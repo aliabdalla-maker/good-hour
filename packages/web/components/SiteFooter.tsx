@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BUYER_FEE_LABEL } from "@gihtcx/shared";
 
 // Public contact address for the site. Override at build time with
 // NEXT_PUBLIC_CONTACT_EMAIL; defaults to the company contact.
@@ -47,7 +48,7 @@ export function SiteFooter() {
 
       <div className="border-t border-slate-100">
         <div className="mx-auto max-w-5xl px-6 py-4 text-xs text-slate-400">
-          <p>© {year} Good Hours. A 1% platform fee applies to travellers and hosts on every booking.</p>
+          <p>© {year} Good Hours. A {BUYER_FEE_LABEL} platform fee applies to travellers and hosts on every booking.</p>
           <p className="mt-1">
             Good Hours is operated by{" "}
             <a href="https://www.softwareequality.com" className="hover:text-slate-600" target="_blank" rel="noopener noreferrer">

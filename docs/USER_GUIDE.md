@@ -36,7 +36,7 @@ description of the running app.
    - **Message host** — a chat thread with the supplier for that booking.
    - **Cancel booking** — for a pending or confirmed booking; a paid
      booking is refunded automatically.
-   - **View receipt** — an itemized, printable receipt (line items, the 1%
+   - **View receipt** — an itemized, printable receipt (line items, the
      platform fee, total) once confirmed.
    - **Leave a review** — 1–5 stars + a comment, once the booking is
      confirmed or completed. One review per booking.
@@ -97,7 +97,7 @@ tied to one booking, one date, or one listing.
 2. Pick a category (🏨 Room / 🚗 Car / 🧭 Travel) and how many hours (quarter-hour
    increments).
 3. The price is the live *average* hourly rate for that category, plus the
-   standard 1% buyer fee. You'll see the total before confirming.
+   standard 10% buyer fee. You'll see the total before confirming.
 4. Complete the card payment. **Hours appear in your wallet once the payment
    clears, not when you click buy** — if you abandon checkout, nothing is
    charged and nothing is credited.
@@ -134,8 +134,8 @@ then **Get quote**.
 The rate is anchored on the real average prices of live listings, so dearer
 hours buy more cheap ones — e.g. 4 hours of rooms (~£30/hr) converts to roughly
 11 hours of cars (~£10.75/hr). An AI agent may adjust that anchor slightly for
-demand, and it shows you its reasoning and confidence. A **1% commission** is
-taken in hours of the destination bucket, so you give up about 1% of value on
+demand, and it shows you its reasoning and confidence. A **10% commission** is
+taken in hours of the destination bucket, so you give up about 10% of value on
 an exchange.
 
 If a category has no active listings, the exchange is refused rather than
@@ -148,12 +148,12 @@ purchase, redemption, gift, exchange and refund, with the counterparty where
 relevant. Nothing is ever edited or deleted from it; corrections appear as new
 rows.
 
-## The 1% fee, plainly
+## The platform fee, plainly
 
-Every booking splits a 2% platform fee in half: the traveller pays subtotal
-+ 1%, the supplier receives subtotal − 1%. It's shown on the booking screen,
+Every booking splits a 20% platform fee in half: the traveller pays subtotal
++ 10%, the supplier receives subtotal − 10%. It's shown on the booking screen,
 the receipt, and the browse page footer before you commit to anything.
 
-The same 1%-each-side rule applies to trading, not just booking: buying time
-credits carries a 1% buyer fee, and exchanging credits between categories
-carries a 1% commission. **Gifting is free.**
+The same 10%-each-side rule applies to trading, not just booking: buying time
+credits carries a 10% buyer fee, and exchanging credits between categories
+carries a 10% commission. **Gifting is free.**

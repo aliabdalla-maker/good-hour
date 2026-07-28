@@ -9,6 +9,7 @@ export {
   getOutstandingCreditLiability,
   grantPurchasedCredits,
   markCreditPurchaseFailed,
+  quoteRedemptionValue,
   redeemForBooking,
   refundRedeemedCredits,
 } from "./service";

@@ -1,6 +1,18 @@
 export const ROLES = ["TRAVELLER", "SUPPLIER", "ADMIN"] as const;
 export type Role = (typeof ROLES)[number];
 
+/**
+ * Roles a visitor may choose for themselves at sign-up.
+ *
+ * ADMIN is deliberately absent: `POST /auth/register` is unauthenticated, so
+ * accepting the full ROLES list there let anyone mint an administrator with one
+ * curl and reach the CRM's customer PII, the verification approvals and the
+ * campaign blaster. Promotion to ADMIN must happen out-of-band (direct DB
+ * update), never from a request body.
+ */
+export const SELF_REGISTERABLE_ROLES = ["TRAVELLER", "SUPPLIER"] as const;
+export type SelfRegisterableRole = (typeof SELF_REGISTERABLE_ROLES)[number];
+
 // The verticals a listing can belong to. A Property is the supplier's
 // venue/fleet/desk; its Rooms are the bookable units (a room, a car, or a
 // bookable travel service) — all booked by the hour on the same slot engine.

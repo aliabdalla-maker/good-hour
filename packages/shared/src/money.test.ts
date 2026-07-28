@@ -2,14 +2,22 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { computeFeeBreakdown, BUYER_FEE_RATE, SELLER_FEE_RATE } from "./money";
 
-test("charges 1% to the buyer (on top) and 1% to the seller (from payout)", () => {
+test("charges the buyer fee on top and the seller fee from payout", () => {
   const f = computeFeeBreakdown(100);
   assert.equal(f.subtotal, 100);
-  assert.equal(f.travellerFee, 1);
-  assert.equal(f.supplierFee, 1);
-  assert.equal(f.travellerTotal, 101);
-  assert.equal(f.supplierPayout, 99);
-  assert.equal(f.platformFee, 2);
+  assert.equal(f.travellerFee, 10);
+  assert.equal(f.supplierFee, 10);
+  assert.equal(f.travellerTotal, 110);
+  assert.equal(f.supplierPayout, 90);
+  assert.equal(f.platformFee, 20);
+});
+
+// Derived from the constants rather than hardcoded, so a future rate change
+// can't leave a passing test asserting a rate the platform no longer charges.
+test("a £100 subtotal fees out at exactly the configured rates", () => {
+  const f = computeFeeBreakdown(100);
+  assert.equal(f.travellerFee, 100 * BUYER_FEE_RATE);
+  assert.equal(f.supplierFee, 100 * SELLER_FEE_RATE);
 });
 
 test("the two fee halves always sum to the platform fee", () => {
@@ -30,7 +38,7 @@ test("no floating-point drift (integer pence math)", () => {
   assert.equal(f.subtotal, 0.3);
 });
 
-test("exposes 1% rates per side", () => {
-  assert.equal(BUYER_FEE_RATE, 0.01);
-  assert.equal(SELLER_FEE_RATE, 0.01);
+test("exposes the configured rate per side", () => {
+  assert.equal(BUYER_FEE_RATE, 0.1);
+  assert.equal(SELLER_FEE_RATE, 0.1);
 });
