@@ -5,6 +5,8 @@ export const WALLET_ENTRY_KINDS = [
   "PURCHASE",
   "SALE_PROCEEDS",
   "REFUND",
+  /** Reverses proceeds already paid to a seller (refund or chargeback). */
+  "SALE_CLAWBACK",
   "FEE",
   "PAYOUT",
 ] as const;

@@ -104,6 +104,25 @@ That last query is the single most useful integrity check in the system. The
 ledger's `Serializable` debit path exists specifically to keep it empty; if it
 ever returns a row, stop and investigate before touching anything else.
 
+**Correction — this is true of the CREDIT ledger, but not unconditionally of the
+MONEY ledger.** A refund or chargeback claws back proceeds a seller may already
+have spent, and a negative money balance is then the *correct* record of a debt
+they owe. Refusing that write would leave the platform out of pocket with no
+trace. So for `wallet_ledger_entries`, distinguish the two cases:
+
+```sql
+-- Negative money balances. Legitimate ONLY if explained by a clawback.
+select w."userId", sum(w.amount) as balance,
+       sum(case when w.kind = 'SALE_CLAWBACK' then w.amount else 0 end) as clawed_back
+from wallet_ledger_entries w
+group by w."userId"
+having sum(w.amount) < 0;
+```
+
+If `balance` is negative and `clawed_back` accounts for it, that's a receivable,
+not a bug. A negative balance with no clawback means a spend path bypassed
+`applyWalletWrites` — that *is* a bug, and the write should have been refused.
+
 ```sql
 -- Both halves of a transfer/exchange share a correlationId. Each pair should
 -- net to ~0 hours for a transfer, and to the fee for an exchange.

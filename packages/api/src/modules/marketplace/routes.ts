@@ -9,12 +9,15 @@ import {
   marketplaceSearchQuerySchema,
   marketplaceSearchResultSchema,
 } from "@gihtcx/shared";
+import { prisma } from "@gihtcx/db";
+import { AppError } from "../../plugins/errorHandler";
 import {
   createListing,
   getListing,
   listMyListings,
   listMyOrders,
   placeOrder,
+  refundOrder,
   searchListings,
 } from "./service";
 
@@ -55,6 +58,31 @@ export default async function marketplaceRoutes(app: FastifyInstance) {
     },
     async (request, reply) =>
       reply.status(201).send(await createListing(request.currentUser!.sub, request.body))
+  );
+
+  // Seller-initiated refund. A chargeback arrives via the Stripe webhook
+  // instead; both funnel through the same refundOrder().
+  server.post(
+    "/orders/:orderId/refund",
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        params: z.object({ orderId: z.string() }),
+        response: { 200: z.object({ status: z.string() }) },
+      },
+    },
+    async (request, reply) => {
+      const order = await prisma.marketplaceOrder.findUnique({
+        where: { id: request.params.orderId },
+        select: { sellerId: true, paymentMethod: true },
+      });
+      // 404 rather than 403 so order ids can't be probed for existence.
+      if (!order || order.sellerId !== request.currentUser!.sub) {
+        throw new AppError(404, "Order not found", "NOT_FOUND");
+      }
+      await refundOrder(request.params.orderId, order.paymentMethod === "WALLET" ? "wallet" : "card_refund");
+      return reply.send({ status: "REFUNDED" });
+    }
   );
 
   server.post(

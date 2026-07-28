@@ -600,6 +600,9 @@ model CreditLedgerEntry {
 
   @@index([userId, category])
   @@index([correlationId])
+  /// One grant per paid purchase, enforced by the database rather than by the
+  /// `grantedAt` check -- see the note on wallet_ledger_entries.
+  @@unique([creditPurchaseId, kind])
   @@map("credit_ledger_entries")
 }
 
@@ -655,6 +658,10 @@ enum WalletEntryKind {
   REFUND
   /// Platform commission recorded against the wallet.
   FEE
+  /// Reverses proceeds already credited to a seller (refund or chargeback).
+  /// Distinct from REFUND so the two halves of a reversal can each carry their
+  /// own uniqueness guarantee per order.
+  SALE_CLAWBACK
   /// Withdrawal to an external account. Reserved -- payouts are NOT implemented.
   PAYOUT
 }
@@ -685,6 +692,18 @@ model WalletLedgerEntry {
 
   @@index([userId, createdAt])
   @@index([correlationId])
+  /// DB-enforced idempotency. The webhook handlers commit money in one
+  /// transaction and their `creditedAt`/`settledAt` marker in another, so a
+  /// crash in between left the marker unset and Stripe's retry (which runs for
+  /// up to 3 days) credited the money a second time. A check-then-write guard
+  /// cannot close that window; a unique index can -- the second insert simply
+  /// fails and the handler treats it as already-done.
+  ///
+  /// Keyed with `kind` because one order legitimately writes several rows:
+  /// PURCHASE (buyer) + SALE_PROCEEDS (seller), and on reversal REFUND (buyer)
+  /// + SALE_CLAWBACK (seller). One of each per order, never two.
+  @@unique([topUpId, kind])
+  @@unique([relatedOrderId, kind])
   @@map("wallet_ledger_entries")
 }
 

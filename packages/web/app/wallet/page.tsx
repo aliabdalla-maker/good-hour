@@ -197,6 +197,7 @@ const WALLET_KIND_LABELS: Record<string, string> = {
   TOPUP: "Topped up",
   PURCHASE: "Marketplace purchase",
   SALE_PROCEEDS: "Sale proceeds",
+  SALE_CLAWBACK: "Reversed (refund/chargeback)",
   REFUND: "Refund",
   FEE: "Platform fee",
   PAYOUT: "Withdrawal",

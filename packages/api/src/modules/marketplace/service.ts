@@ -14,7 +14,8 @@ import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
 import { getStripeClient } from "../payments/stripeClient";
-import { applyWalletWrites, getMoneyBalance } from "../wallet/ledger";
+import type { WalletWrite } from "../wallet/ledger";
+import { applyWalletWrites, getMoneyBalance, isAlreadyApplied } from "../wallet/ledger";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -297,7 +298,7 @@ export async function settleOrder(orderId: string): Promise<void> {
   if (order.settledAt) return;
 
   const correlationId = randomUUID();
-  const writes = [];
+  const writes: WalletWrite[] = [];
 
   if (order.paymentMethod === "WALLET") {
     writes.push({
@@ -323,7 +324,14 @@ export async function settleOrder(orderId: string): Promise<void> {
     note: `Sale ${order.id.slice(0, 8)} (net of 1% seller fee)`,
   });
 
-  await applyWalletWrites(writes);
+  try {
+    await applyWalletWrites(writes);
+  } catch (error) {
+    // The unique index already recorded this settlement -- a retried webhook
+    // after a crash between the money write and the marker below. Fall through
+    // so the marker and stock decrement still get applied.
+    if (!isAlreadyApplied(error)) throw error;
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.marketplaceOrder.update({
@@ -373,6 +381,109 @@ export async function settleOrder(orderId: string): Promise<void> {
       buyerId: order.buyerId,
       sellerId: order.sellerId,
       amount: Number(order.buyerTotal),
+    },
+  });
+}
+
+/**
+ * Reverses a paid order: money back to the buyer, proceeds clawed back from the
+ * seller, stock restored, order marked REFUNDED.
+ *
+ * Before this existed, `MarketplaceOrderStatus.REFUNDED` and
+ * `WalletEntryKind.REFUND` were declared in the schema and written by nothing.
+ * A card chargeback pulled the funds back from the platform while the seller
+ * kept their credited proceeds — a total loss of the full order value on every
+ * dispute, with no record of it anywhere.
+ *
+ * Idempotent through the `(relatedOrderId, kind)` unique index rather than a
+ * status check, so a retried `charge.refunded` webhook cannot pay twice.
+ *
+ * `reason` distinguishes the two cases that need different money movements:
+ *  - "wallet"    — the buyer paid from their balance, so credit it back here.
+ *  - "chargeback" — Stripe has already returned the money to the cardholder, so
+ *                   crediting the buyer's wallet as well would pay them twice.
+ */
+export async function refundOrder(
+  orderId: string,
+  reason: "wallet" | "chargeback" | "card_refund"
+): Promise<void> {
+  const order = await prisma.marketplaceOrder.findUnique({ where: { id: orderId } });
+  if (!order) throw new AppError(404, "Order not found", "NOT_FOUND");
+  if (order.status !== "PAID") {
+    throw new AppError(409, "Only a paid order can be refunded", "NOT_REFUNDABLE");
+  }
+
+  const correlationId = randomUUID();
+  const writes: WalletWrite[] = [];
+
+  // Return the buyer's money only when it is actually sitting on the platform.
+  if (order.paymentMethod === "WALLET") {
+    writes.push({
+      userId: order.buyerId,
+      amount: Number(order.buyerTotal),
+      kind: "REFUND" as const,
+      currency: order.currency,
+      relatedOrderId: order.id,
+      counterpartyUserId: order.sellerId,
+      correlationId,
+      note: `Refund of order ${order.id.slice(0, 8)}`,
+    });
+  }
+
+  // Always reverse the seller — they were credited at settlement regardless of
+  // how the buyer paid.
+  writes.push({
+    userId: order.sellerId,
+    amount: -Number(order.sellerProceeds),
+    kind: "SALE_CLAWBACK" as const,
+    currency: order.currency,
+    relatedOrderId: order.id,
+    counterpartyUserId: order.buyerId,
+    correlationId,
+    note:
+      reason === "chargeback"
+        ? `Chargeback on order ${order.id.slice(0, 8)}`
+        : `Refund clawback on order ${order.id.slice(0, 8)}`,
+  });
+
+  try {
+    // allowNegative: a seller who already spent the proceeds owes this money.
+    // Blocking the write would silently leave the platform short.
+    await applyWalletWrites(writes, { allowNegative: true });
+  } catch (error) {
+    if (isAlreadyApplied(error)) return; // a retried webhook; already reversed
+    throw error;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.marketplaceOrder.update({
+      where: { id: order.id },
+      data: { status: "REFUNDED" },
+    });
+    // Put metered stock back and un-retire a listing that sold out.
+    const listing = await tx.marketplaceListing.findUnique({
+      where: { id: order.listingId },
+      select: { stock: true, status: true },
+    });
+    if (listing && listing.stock !== null) {
+      await tx.marketplaceListing.update({
+        where: { id: order.listingId },
+        data: {
+          stock: { increment: order.quantity },
+          ...(listing.status === "SOLD_OUT" ? { status: "ACTIVE" as const } : {}),
+        },
+      });
+    }
+  });
+
+  await domainEvents.publish({
+    type: "order.refunded",
+    payload: {
+      orderId: order.id,
+      buyerId: order.buyerId,
+      sellerId: order.sellerId,
+      amount: Number(order.buyerTotal),
+      reason,
     },
   });
 }

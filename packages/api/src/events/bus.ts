@@ -18,6 +18,16 @@ export type DomainEvent =
     }
   | { type: "wallet.topped_up"; payload: { userId: string; amount: number } }
   | {
+      type: "order.refunded";
+      payload: {
+        orderId: string;
+        buyerId: string;
+        sellerId: string;
+        amount: number;
+        reason: string;
+      };
+    }
+  | {
       type: "order.paid";
       payload: { orderId: string; buyerId: string; sellerId: string; amount: number };
     }
