@@ -64,8 +64,15 @@ export const bookingPublicSchema = z.object({
   platformFee: z.number(),
   /** Amount remitted to the supplier: subtotal − their half of the fee. */
   supplierPayout: z.number(),
-  /** Amount the traveller is charged: subtotal + their half of the fee. */
+  /**
+   * GROSS amount owed: subtotal + the buyer-side fee. Time credits do NOT
+   * reduce this — they reduce the cash charged. Checkout must show
+   * `totalAmount − creditValueApplied` as the amount due, or the card total
+   * won't match the figure above it.
+   */
   totalAmount: z.number(),
+  /** Money value covered by redeemed time credits (0 when none were used). */
+  creditValueApplied: z.number().default(0),
   currency: z.string(),
   isCorporateRate: z.boolean(),
   source: z.enum(BOOKING_SOURCES),

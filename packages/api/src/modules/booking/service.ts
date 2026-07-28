@@ -356,6 +356,7 @@ export function toPublicBooking(booking: {
   platformFee: unknown;
   supplierPayout: unknown;
   totalAmount: unknown;
+  creditValueApplied?: unknown;
   currency: string;
   isCorporateRate: boolean;
   source: BookingSource;
@@ -372,6 +373,7 @@ export function toPublicBooking(booking: {
     platformFee: Number(booking.platformFee),
     supplierPayout: Number(booking.supplierPayout),
     totalAmount: Number(booking.totalAmount),
+    creditValueApplied: Number(booking.creditValueApplied ?? 0),
     currency: booking.currency,
     isCorporateRate: booking.isCorporateRate,
     source: booking.source,

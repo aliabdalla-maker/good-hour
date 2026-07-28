@@ -20,18 +20,30 @@ function PayButton({ onSucceeded, label }: { onSucceeded: () => void; label: str
     setSubmitting(true);
     setError(null);
 
-    const { error: confirmError } = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-    });
-
-    if (confirmError) {
-      setError(confirmError.message ?? "Payment failed");
+    // confirmPayment can REJECT (not just resolve with `{error}`) — a stale or
+    // already-consumed clientSecret does exactly that. Without the try/finally
+    // the rejection escaped handleSubmit, `submitting` was never reset, and the
+    // button sat on "Processing…" forever with no error shown. That was the
+    // stuck checkout: the payment never started and the user had no way to know.
+    try {
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
+      });
+      if (confirmError) {
+        setError(confirmError.message ?? "Payment failed");
+        return;
+      }
+      onSucceeded();
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? `${e.message} — please reload the page and try again.`
+          : "Something went wrong starting the payment. Please reload and try again."
+      );
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    onSucceeded();
   }
 
   return (

@@ -15,6 +15,7 @@ import {
   listPublicCatalog,
   toPublicProperty,
   toPublicRoom,
+  updateRoomSettings,
 } from "./service";
 import { getRoomRatings } from "../reviews";
 
@@ -77,6 +78,30 @@ export default async function listingsRoutes(app: FastifyInstance) {
           rooms: property.rooms.map((r) => toPublicRoom(r, ratings.get(r.id))),
         }))
       );
+    }
+  );
+
+  server.patch(
+    "/rooms/:roomId",
+    {
+      preHandler: [app.authenticate, app.requireRole(["SUPPLIER", "ADMIN"])],
+      schema: {
+        params: z.object({ roomId: z.string() }),
+        body: z.object({
+          autoOfferEnabled: z.boolean().optional(),
+          status: z.enum(["ACTIVE", "PAUSED"]).optional(),
+        }),
+        response: { 200: roomPublicSchema },
+      },
+    },
+    async (request, reply) => {
+      const room = await updateRoomSettings(
+        request.currentUser!.sub,
+        request.params.roomId,
+        request.body
+      );
+      const ratings = await getRoomRatings([room.id]);
+      return reply.send(toPublicRoom(room, ratings.get(room.id)));
     }
   );
 

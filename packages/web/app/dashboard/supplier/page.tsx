@@ -259,11 +259,9 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
 
       <ul className="mt-3 flex flex-col gap-1 text-sm">
         {property.rooms.map((room) => (
-          <li key={room.id} className="flex items-center justify-between">
+          <li key={room.id} className="flex flex-wrap items-center justify-between gap-2">
             <span>{room.name} — {room.currency} {room.baseHourlyRate}/hr ({room.minHours}-{room.maxHours}h)</span>
-            {room.autoOfferEnabled && (
-              <span className="rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">Auto-offer on</span>
-            )}
+            <AutoOfferToggle room={room} onChanged={onRoomAdded} />
           </li>
         ))}
         {property.rooms.length === 0 && <li className="text-slate-500">No rooms yet</li>}
@@ -329,5 +327,50 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * Turns the B2A supplier agent on or off for a room that already exists.
+ *
+ * Until now this flag could only be chosen in the create-room form, so every
+ * live room was stuck OFF and no booking request could ever attract an
+ * auto-offer — the reverse auction looked broken when it was simply opted out
+ * of by default.
+ */
+function AutoOfferToggle({
+  room,
+  onChanged,
+}: {
+  room: { id: string; autoOfferEnabled: boolean };
+  onChanged: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const toggle = useMutation({
+    mutationFn: () =>
+      api.patch(`/listings/rooms/${room.id}`, { autoOfferEnabled: !room.autoOfferEnabled }),
+    onMutate: () => setError(null),
+    onSuccess: onChanged,
+    onError: (e) => setError(e instanceof ApiError ? e.message : "Couldn't change that"),
+  });
+
+  return (
+    <span className="flex items-center gap-2">
+      {error && <span className="text-xs text-red-600">{error}</span>}
+      <button
+        type="button"
+        onClick={() => toggle.mutate()}
+        disabled={toggle.isPending}
+        aria-pressed={room.autoOfferEnabled}
+        title="When on, this room's agent bids automatically on matching booking requests"
+        className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
+          room.autoOfferEnabled
+            ? "bg-sky-100 text-sky-900 hover:bg-sky-200"
+            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+        }`}
+      >
+        {toggle.isPending ? "Saving…" : room.autoOfferEnabled ? "✦ Auto-offer on" : "Auto-offer off"}
+      </button>
+    </span>
   );
 }

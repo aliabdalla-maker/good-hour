@@ -124,7 +124,10 @@ function BookingRequestOffersPageInner() {
           </div>
         ))}
         {offers?.length === 0 && (
-          <p className="text-slate-500">No offers yet -- suppliers with auto-offer enabled respond instantly.</p>
+          <p className="text-slate-500">
+            No offers yet — hosts who have turned on auto-offer respond within seconds, and others
+            may bid manually before this request expires.
+          </p>
         )}
       </div>
 

@@ -46,6 +46,58 @@ export async function createPaymentIntentForBooking(bookingId: string, amount: n
   return { clientSecret: intent.client_secret, simulated: false };
 }
 
+/**
+ * Returns a usable clientSecret for a booking that still needs paying.
+ *
+ * Checkout previously depended entirely on a clientSecret stashed in
+ * sessionStorage by the room page. Close the tab, reload in a new one, or come
+ * back later and it was gone — leaving a real PENDING_PAYMENT booking with no
+ * route to pay it, which then silently expired. This makes checkout recoverable
+ * from the booking id alone.
+ *
+ * Payment.bookingId is unique, so an existing row must be REUSED (retrieve the
+ * intent from Stripe) rather than creating a second one.
+ */
+export async function getOrCreatePaymentIntent(bookingId: string) {
+  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  if (!booking) throw new AppError(404, "Booking not found", "NOT_FOUND");
+  if (booking.status !== "PENDING_PAYMENT") {
+    throw new AppError(409, "This booking is not awaiting payment", "NOT_PAYABLE");
+  }
+
+  const cashDue = Number(booking.totalAmount) - Number(booking.creditValueApplied);
+  if (cashDue <= 0) {
+    throw new AppError(409, "This booking is fully covered by time credits", "NOTHING_TO_PAY");
+  }
+
+  const existing = await prisma.payment.findUnique({ where: { bookingId } });
+
+  if (!featureFlags.paymentsEnabled) {
+    if (!existing) {
+      await createPaymentIntentForBooking(bookingId, cashDue, booking.currency);
+    }
+    return { clientSecret: null as string | null, simulated: true, amount: cashDue };
+  }
+
+  if (existing) {
+    const stripe = getStripeClient();
+    const intent = await stripe.paymentIntents.retrieve(existing.stripePaymentIntentId);
+    // A cancelled or already-captured intent can't be reused; the caller should
+    // not be shown a card form that will fail.
+    if (intent.status === "canceled" || intent.status === "succeeded") {
+      throw new AppError(
+        409,
+        "That payment can no longer be completed — please start a new booking",
+        "INTENT_UNUSABLE"
+      );
+    }
+    return { clientSecret: intent.client_secret, simulated: false, amount: cashDue };
+  }
+
+  const created = await createPaymentIntentForBooking(bookingId, cashDue, booking.currency);
+  return { clientSecret: created.clientSecret, simulated: created.simulated, amount: cashDue };
+}
+
 export async function markPaymentSucceeded(stripePaymentIntentId: string) {
   const payment = await prisma.payment.findUnique({ where: { stripePaymentIntentId } });
   if (!payment) {

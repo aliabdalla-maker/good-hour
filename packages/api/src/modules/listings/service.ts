@@ -94,6 +94,40 @@ export async function getRoomById(roomId: string) {
   return room;
 }
 
+/**
+ * Lets a supplier change the two settings they realistically need to revisit
+ * after a room exists: whether their agent auto-bids (B2A) and whether the
+ * listing is live.
+ *
+ * `autoOfferEnabled` was previously only settable in the create-room form, with
+ * no update route at all — so every existing room was permanently stuck OFF and
+ * the whole reverse-auction feature was unreachable for real inventory. Every
+ * booking request got "No offers yet" because nothing could ever opt in.
+ */
+export async function updateRoomSettings(
+  supplierId: string,
+  roomId: string,
+  input: { autoOfferEnabled?: boolean; status?: "ACTIVE" | "PAUSED" }
+) {
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    include: { property: { select: { supplierId: true } } },
+  });
+  if (!room) throw new AppError(404, "Room not found", "NOT_FOUND");
+  if (room.property.supplierId !== supplierId) {
+    throw new AppError(403, "You do not own this room", "FORBIDDEN");
+  }
+
+  return prisma.room.update({
+    where: { id: roomId },
+    data: {
+      ...(input.autoOfferEnabled !== undefined ? { autoOfferEnabled: input.autoOfferEnabled } : {}),
+      ...(input.status !== undefined ? { status: input.status } : {}),
+    },
+    include: { property: { include: { supplier: { select: { verificationStatus: true } } } } },
+  });
+}
+
 export function toPublicProperty(
   property: {
     id: string;

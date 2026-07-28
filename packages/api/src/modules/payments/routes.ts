@@ -1,12 +1,15 @@
 import type { FastifyInstance } from "fastify";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { AppError } from "../../plugins/errorHandler";
-import { simulatePaymentSucceeded } from "./service";
+import { getOrCreatePaymentIntent, simulatePaymentSucceeded } from "./service";
 import { constructWebhookEvent, handleWebhookEvent } from "./webhookHandler";
 import { config, featureFlags } from "../../config";
 import { getBookingForViewer } from "../booking";
 
 export default async function paymentsRoutes(app: FastifyInstance) {
+  const server = app.withTypeProvider<ZodTypeProvider>();
+
   // Scoped to this plugin only (Fastify plugin encapsulation): Stripe needs
   // the exact raw request bytes to verify the webhook signature, so this
   // route captures the raw buffer instead of using the app-wide JSON parser.
@@ -23,6 +26,30 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     await handleWebhookEvent(event);
     return reply.status(200).send({ received: true });
   });
+
+  // Makes checkout recoverable: the browser no longer needs a clientSecret it
+  // stashed earlier, it can always ask for one using the booking id.
+  server.post(
+    "/:bookingId/intent",
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        params: z.object({ bookingId: z.string() }),
+        response: {
+          200: z.object({
+            clientSecret: z.string().nullable(),
+            simulated: z.boolean(),
+            amount: z.number(),
+          }),
+        },
+      },
+    },
+    async (request, reply) => {
+      // Ownership first — this hands back a payable secret for a booking.
+      await getBookingForViewer(request.params.bookingId, request.currentUser!.sub);
+      return reply.send(await getOrCreatePaymentIntent(request.params.bookingId));
+    }
+  );
 
   app.post(
     "/:bookingId/simulate-succeeded",
