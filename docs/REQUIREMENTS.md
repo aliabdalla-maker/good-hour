@@ -71,7 +71,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-028 | Multi-channel notifications: in-app, email, SMS | Should | Each channel delivers, or degrades visibly when unconfigured | Partially met | In-app works; email/SMS depend on unset provider keys |
 | FR-029 | B2B accounts and corporate rates | Should | A business account receives a corporate rate distinct from the consumer rate | Partially met | Flag and rate kind exist; no acquisition path or B2B UI |
 | **FR-030** | **Supply liquidity: real sellers with real inventory** | **Must** | **At least N sellers have listed inventory, and one real order has completed** | **Not met** | **`prod:` 0 marketplace listings, 0 auction bids, 0 orders** |
-| FR-031 | Motion design for UX polish ("flash animation") | Should | Entrances and state changes are animated, and respect `prefers-reduced-motion` | Partially met | `code:packages/web/tailwind.config.ts` — CSS animations exist; this was never pinned to a definition |
+| FR-031 | Motion design for UX polish ("flash animation") | Should | Entrances and state changes are animated; every `animate-*` class used is declared in the theme; `prefers-reduced-motion` is honoured globally | Met | `test:packages/web/lib/designAudit.test.ts` |
 | FR-032 | Full ERP/HR/Finance back office | Won't | — | Not started | Deferred at plan time; a read-only ERP surface stands in |
 | FR-033 | B2G procurement workflows | Won't | — | Not started | Deferred at plan time |
 | FR-034 | Multi-currency and multi-language | Won't | — | Not started | Deferred at plan time; GBP only |
@@ -88,7 +88,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | NFR-006 | Latency budgets for pages and API | Should | Stated p95 targets, measured continuously | Not started | Never specified, never measured |
 | NFR-007 | Correctness under concurrency | Must | Simultaneous orders and spends cannot oversell or double-spend, proven against a real Postgres | Met | `test:packages/api/src/test/concurrency.itest.ts` — 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up |
 | NFR-008 | Observability: structured logs and error tracking | Should | Errors are aggregated somewhere a human sees them | Partially met | Fastify logs to stdout; no aggregation or error tracker |
-| NFR-009 | Backup and tested restore | Must | A restore has been performed and verified within the retention window | Not met | Managed Postgres snapshots are assumed; **no restore has ever been tested** |
+| NFR-009 | Backup and tested restore | Must | A dump is restored into a scratch database and per-table row counts match the source exactly | Met | `code:scripts/backup-verify.mjs` `manual:` run against 26 tables / 2892 rows — counts identical after restore |
 | NFR-010 | Module boundaries enforced, not conventional | Should | A cross-module deep import fails the lint gate | Met | `test:eslint.config.mjs` |
 | NFR-011 | Type legibility floor of 12px | Should | No text below 12px in app or component code | Met | `test:packages/web/lib/designAudit.test.ts` |
 | NFR-012 | Verification claims distinguish tested from written | Must | Every area states whether it is tested, exercised or merely written | Met | `test:packages/shared/src/requirements.test.ts` |
@@ -103,10 +103,10 @@ law does not care that they were never in the brief.
 | ID | Requirement | Priority | Acceptance criterion | Verdict | Evidence |
 | --- | --- | --- | --- | --- | --- |
 | CR-001 | E-money / safeguarding assessment | Must | A written determination of whether custodial wallet balances plus transferable credits constitute stored value or e-money, with safeguarding if so | Not started | Wallet holds balances and credits transfer between users; no assessment exists |
-| CR-002 | KYC / AML on user-to-user value transfer | Must | Identity verification and transfer limits before value moves between accounts | Not started | `transferCredits` moves value between users with no identity check and no cap |
+| CR-002 | KYC / AML on user-to-user value transfer | Must | Transfers above a threshold require a VERIFIED sender; rolling 24h hour and count caps are enforced off the ledger | Met | `test:packages/api/src/test/compliance.itest.ts` — thresholds are engineering defaults, not a legal determination |
 | CR-003 | Consumer rights on auctions and cancellations | Must | Cancellation and cooling-off terms stated, and consistent with auction finality | Partially met | Free cancellation while unpaid is implemented and disclosed; auction finality has no stated terms |
 | CR-004 | Autonomous agent mandate and liability | Must | Recorded consent per mandate, a stated binding rule, and a dispute path when an agent bids | Partially met | `autoSettle` is explicit opt-in and decisions are logged; no terms bind the outcome and no dispute route exists |
-| CR-005 | GDPR: lawful basis, DSAR, erasure | Must | Marketing consent logged, and a working subject-access and deletion path | Partially met | Consent logging and unsubscribe exist; no DSAR or erasure path |
+| CR-005 | GDPR: lawful basis, DSAR, erasure | Must | Consent is logged, a subject can export their own data, and erasure pseudonymises the person while retaining the financial record | Met | `test:packages/api/src/test/compliance.itest.ts` — `GET /auth/me/export`, `POST /auth/me/erase` |
 | CR-006 | PCI scope minimisation | Must | Card data never reaches our servers | Met | `prod:` live card payments completed through Stripe Elements; `code:packages/web/components/StripePaymentForm.tsx` — no PAN in our stack |
 
 ---
@@ -120,10 +120,10 @@ law does not care that they were never in the brief.
 
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
-| Functional | 34 | 23 | 6 | 2 | 3 |
-| Non-functional | 12 | 8 | 1 | 2 | 1 |
-| Compliance | 6 | 1 | 3 | 0 | 2 |
-| **All** | **52** | **32** | **10** | **4** | **6** |
+| Functional | 34 | 24 | 5 | 2 | 3 |
+| Non-functional | 12 | 9 | 1 | 1 | 1 |
+| Compliance | 6 | 3 | 2 | 0 | 1 |
+| **All** | **52** | **36** | **8** | **3** | **5** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

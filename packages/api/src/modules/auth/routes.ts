@@ -3,6 +3,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { registerSchema, loginSchema, userPublicSchema } from "@gihtcx/shared";
 import { config } from "../../config";
 import { getUserById, loginUser, registerUser, toPublicUser } from "./service";
+import { exportUserData, eraseUserAccount } from "./privacy";
 
 // web and api are deployed on different hosts (different sites,
 // not just different origins) -- a browser never attaches a SameSite=Lax
@@ -61,6 +62,36 @@ export default async function authRoutes(app: FastifyInstance) {
     async (request, reply) => {
       const user = await getUserById(request.currentUser!.sub);
       return reply.send(toPublicUser(user));
+    }
+  );
+
+  // CR-005: subject access. Always scoped to the caller's own id — never a
+  // parameter, so there is no shape of request that exports someone else.
+  server.get(
+    "/me/export",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const data = await exportUserData(request.currentUser!.sub);
+      return reply
+        .header("content-disposition", 'attachment; filename="good-hours-data-export.json"')
+        .send(data);
+    }
+  );
+
+  // CR-005: erasure. POST, not DELETE, because it is irreversible and must never
+  // be reachable by a prefetch, a crawler, or a mistyped URL.
+  server.post(
+    "/me/erase",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const result = await eraseUserAccount(request.currentUser!.sub);
+      // The account no longer exists in any usable form, so end the session too.
+      reply.clearCookie(config.COOKIE_NAME, {
+        path: "/",
+        sameSite: COOKIE_OPTS.sameSite,
+        secure: COOKIE_OPTS.secure,
+      });
+      return reply.send(result);
     }
   );
 }

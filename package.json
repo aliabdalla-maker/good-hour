@@ -21,7 +21,8 @@
     "db:migrate": "npm run migrate --workspace=packages/db",
     "db:deploy": "npm run deploy --workspace=packages/db",
     "db:drift": "npm run drift --workspace=packages/db",
-    "db:seed": "npm run seed --workspace=packages/db"
+    "db:seed": "npm run seed --workspace=packages/db",
+    "db:verify-backup": "node scripts/backup-verify.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

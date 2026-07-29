@@ -152,3 +152,33 @@ test("the scanner actually reads files (guards the silent-empty pass)", () => {
   assert.ok(files.length > 40, `only scanned ${files.length} files — the walk is broken`);
   assert.ok(files.some((f) => /NavBar/.test(f.file)), "expected NavBar in the scan");
 });
+
+test("FR-031: entrances are animated and reduced-motion is honoured globally", () => {
+  // "Flash animation" was never pinned to a definition, so this asserts the
+  // criterion as written: state changes are animated, and a user who asks for less
+  // motion gets it. The reduced-motion rule has to be GLOBAL — a per-component
+  // opt-in is the version that gets forgotten on the next component.
+  const css = readFileSync(path.join(webRoot, "app/globals.css"), "utf8");
+  const reduced = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/.exec(css);
+  assert.ok(reduced, "no prefers-reduced-motion block in globals.css");
+  assert.match(reduced[1]!, /\*,/, "the reduced-motion rule is not applied globally");
+  assert.match(reduced[1]!, /animation-duration/);
+  assert.match(reduced[1]!, /transition-duration/);
+
+  // Every animation the app actually uses must be declared in the theme, so a
+  // class name typo degrades to "no animation" rather than silently doing nothing
+  // while looking intentional.
+  const declared = new Set(
+    [...tailwindConfig.matchAll(/^\s{8}"?([a-z-]+)"?:\s*"[^"]*\d+m?s/gm)].map((m) => m[1]!)
+  );
+  const used = new Set(
+    sourceFiles()
+      .flatMap(({ source }) => [...source.matchAll(/\banimate-([a-z-]+)\b/g)])
+      .map((m) => m[1]!)
+      // Tailwind ships these; they need no theme entry.
+      .filter((name) => !["pulse", "spin", "ping", "bounce", "none"].includes(name))
+  );
+  const undeclared = [...used].filter((name) => !declared.has(name));
+  assert.deepEqual(undeclared, [], `animate-* classes with no theme entry: ${undeclared.join(", ")}`);
+  assert.ok(used.size >= 3, `only ${used.size} animations in use — entrances are not animated`);
+});

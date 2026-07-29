@@ -12,7 +12,12 @@ import type {
 // redemptionValue is shared, not local, because the version that lived here
 // shipped a 37.5% arbitrage behind a comment defending it. Its invariant is now
 // asserted in redemption.test.ts rather than argued in prose.
-import { computeTradeFee, redemptionValue } from "@gihtcx/shared";
+import {
+  computeTradeFee,
+  redemptionValue,
+  evaluateTransfer,
+  TRANSFER_WINDOW_MS,
+} from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
@@ -213,6 +218,33 @@ export async function transferCredits(fromUserId: string, input: TransferCredits
   const balance = await getBalanceFor(fromUserId, input.category);
   if (balance < input.hours) {
     throw new AppError(409, "Not enough time credits in that bucket", "INSUFFICIENT_CREDITS");
+  }
+
+  // CR-002: identity and velocity controls on user-to-user value transfer.
+  //
+  // Until this existed, stored value moved between accounts on the strength of an
+  // email address alone — no identity check, no cap, no velocity limit. The window
+  // is measured over TRANSFER_OUT entries, which is the ledger's own record of
+  // what this account has sent, so the limit cannot be evaded by any other path.
+  const sender = await prisma.user.findUniqueOrThrow({
+    where: { id: fromUserId },
+    select: { verificationStatus: true },
+  });
+  const since = new Date(Date.now() - TRANSFER_WINDOW_MS);
+  const window = await prisma.creditLedgerEntry.aggregate({
+    where: { userId: fromUserId, kind: "TRANSFER_OUT", createdAt: { gte: since } },
+    _sum: { hours: true },
+    _count: { _all: true },
+  });
+  const decision = evaluateTransfer({
+    hours: input.hours,
+    senderVerification: sender.verificationStatus,
+    // TRANSFER_OUT hours are stored negative; the policy reasons in magnitudes.
+    hoursSentInWindow: Math.abs(Number(window._sum.hours ?? 0)),
+    transfersInWindow: window._count._all,
+  });
+  if (!decision.allowed) {
+    throw new AppError(409, decision.message!, decision.refusal!);
   }
   // Transferred hours keep the sender's acquisition value so the recipient's
   // wallet is valued on what was actually paid, not today's market price.

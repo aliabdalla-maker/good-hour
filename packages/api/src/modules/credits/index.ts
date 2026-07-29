@@ -12,5 +12,8 @@ export {
   quoteRedemptionValue,
   redeemForBooking,
   refundRedeemedCredits,
+  // Exported for the compliance integration suite, which drives the real
+  // transfer path to prove the CR-002 controls are wired to the ledger.
+  transferCredits,
 } from "./service";
 export { getBalanceFor } from "./ledger";

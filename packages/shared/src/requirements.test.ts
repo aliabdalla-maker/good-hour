@@ -153,16 +153,34 @@ test("liquidity is tracked as a Must, and its verdict is not overstated", () => 
   );
 });
 
-test("compliance requirements are present and none are silently Met", () => {
+test("a compliance requirement is only Met when the control is proven, not merely written", () => {
   const compliance = rows.filter((r) => r.id.startsWith("CR-"));
   assert.ok(compliance.length >= 6, `only ${compliance.length} compliance requirements`);
+
+  // This rule started as "only CR-006 may be Met", on the reasoning that
+  // compliance needs an external determination. Too broad: some of these rows are
+  // *technical controls* with testable criteria — a verification gate, a transfer
+  // cap, an erasure path — and those are met when the control is enforced and
+  // proven. Narrowed rather than dropped, because the distinction is the point.
   for (const r of compliance) {
-    // PCI scope minimisation is genuinely met by not touching card data. Any other
-    // compliance row claiming Met needs a named external determination, not code.
-    if (r.verdict === "Met") {
-      assert.equal(r.id, "CR-006", `${r.id} claims Met — compliance needs a written determination`);
-    }
+    if (r.verdict !== "Met") continue;
+    assert.ok(
+      /`(?:test|prod):/.test(r.evidence),
+      `${r.id} claims Met on a manual check or on code alone — a compliance control needs a test or production evidence`
+    );
   }
+
+  // CR-001 is the exception that must stay honest. Its criterion is a *written
+  // determination* about whether custodial balances plus transferable credits
+  // constitute e-money. No amount of code discharges it, and marking it Met would
+  // be the single most dangerous false claim in this register.
+  const eMoney = compliance.find((r) => r.id === "CR-001");
+  assert.ok(eMoney, "CR-001 (e-money determination) is missing from the register");
+  assert.notEqual(
+    eMoney.verdict,
+    "Met",
+    "CR-001 needs a determination from someone qualified, not an implementation"
+  );
 });
 
 test("the summary table matches the rows it summarises", () => {

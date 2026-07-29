@@ -11,3 +11,4 @@ coverage/
 packages/db/generated/
 .agents/
 *.tsbuildinfo
+.backup-verify/
