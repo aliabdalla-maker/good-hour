@@ -1,3 +1,13 @@
+/**
+ * Marker recorded in `Notification.providerRef` when a channel had no provider
+ * configured and only logged the message — FR-028.
+ *
+ * A notification row that says SENT with no provider reference used to be
+ * indistinguishable from one that was really delivered. This makes the degradation
+ * legible to anyone reading the table or the UI.
+ */
+export const LOGGED_ONLY_REF = "logged:no-provider";
+
 import { z } from "zod";
 import {
   NOTIFICATION_CHANNELS,

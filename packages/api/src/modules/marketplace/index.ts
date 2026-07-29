@@ -13,4 +13,7 @@ export {
   markOrderFailed,
   refundOrder,
   getMarketplaceStats,
+  searchListings,
+  getListing,
+  createListing,
 } from "./service";

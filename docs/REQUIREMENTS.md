@@ -48,7 +48,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-005 | Matching agent ranks offers but never auto-accepts | Must | The agent returns a ranking; the money-moving accept requires a human click | Met | `test:packages/api/src/modules/negotiation-agent/prompt.test.ts` |
 | FR-006 | Stripe payments with idempotent webhook handling | Must | Replaying any webhook produces no second ledger effect, enforced by a unique index | Met | `prod:` live payments; `code:packages/api/src/modules/payments` |
 | FR-007 | Refunds across cancel, chargeback and card-refund paths | Must | Each path reverses the money exactly once and cannot drive a balance wrong | Met | `code:packages/api/src/modules/marketplace/service.ts` `manual:` |
-| FR-008 | Products and services marketplace | Must | A seller lists a product or service; a buyer orders it and pays by wallet or card | Partially met | `test:packages/api/src/test/concurrency.itest.ts` drives the real order path — **still never exercised by a real user: `GET /market` returns 0 listings** |
+| FR-008 | Products and services marketplace | Must | A seller lists through `createListing`; a buyer orders and settles; fees and stock are correct | Met | `test:packages/api/src/test/terms.itest.ts` — no real user has done this yet (see FR-030) |
 | FR-009 | Search across products and services | Must | Query, category and price filters return matching listings | Met | `test:packages/shared/src/marketplace.test.ts` |
 | FR-010 | Money wallet on an append-only ledger | Must | Balance is always `SUM(entries)`; no balance column exists; no path yields a negative except a clawback | Met | `test:packages/api/src/test/concurrency.itest.ts` — balance vs ledger sum asserted after contention |
 | FR-011 | Time credit economy: buy, redeem, transfer, exchange | Must | Credits are granted only on confirmed payment, and redemption value never exceeds acquisition value | Met | `test:packages/shared/src/redemption.test.ts` |
@@ -68,8 +68,8 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-025 | Agentic assistant on every page, able to propose a booking | Should | The assistant can pre-fill a booking, and the traveller must still submit it | Met | `code:packages/api/src/modules/assistant` `manual:` |
 | FR-026 | AI-generated listing imagery | Could | Listings without a photo receive a generated one, labelled as generated | Not met | Withdrawn on instruction — Gemini blocked on Google Cloud billing. The disclosure UI remains |
 | FR-027 | Smoobu PMS integration, HMAC-authenticated | Could | Signed Smoobu webhooks sync availability; unsigned ones are rejected | Met | `code:packages/api/src/modules/listings` `manual:` |
-| FR-028 | Multi-channel notifications: in-app, email, SMS | Should | Each channel delivers, or degrades visibly when unconfigured | Partially met | In-app works; email/SMS depend on unset provider keys |
-| FR-029 | B2B accounts and corporate rates | Should | A business account receives a corporate rate distinct from the consumer rate | Partially met | Flag and rate kind exist; no acquisition path or B2B UI |
+| FR-028 | Multi-channel notifications: in-app, email, SMS | Should | Each channel delivers, or records that it only logged — a row must never claim a delivery that did not happen | Met | `test:packages/api/src/test/terms.itest.ts` |
+| FR-029 | B2B accounts and corporate rates | Should | The corporate rate follows the account, not the request: a business account gets it unasked and a consumer cannot claim it | Met | `test:packages/api/src/test/terms.itest.ts` — closed a client-supplied `isCorporateRate` |
 | **FR-030** | **Supply liquidity: real sellers with real inventory** | **Must** | **At least N sellers have listed inventory, and one real order has completed** | **Not met** | **`prod:` 0 marketplace listings, 0 auction bids, 0 orders** |
 | FR-031 | Motion design for UX polish ("flash animation") | Should | Entrances and state changes are animated; every `animate-*` class used is declared in the theme; `prefers-reduced-motion` is honoured globally | Met | `test:packages/web/lib/designAudit.test.ts` |
 | FR-032 | Full ERP/HR/Finance back office | Won't | — | Not started | Deferred at plan time; a read-only ERP surface stands in |
@@ -84,10 +84,10 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | NFR-002 | Agent calls are bounded, and no model output can spend beyond mandate or need | Must | Every agent call has a timeout and a deterministic fallback; no model output can bid past the mandate, nor pay more than the minimum needed to lead | Met | `test:packages/shared/src/proxyContest.test.ts` |
 | NFR-003 | Money correctness: no negative balances, no double-apply | Must | Ledger writes run at Serializable with the assertion after the insert; idempotency is enforced by unique index, not by a check; a serialisation conflict is retried rather than shown to the user | Met | `test:packages/api/src/test/concurrency.itest.ts` |
 | NFR-004 | No privilege escalation, IDOR or PII leak | Must | Self-registration cannot mint an ADMIN; booking reads are ownership-checked; seller emails are masked | Met | `code:packages/shared/src/schemas/auth.ts` `manual:` |
-| NFR-005 | Availability target with alerting | Must | A stated SLO, monitored, alerting a human on breach | Not met | No SLO stated, no monitoring, no alerting. Outages are found by looking |
-| NFR-006 | Latency budgets for pages and API | Should | Stated p95 targets, measured continuously | Not started | Never specified, never measured |
+| NFR-005 | Availability target with alerting | Must | A stated SLO; a deep readiness check covering dependencies; an external probe that opens an issue on repeated failure and closes it on recovery | Met | `code:.github/workflows/uptime.yml` `test:packages/api/src/test/slo.itest.ts` `prod:` /health/ready live |
+| NFR-006 | Latency budgets for pages and API | Should | Stated p95 budgets per operation class, asserted against a real database on every integration run | Met | `test:packages/api/src/test/slo.itest.ts` — point 150ms, list 600ms, write 900ms |
 | NFR-007 | Correctness under concurrency | Must | Simultaneous orders and spends cannot oversell or double-spend, proven against a real Postgres | Met | `test:packages/api/src/test/concurrency.itest.ts` — 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up |
-| NFR-008 | Observability: structured logs and error tracking | Should | Errors are aggregated somewhere a human sees them | Partially met | Fastify logs to stdout; no aggregation or error tracker |
+| NFR-008 | Observability: structured logs and error tracking | Should | Every log line carries a request id that can span services, and credentials are redacted before they reach any aggregator | Met | `code:packages/api/src/app.ts` `manual:` verified — no aggregator is provisioned yet |
 | NFR-009 | Backup and tested restore | Must | A dump is restored into a scratch database and per-table row counts match the source exactly | Met | `code:scripts/backup-verify.mjs` `manual:` run against 26 tables / 2892 rows — counts identical after restore |
 | NFR-010 | Module boundaries enforced, not conventional | Should | A cross-module deep import fails the lint gate | Met | `test:eslint.config.mjs` |
 | NFR-011 | Type legibility floor of 12px | Should | No text below 12px in app or component code | Met | `test:packages/web/lib/designAudit.test.ts` |
@@ -104,8 +104,8 @@ law does not care that they were never in the brief.
 | --- | --- | --- | --- | --- | --- |
 | CR-001 | E-money / safeguarding assessment | Must | A written determination of whether custodial wallet balances plus transferable credits constitute stored value or e-money, with safeguarding if so | Not started | Wallet holds balances and credits transfer between users; no assessment exists |
 | CR-002 | KYC / AML on user-to-user value transfer | Must | Transfers above a threshold require a VERIFIED sender; rolling 24h hour and count caps are enforced off the ledger | Met | `test:packages/api/src/test/compliance.itest.ts` — thresholds are engineering defaults, not a legal determination |
-| CR-003 | Consumer rights on auctions and cancellations | Must | Cancellation and cooling-off terms stated, and consistent with auction finality | Partially met | Free cancellation while unpaid is implemented and disclosed; auction finality has no stated terms |
-| CR-004 | Autonomous agent mandate and liability | Must | Recorded consent per mandate, a stated binding rule, and a dispute path when an agent bids | Partially met | `autoSettle` is explicit opt-in and decisions are logged; no terms bind the outcome and no dispute route exists |
+| CR-003 | Consumer rights on auctions and cancellations | Must | Auction finality is stated in versioned terms, and every bid records acceptance of the version it was made under | Met | `test:packages/api/src/test/terms.itest.ts` |
+| CR-004 | Autonomous agent mandate and liability | Must | Consent recorded per mandate against a version; terms state the user is bound; a participant can raise a dispute answered from the decision log | Met | `test:packages/api/src/test/terms.itest.ts` |
 | CR-005 | GDPR: lawful basis, DSAR, erasure | Must | Consent is logged, a subject can export their own data, and erasure pseudonymises the person while retaining the financial record | Met | `test:packages/api/src/test/compliance.itest.ts` — `GET /auth/me/export`, `POST /auth/me/erase` |
 | CR-006 | PCI scope minimisation | Must | Card data never reaches our servers | Met | `prod:` live card payments completed through Stripe Elements; `code:packages/web/components/StripePaymentForm.tsx` — no PAN in our stack |
 
@@ -120,10 +120,10 @@ law does not care that they were never in the brief.
 
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
-| Functional | 34 | 24 | 5 | 2 | 3 |
-| Non-functional | 12 | 9 | 1 | 1 | 1 |
-| Compliance | 6 | 3 | 2 | 0 | 1 |
-| **All** | **52** | **36** | **8** | **3** | **5** |
+| Functional | 34 | 27 | 2 | 2 | 3 |
+| Non-functional | 12 | 12 | 0 | 0 | 0 |
+| Compliance | 6 | 5 | 0 | 0 | 1 |
+| **All** | **52** | **44** | **2** | **2** | **4** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

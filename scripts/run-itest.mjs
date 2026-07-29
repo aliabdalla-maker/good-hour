@@ -33,6 +33,31 @@ if (existsSync(envPath)) {
   }
 }
 
+/**
+ * The suite must not reach an external provider.
+ *
+ * A booking test started failing with `Invalid API Key provided: sk_test...` —
+ * meaning it had been trying to reach Stripe's API, and would have created real
+ * test-mode PaymentIntents against whatever account the local key belonged to.
+ * Tests that make outbound calls are slow, flaky, and occasionally consequential.
+ *
+ * Unsetting these puts the code into the fallbacks it already has: payments become
+ * simulated intents, and agents fall back to their deterministic decisions. Both
+ * paths are the ones that need testing anyway — the fallback is what runs when a
+ * provider is down, and it was never exercised.
+ */
+for (const key of [
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "OPENAI_API_KEY",
+  "RESEND_API_KEY",
+  "TWILIO_ACCOUNT_SID",
+  "TWILIO_AUTH_TOKEN",
+  "SMOOBU_API_KEY",
+]) {
+  delete env[key];
+}
+
 if (!env.DATABASE_URL) {
   console.error(
     "DATABASE_URL is not set. The integration suite runs against a real Postgres:\n" +

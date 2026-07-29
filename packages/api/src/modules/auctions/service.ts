@@ -21,6 +21,7 @@ import { domainEvents } from "../../events/bus";
 import { auctionCloseQueue } from "../../queue/queues";
 import { applyWalletWrites, getMoneyBalance } from "../wallet";
 import { decideCounterBid } from "./agent";
+import { recordBidTermsAcceptance } from "./compliance";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -240,6 +241,12 @@ export async function placeBid(bidderId: string, auctionId: string, input: Place
     autoSettle: input.autoSettle,
     isAgentPlaced: false,
   });
+
+  // CR-003 / CR-004. Recorded AFTER the bid is accepted, so a rejected bid does not
+  // leave an acceptance behind for terms that never bound anything. A mandate adds a
+  // second acceptance because it authorises something the bid alone does not:
+  // spending on the user's behalf while they are not looking.
+  await recordBidTermsAcceptance(bidderId, { hasMandate: input.maxPerHour !== undefined });
 
   await runAgentResponses(auctionId);
   return getAuctionDetail(auctionId, bidderId);

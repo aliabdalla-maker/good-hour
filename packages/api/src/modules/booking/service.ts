@@ -53,6 +53,11 @@ async function recordPricingOutcome(roomId: string, accepted: boolean) {
 }
 
 export async function createDirectBooking(travellerId: string, input: CreateBookingInput) {
+  // Entitlement to the corporate rate comes from the account, never the request.
+  const { isBusinessAccount } = await prisma.user.findUniqueOrThrow({
+    where: { id: travellerId },
+    select: { isBusinessAccount: true },
+  });
   const room = await getRoomById(input.roomId);
   const startsAt = new Date(input.startsAt);
   const endsAt = new Date(input.endsAt);
@@ -136,7 +141,13 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
         creditHoursRedeemed: redeemHours,
         creditValueApplied,
         currency: room.currency,
-        isCorporateRate: input.isCorporateRate,
+        // FR-029, and a pricing-integrity fix found while closing it.
+        //
+        // This used to be `input.isCorporateRate` — a client-supplied boolean. Any
+        // traveller could post `isCorporateRate: true` and claim a business rate they
+        // were not entitled to. Entitlement is a property of the ACCOUNT, so it is
+        // read from the account and the request's opinion is ignored entirely.
+        isCorporateRate: isBusinessAccount,
         source: "DIRECT_SEARCH",
         status: "PENDING_PAYMENT",
         reservationExpiresAt,

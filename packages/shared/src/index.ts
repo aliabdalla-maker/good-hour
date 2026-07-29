@@ -4,6 +4,8 @@ export * from "./contrast";
 export * from "./proxyContest";
 export * from "./redemption";
 export * from "./transferPolicy";
+export * from "./terms";
+export * from "./slo";
 export * from "./schemas/auth";
 export * from "./schemas/listings";
 export * from "./schemas/search";

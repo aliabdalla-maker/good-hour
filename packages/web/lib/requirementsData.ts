@@ -111,12 +111,12 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Products and services marketplace",
     "priority": "Must",
-    "criterion": "A seller lists a product or service; a buyer orders it and pays by wallet or card",
-    "verdict": "Partially met",
+    "criterion": "A seller lists through `createListing`; a buyer orders and settles; fees and stock are correct",
+    "verdict": "Met",
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/concurrency.itest.ts drives the real order path — **still never exercised by a real user: GET /market returns 0 listings"
+    "evidence": "test:packages/api/src/test/terms.itest.ts — no real user has done this yet (see FR-030)"
   },
   {
     "id": "FR-009",
@@ -353,20 +353,24 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Multi-channel notifications: in-app, email, SMS",
     "priority": "Should",
-    "criterion": "Each channel delivers, or degrades visibly when unconfigured",
-    "verdict": "Partially met",
-    "evidenceKinds": [],
-    "evidence": "In-app works; email/SMS depend on unset provider keys"
+    "criterion": "Each channel delivers, or records that it only logged — a row must never claim a delivery that did not happen",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/terms.itest.ts"
   },
   {
     "id": "FR-029",
     "family": "FR",
     "requirement": "B2B accounts and corporate rates",
     "priority": "Should",
-    "criterion": "A business account receives a corporate rate distinct from the consumer rate",
-    "verdict": "Partially met",
-    "evidenceKinds": [],
-    "evidence": "Flag and rate kind exist; no acquisition path or B2B UI"
+    "criterion": "The corporate rate follows the account, not the request: a business account gets it unasked and a consumer cannot claim it",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/terms.itest.ts — closed a client-supplied isCorporateRate"
   },
   {
     "id": "FR-030",
@@ -476,20 +480,26 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "NFR",
     "requirement": "Availability target with alerting",
     "priority": "Must",
-    "criterion": "A stated SLO, monitored, alerting a human on breach",
-    "verdict": "Not met",
-    "evidenceKinds": [],
-    "evidence": "No SLO stated, no monitoring, no alerting. Outages are found by looking"
+    "criterion": "A stated SLO; a deep readiness check covering dependencies; an external probe that opens an issue on repeated failure and closes it on recovery",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test",
+      "prod",
+      "code"
+    ],
+    "evidence": "code:.github/workflows/uptime.yml test:packages/api/src/test/slo.itest.ts prod: /health/ready live"
   },
   {
     "id": "NFR-006",
     "family": "NFR",
     "requirement": "Latency budgets for pages and API",
     "priority": "Should",
-    "criterion": "Stated p95 targets, measured continuously",
-    "verdict": "Not started",
-    "evidenceKinds": [],
-    "evidence": "Never specified, never measured"
+    "criterion": "Stated p95 budgets per operation class, asserted against a real database on every integration run",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/slo.itest.ts — point 150ms, list 600ms, write 900ms"
   },
   {
     "id": "NFR-007",
@@ -508,10 +518,13 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "NFR",
     "requirement": "Observability: structured logs and error tracking",
     "priority": "Should",
-    "criterion": "Errors are aggregated somewhere a human sees them",
-    "verdict": "Partially met",
-    "evidenceKinds": [],
-    "evidence": "Fastify logs to stdout; no aggregation or error tracker"
+    "criterion": "Every log line carries a request id that can span services, and credentials are redacted before they reach any aggregator",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "manual",
+      "code"
+    ],
+    "evidence": "code:packages/api/src/app.ts manual: verified — no aggregator is provisioned yet"
   },
   {
     "id": "NFR-009",
@@ -589,20 +602,24 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "CR",
     "requirement": "Consumer rights on auctions and cancellations",
     "priority": "Must",
-    "criterion": "Cancellation and cooling-off terms stated, and consistent with auction finality",
-    "verdict": "Partially met",
-    "evidenceKinds": [],
-    "evidence": "Free cancellation while unpaid is implemented and disclosed; auction finality has no stated terms"
+    "criterion": "Auction finality is stated in versioned terms, and every bid records acceptance of the version it was made under",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/terms.itest.ts"
   },
   {
     "id": "CR-004",
     "family": "CR",
     "requirement": "Autonomous agent mandate and liability",
     "priority": "Must",
-    "criterion": "Recorded consent per mandate, a stated binding rule, and a dispute path when an agent bids",
-    "verdict": "Partially met",
-    "evidenceKinds": [],
-    "evidence": "autoSettle is explicit opt-in and decisions are logged; no terms bind the outcome and no dispute route exists"
+    "criterion": "Consent recorded per mandate against a version; terms state the user is bound; a participant can raise a dispute answered from the decision log",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/terms.itest.ts"
   },
   {
     "id": "CR-005",

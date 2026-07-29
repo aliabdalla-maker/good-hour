@@ -24,6 +24,7 @@ export interface Fixture {
   suffix: string;
   userIds: string[];
   propertyIds: string[];
+  roomIds: string[];
   listingIds: string[];
   auctionIds: string[];
 }
@@ -33,6 +34,7 @@ export function newFixture(): Fixture {
     suffix: randomUUID().slice(0, 8),
     userIds: [],
     propertyIds: [],
+    roomIds: [],
     listingIds: [],
     auctionIds: [],
   };
@@ -129,6 +131,64 @@ export async function makeTopUp(userId: string, amount: number): Promise<string>
   return topUp.id;
 }
 
+/**
+ * A property, a room and hourly OPEN slots covering a window.
+ *
+ * Booking tests used to reach for whatever seeded room happened to exist, which
+ * meant they passed or failed on the state of the developer's database rather than
+ * on the code. `createDirectBooking` refuses a range it has no OPEN slots for, so
+ * the slots have to be real — this builds them.
+ */
+export async function makeRoomWithSlots(
+  f: Fixture,
+  supplierId: string,
+  opts: { hourlyRate?: number; startsAt: Date; hours: number }
+): Promise<string> {
+  const property = await prisma.property.create({
+    data: {
+      supplierId,
+      name: `itest property ${f.suffix}`,
+      category: "ROOM",
+      addressLine: "1 Integration Test Road",
+      city: "Testville",
+      country: "GB",
+      lat: 51.5,
+      lng: -0.12,
+      amenities: [],
+    },
+  });
+  f.propertyIds.push(property.id);
+
+  const room = await prisma.room.create({
+    data: {
+      propertyId: property.id,
+      name: `itest room ${f.suffix}`,
+      capacity: 4,
+      amenities: [],
+      baseHourlyRate: opts.hourlyRate ?? 30,
+      minHours: 1,
+      maxHours: 24,
+      status: "ACTIVE",
+    },
+  });
+  f.roomIds.push(room.id);
+
+  // One OPEN slot per hour, aligned to the hour, matching how the booking module
+  // reserves them.
+  const base = new Date(opts.startsAt);
+  base.setMinutes(0, 0, 0);
+  await prisma.availabilitySlot.createMany({
+    data: Array.from({ length: opts.hours }, (_, i) => ({
+      roomId: room.id,
+      startsAt: new Date(base.getTime() + i * 3_600_000),
+      endsAt: new Date(base.getTime() + (i + 1) * 3_600_000),
+      status: "OPEN" as const,
+    })),
+  });
+
+  return room.id;
+}
+
 export async function walletBalance(userId: string): Promise<number> {
   const agg = await prisma.walletLedgerEntry.aggregate({
     where: { userId },
@@ -177,7 +237,43 @@ export async function teardown(f: Fixture): Promise<void> {
     await prisma.marketplaceOrder.deleteMany({ where: { listingId: { in: f.listingIds } } });
     await prisma.marketplaceListing.deleteMany({ where: { id: { in: f.listingIds } } });
   }
+  if (f.roomIds.length) {
+    // Slots reference bookings, bookings reference rooms — so release the slots,
+    // then drop the bookings, then the rooms and properties.
+    await prisma.availabilitySlot.updateMany({
+      where: { roomId: { in: f.roomIds } },
+      data: { bookingId: null, status: "OPEN" },
+    });
+    // Payment rows point at bookings (simulated intents in the test environment),
+    // so they go first. The FK chain here is slot -> booking -> payment, and the
+    // order below follows it in reverse.
+    const bookingIds = (
+      await prisma.booking.findMany({
+        where: { roomId: { in: f.roomIds } },
+        select: { id: true },
+      })
+    ).map((b) => b.id);
+    if (bookingIds.length) {
+      await prisma.payment.deleteMany({ where: { bookingId: { in: bookingIds } } });
+    }
+    await prisma.booking.deleteMany({ where: { roomId: { in: f.roomIds } } });
+    await prisma.availabilitySlot.deleteMany({ where: { roomId: { in: f.roomIds } } });
+    await prisma.review.deleteMany({ where: { roomId: { in: f.roomIds } } });
+    await prisma.room.deleteMany({ where: { id: { in: f.roomIds } } });
+  }
+  if (f.propertyIds.length) {
+    await prisma.property.deleteMany({ where: { id: { in: f.propertyIds } } });
+  }
   if (f.userIds.length) {
+    // Rows that hang off User by foreign key and are written as a side effect of
+    // ordinary operations — terms acceptance on a bid, a dispute note, a receipt
+    // notification. Missing them made `user.deleteMany` fail on a constraint inside
+    // the `after` hook, which surfaced as the whole suite hanging rather than as any
+    // legible error. Teardown has to know about everything the code under test
+    // writes, not just what the test wrote itself.
+    await prisma.consentEvent.deleteMany({ where: { userId: { in: f.userIds } } });
+    await prisma.crmNote.deleteMany({ where: { userId: { in: f.userIds } } });
+    await prisma.notification.deleteMany({ where: { userId: { in: f.userIds } } });
     await prisma.marketplaceOrder.deleteMany({ where: { buyerId: { in: f.userIds } } });
     await prisma.walletLedgerEntry.deleteMany({ where: { userId: { in: f.userIds } } });
     await prisma.walletTopUp.deleteMany({ where: { userId: { in: f.userIds } } });

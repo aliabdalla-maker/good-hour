@@ -7,6 +7,9 @@ import {
   auctionSearchQuerySchema,
   createAuctionSchema,
   placeBidSchema,
+  AUCTION_TERMS,
+  AGENT_MANDATE_TERMS,
+  DISPUTE_REASONS,
 } from "@gihtcx/shared";
 import {
   createAuction,
@@ -16,6 +19,7 @@ import {
   searchAuctions,
   settleAuction,
 } from "./service";
+import { raiseAuctionDispute, termsAcceptance } from "./compliance";
 
 export default async function auctionRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -74,6 +78,41 @@ export default async function auctionRoutes(app: FastifyInstance) {
     },
     async (request, reply) =>
       reply.status(201).send(await placeBid(request.currentUser!.sub, request.params.id, request.body))
+  );
+
+  // CR-003 / CR-004: the terms a bid binds you to, and what this account has
+  // already accepted. Public text, private acceptance.
+  server.get("/terms", async (_request, reply) =>
+    reply.send({ auction: AUCTION_TERMS, agentMandate: AGENT_MANDATE_TERMS })
+  );
+
+  server.get(
+    "/terms/acceptance",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => reply.send(await termsAcceptance(request.currentUser!.sub))
+  );
+
+  server.post(
+    "/:id/dispute",
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        params: z.object({ id: z.string() }),
+        body: z.object({
+          reason: z.enum(DISPUTE_REASONS),
+          // Long enough to be actionable, bounded so it cannot be used as storage.
+          detail: z.string().trim().min(20).max(2000),
+        }),
+      },
+    },
+    async (request, reply) =>
+      reply.status(201).send(
+        await raiseAuctionDispute(request.currentUser!.sub, {
+          auctionId: request.params.id,
+          reason: request.body.reason,
+          detail: request.body.detail,
+        })
+      )
   );
 
   server.post(

@@ -7,6 +7,7 @@ import type {
   NotificationChannel,
   UpdatePreferencesInput,
 } from "@gihtcx/shared";
+import { LOGGED_ONLY_REF } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { domainEvents } from "../../events/bus";
 import { unsubscribeUrl, verifyUnsubToken } from "../../lib/unsubscribe";
@@ -49,10 +50,14 @@ export async function notify(input: NotifyInput) {
             ? `${input.body}\n\n—\nYou received this because you opted into Good Hours updates.\nUnsubscribe: ${unsubscribeUrl(user.id)}`
             : input.body;
         const r = await sendEmail(user.email, input.subject, emailBody);
-        providerRef = r.providerRef;
+        // FR-028. The channel reports `delivered: "logged"` when no provider is
+        // configured, but this row used to record status SENT regardless — claiming a
+        // delivery that never happened. Degradation has to be visible in the record,
+        // or "email is working" is indistinguishable from "email is a console.log".
+        providerRef = r.providerRef ?? (r.delivered === "logged" ? LOGGED_ONLY_REF : undefined);
       } else if (channel === "SMS") {
         const r = await sendSms(user.phone as string, `${input.subject}: ${input.body}`);
-        providerRef = r.providerRef;
+        providerRef = r.providerRef ?? (r.delivered === "logged" ? LOGGED_ONLY_REF : undefined);
       }
     } catch {
       status = "FAILED";

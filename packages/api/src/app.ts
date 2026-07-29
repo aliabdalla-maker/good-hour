@@ -1,9 +1,12 @@
 import Fastify from "fastify";
+import { randomUUID } from "node:crypto";
+import { prisma } from "@gihtcx/db";
 import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import { config } from "./config";
+import { redisConnection } from "./queue/connection";
 import { registerErrorHandler } from "./plugins/errorHandler";
 import authGuardPlugin from "./plugins/authGuard";
 import authModule from "./modules/auth";
@@ -31,9 +34,6 @@ const bootedAt = new Date().toISOString();
 
 export function buildApp() {
   const app = Fastify({
-    logger: {
-      level: config.NODE_ENV === "development" ? "info" : "warn",
-    },
     // Fastify's 1MB default would silently reject a data:image/ room photo
     // before Zod even runs — a generated image's base64 payload routinely
     // exceeds that. Matches the imageUrl cap in listings.ts with headroom
@@ -44,6 +44,31 @@ export function buildApp() {
     // client at 100 req/min could 429 every other user, and 10 bad logins from
     // anywhere locked out logins globally.
     trustProxy: true,
+    // NFR-008. Fastify's default logger emits JSON already; what was missing was a
+    // correlation id on every line and a guarantee that secrets never reach a log
+    // aggregator. `redact` operates on the serialised object, so it holds even when
+    // a header or body is logged by a plugin that knows nothing about this list.
+    logger: {
+      level: process.env.LOG_LEVEL ?? (config.NODE_ENV === "development" ? "info" : "warn"),
+      redact: {
+        paths: [
+          "req.headers.authorization",
+          "req.headers.cookie",
+          "req.headers['x-api-key']",
+          "res.headers['set-cookie']",
+          "*.password",
+          "*.passwordHash",
+          "*.clientSecret",
+          "*.client_secret",
+        ],
+        censor: "[redacted]",
+      },
+    },
+    // Honour an upstream request id so one id spans proxy, api and worker logs; mint
+    // one when there isn't one. Without this, correlating a user report to a log line
+    // means guessing from timestamps.
+    genReqId: (req) =>
+      (req.headers["x-request-id"] as string | undefined) ?? `req-${randomUUID()}`,
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
@@ -79,6 +104,47 @@ export function buildApp() {
     commit: process.env.RENDER_GIT_COMMIT ?? process.env.GIT_COMMIT ?? "unknown",
     startedAt: bootedAt,
   }));
+
+  /**
+   * Readiness — NFR-005.
+   *
+   * /health answers "is the process up", which is not the same question as "can it
+   * serve a request". A process with a dead database connection answers /health
+   * happily, so an uptime probe pointed at it reports 100% through an outage.
+   *
+   * Returns 503 when a dependency is down, because a probe that has to parse a body
+   * to notice a failure is a probe that will be configured wrong.
+   */
+  app.get("/health/ready", async (_request, reply) => {
+    const checks: Record<string, { ok: boolean; ms: number; error?: string }> = {};
+
+    const timed = async (name: string, fn: () => Promise<unknown>) => {
+      const started = Date.now();
+      try {
+        await fn();
+        checks[name] = { ok: true, ms: Date.now() - started };
+      } catch (err) {
+        checks[name] = {
+          ok: false,
+          ms: Date.now() - started,
+          error: err instanceof Error ? err.message.slice(0, 120) : "unknown",
+        };
+      }
+    };
+
+    await timed("database", () => prisma.$queryRaw`SELECT 1`);
+    await timed("redis", async () => {
+      await redisConnection.ping();
+    });
+
+    const ok = Object.values(checks).every((c) => c.ok);
+    return reply.status(ok ? 200 : 503).send({
+      status: ok ? "ready" : "degraded",
+      commit: process.env.RENDER_GIT_COMMIT ?? process.env.GIT_COMMIT ?? "unknown",
+      checks,
+    });
+  });
+
   // Friendly root so anyone browsing to the bare API origin sees a pointer
   // instead of a raw 404 (there's no UI here — the web app is the frontend).
   app.get("/", async () => ({
