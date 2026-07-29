@@ -14,11 +14,12 @@ import {
   bidBeats,
   computeTradeFee,
   nextValidBid,
+  resolveProxyContest,
 } from "@gihtcx/shared";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
 import { auctionCloseQueue } from "../../queue/queues";
-import { applyWalletWrites, getMoneyBalance } from "../wallet/ledger";
+import { applyWalletWrites, getMoneyBalance } from "../wallet";
 import { decideCounterBid } from "./agent";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -330,41 +331,31 @@ async function runAgentResponses(auctionId: string): Promise<void> {
   /**
    * Resolve the proxy contest in ONE step, to its economic conclusion.
    *
-   * The first version looped "everyone counters by one increment" up to a fixed
-   * number of rounds. That was wrong, not just slow: with a £0.50 increment and
-   * ceilings of £70 and £62, the ladder crawled 50 -> 55 -> 55.5 -> … -> 58 and
-   * stopped when it hit the round cap, leaving the £62 mandate in front. The
-   * *iteration limit* was picking the winner instead of the mandates. A bidder
-   * with a strictly higher ceiling must always end up in front.
+   * The decision itself lives in `resolveProxyContest` (shared) rather than here,
+   * because the bug it replaced was only reachable through Prisma and so nothing
+   * tested it: the first version looped "everyone counters by one increment" up to
+   * a fixed round cap, and with a £0.50 increment against ceilings of £70 and £62
+   * the ladder ran out of rounds around £58 with the £62 mandate in front. The
+   * iteration limit was picking the winner instead of the mandates.
    *
-   * Standard proxy semantics fix it: the strongest mandate wins at one
-   * increment beyond the second-strongest (capped by its own ceiling). One bid,
-   * deterministic, and independent of how many rounds anyone iterates.
+   * Pure function + regression test is the actual fix; a correct comment here was
+   * never going to be one. See proxyContest.test.ts, which sweeps the ceiling gap.
    */
-  const strongerFirst = [...mandates].sort((x, y) =>
-    auction.kind === "FORWARD"
-      ? Number(y.maxPerHour) - Number(x.maxPerHour)
-      : Number(x.maxPerHour) - Number(y.maxPerHour)
-  );
-  const champion = strongerFirst[0];
-  const runnerUp = strongerFirst[1];
-  if (!champion) return;
-
   const currentLead = Number(leading.amountPerHour);
-  const championCeiling = Number(champion.maxPerHour);
+  const contest = resolveProxyContest({
+    kind: auction.kind,
+    leadingBidderId: leading.bidderId,
+    leadingPerHour: currentLead,
+    mandates: mandates.map((m) => ({
+      bidderId: m.bidderId,
+      maxPerHour: Number(m.maxPerHour),
+      autoSettle: m.autoSettle,
+    })),
+  });
+  if (!contest) return;
 
-  // Nothing to do when the strongest mandate already leads and no rival mandate
-  // can touch it.
-  if (champion.bidderId === leading.bidderId) {
-    const rivalCanBeat =
-      runnerUp !== undefined &&
-      bidBeats(auction.kind, Number(runnerUp.maxPerHour), currentLead);
-    if (!rivalCanBeat) return;
-  }
-
-  // Price to beat: the runner-up's ceiling if there is one, else the live lead.
-  const contested = runnerUp ? Number(runnerUp.maxPerHour) : currentLead;
-  const reference = bidBeats(auction.kind, contested, currentLead) ? contested : currentLead;
+  const championCeiling = contest.championCeiling;
+  const reference = contest.referencePerHour;
 
   const decision = await decideCounterBid({
     auctionId,
@@ -384,9 +375,9 @@ async function runAgentResponses(auctionId: string): Promise<void> {
   if (!bidBeats(auction.kind, decision.amountPerHour, currentLead)) return;
 
   try {
-    await recordBid(auction, champion.bidderId, decision.amountPerHour, {
+    await recordBid(auction, contest.championId, decision.amountPerHour, {
       maxPerHour: championCeiling,
-      autoSettle: champion.autoSettle,
+      autoSettle: contest.championAutoSettle,
       isAgentPlaced: true,
     });
   } catch {

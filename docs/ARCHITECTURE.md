@@ -25,11 +25,30 @@ Both `api` and `worker` run via `tsx` (not a `tsc` build) even in the Docker ima
 Each is a Fastify plugin exposing a public `index.ts`; cross-module access is
 expected to go through that barrel rather than a deep import.
 
-**This is a convention, not an enforced rule.** The original plan called for an
-ESLint `no-restricted-imports` guard and it was never actually added — there is
-no such rule in `eslint.config.mjs`. Nothing currently stops a deep import into
-another module's internals, so the boundary holds only as long as reviewers
-watch for it. Adding the rule is a genuine, small, unstarted improvement.
+**This is now enforced**, by an ESLint `no-restricted-imports` rule in
+`eslint.config.mjs`. It was documented as enforced for a long time while it did
+not exist: the original plan called for it, and the plan then got restated in the
+indicative mood. This paragraph has been wrong twice — once claiming enforcement
+that was absent, once (correctly) recording its absence — so it is worth stating
+exactly what the rule does and does not do.
+
+**Catches:** a named sibling module's internals imported past its barrel, one or
+two levels up — `../listings/service`, `../../listings/service`. Correct access
+(`../listings`, resolving to `index.ts`), intra-module imports (`./service`) and
+shared infrastructure (`../../config`, `../../plugins/*`) are all untouched.
+
+**Does not catch:** a module added to `src/modules/` but not to the `API_MODULES`
+list in the config, or anything reached via a path alias or re-export chain. It
+is enumeration, not proof.
+
+It is enumerated rather than glob-shaped because the obvious pattern `../*/*`
+also matches `../../config` — ESLint's `*` matches a literal `..` segment. That
+version flagged 40+ imports of which 9 were real, and noise on that scale gets a
+rule deleted rather than obeyed.
+
+Those 9 were real, and enabling the rule fixed them: `auth/session`,
+`wallet/ledger`, `payments/stripeClient` and `listings/service` were all being
+deep-imported across boundaries. The barrels now re-export what callers needed.
 
 | Module | Owns | Route prefix |
 |---|---|---|

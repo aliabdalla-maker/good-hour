@@ -5,4 +5,4 @@ export default async function listingsModule(app: FastifyInstance) {
   app.register(listingsRoutes, { prefix: "/listings" });
 }
 
-export { getRoomById, toPublicRoom, toPublicProperty } from "./service";
+export { getRoomById, toPublicRoom, toPublicProperty, createProperty, createRoom } from "./service";

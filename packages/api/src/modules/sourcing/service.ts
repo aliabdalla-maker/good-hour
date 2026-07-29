@@ -11,7 +11,7 @@ import { AppError } from "../../plugins/errorHandler";
 import { isPrivateIp } from "../../lib/ip";
 import { featureFlags } from "../../config";
 import { getApartment, listApartments } from "../../lib/smoobuClient";
-import { createProperty, createRoom } from "../listings/service";
+import { createProperty, createRoom } from "../listings";
 
 const AMENITY_KEYWORDS = [
   "wifi",

@@ -13,9 +13,9 @@ import { computeTradeFee } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
-import { getStripeClient } from "../payments/stripeClient";
-import type { WalletWrite } from "../wallet/ledger";
-import { applyWalletWrites, getMoneyBalance, isAlreadyApplied } from "../wallet/ledger";
+import { getStripeClient } from "../payments";
+import type { WalletWrite } from "../wallet";
+import { applyWalletWrites, getMoneyBalance, isAlreadyApplied } from "../wallet";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

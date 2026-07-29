@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { assistantChatSchema, assistantReplySchema } from "@gihtcx/shared";
 import { config } from "../../config";
-import { verifySession } from "../auth/session";
+import { verifySession } from "../auth";
 import { chatWithAssistant } from "./service";
 
 /**

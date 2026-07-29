@@ -295,3 +295,43 @@ the UI as the generic fallback copy, because the thrown error isn't an
 complete that search" therefore means the request never got an HTTP response —
 whereas a genuine 4xx renders the API's own message. That distinction is the
 fastest way to tell "API is broken" from "API is unreachable".
+
+## Verifying a security fix has reached production
+
+**Never probe a vulnerability to check whether its fix has deployed.**
+
+This rule was written after breaking it. To confirm the ADMIN self-registration
+fix was live, a loop polled `POST /auth/register` with `role: "ADMIN"` and watched
+for the 201 to become a 400. Four polls landed before the deploy did, creating
+**four real ADMIN accounts with a known password on the production database**,
+live for roughly eight minutes. They were found by noticing a user count of 8
+against an expected 4 — no check had been designed to catch it.
+
+The probe worked. That was the problem: a successful probe *is* the exploit.
+
+### Do this instead
+
+`GET /health` returns the commit the running process was built from:
+
+```bash
+curl -s https://goodhour-api.onrender.com/health
+# {"status":"ok","commit":"efd9f63…","startedAt":"2026-07-29T…"}
+```
+
+1. Note the commit containing the fix: `git rev-parse HEAD`.
+2. Poll `/health` until `commit` matches (or is a descendant of) it.
+3. Only then, if a behavioural check is genuinely needed, use a payload for which
+   the *successful* outcome is impossible — e.g. `role: "ADMIN"` together with a
+   deliberately invalid password, so validation must reject the request whatever
+   the role enum does, and read the shape of the 400 rather than the status alone.
+
+Step 3 is optional; steps 1–2 answer the deployment question completely.
+
+### The general form
+
+Before any verification loop that writes, ask: *if this request succeeds, what
+exists afterwards that did not exist before?* If the answer is "an account, an
+order, a payment, a listing", the loop is not a check. Read state, compare
+versions, or exercise a path where success is provably unreachable.
+
+See `docs/VERIFICATION.md` for the other rules this class of failure produced.

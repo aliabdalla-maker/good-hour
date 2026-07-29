@@ -26,6 +26,9 @@ import walletModule from "./modules/wallet";
 import marketplaceModule from "./modules/marketplace";
 import auctionsModule from "./modules/auctions";
 
+/** Process start, so /health also shows whether a restart has just happened. */
+const bootedAt = new Date().toISOString();
+
 export function buildApp() {
   const app = Fastify({
     logger: {
@@ -56,7 +59,26 @@ export function buildApp() {
   app.register(rateLimit, { max: 100, timeWindow: "1 minute" });
   app.register(authGuardPlugin);
 
-  app.get("/health", async () => ({ status: "ok" }));
+  /**
+   * Health, plus the commit the running process was built from.
+   *
+   * The commit is here for a specific reason. To check whether a security fix had
+   * reached production, a verification loop polled /auth/register with
+   * role: "ADMIN" and watched for the 201 to turn into a 400. Before the deploy
+   * landed, four of those polls succeeded — creating four real ADMIN accounts with
+   * a known password on the live database.
+   *
+   * A probe for "is this hole closed?" must never take the action the hole
+   * permits. Comparing this SHA against the deployed commit answers the same
+   * question and cannot change any state. Anything that needs to know whether a
+   * fix is live reads this, not the vulnerable endpoint.
+   */
+  app.get("/health", async () => ({
+    status: "ok",
+    // Render injects RENDER_GIT_COMMIT; GIT_COMMIT covers Docker/Compose builds.
+    commit: process.env.RENDER_GIT_COMMIT ?? process.env.GIT_COMMIT ?? "unknown",
+    startedAt: bootedAt,
+  }));
   // Friendly root so anyone browsing to the bare API origin sees a pointer
   // instead of a raw 404 (there's no UI here — the web app is the frontend).
   app.get("/", async () => ({

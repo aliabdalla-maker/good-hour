@@ -9,11 +9,14 @@ import type {
   PurchaseCreditsInput,
   TransferCreditsInput,
 } from "@gihtcx/shared";
-import { computeTradeFee } from "@gihtcx/shared";
+// redemptionValue is shared, not local, because the version that lived here
+// shipped a 37.5% arbitrage behind a comment defending it. Its invariant is now
+// asserted in redemption.test.ts rather than argued in prose.
+import { computeTradeFee, redemptionValue } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
-import { getStripeClient } from "../payments/stripeClient";
+import { getStripeClient } from "../payments";
 import { applyLedgerWrites, getAvgUnitValue, getBalanceFor, getBalances } from "./ledger";
 import { quoteExchange } from "./exchangeAgent";
 
@@ -360,23 +363,6 @@ export async function redeemForBooking(
   ]);
 
   return redemptionValue(hours, hourlyRate, unitValue);
-}
-
-/**
- * Money value a redemption is worth, capped at what the hours actually cost.
- *
- * Credits are SOLD at the unweighted category average (marketUnitValue), so
- * valuing redemption at the booked room's own rate was a standing arbitrage: on
- * live inventory (ROOM average £30.25, suite £42/hr) you could buy 2h for
- * £61.11 and draw £84.00 of inventory — a 37.5% gain, with the platform
- * covering the gap out of a liability it only collected £61.11 for. The wider
- * the price spread within a category, the worse it got.
- *
- * Taking the lower of the two keeps a credit worth an hour of typical inventory
- * (the honest promise) without letting it mint value on the dearest room.
- */
-function redemptionValue(hours: number, hourlyRate: number, unitValue: number): number {
-  return Math.min(round2(hours * hourlyRate), round2(hours * unitValue));
 }
 
 /**

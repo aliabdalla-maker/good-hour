@@ -3,7 +3,7 @@ import type { MoneyWallet, TopUpWalletInput, WalletTopUpQuote } from "@gihtcx/sh
 import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
-import { getStripeClient } from "../payments/stripeClient";
+import { getStripeClient } from "../payments";
 import { applyWalletWrites, getMoneyBalance } from "./ledger";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

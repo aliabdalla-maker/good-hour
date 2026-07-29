@@ -6,4 +6,5 @@ export default async function walletModule(app: FastifyInstance) {
 }
 
 export { creditTopUp, markTopUpFailed, getWalletLiability } from "./service";
-export { getMoneyBalance, applyWalletWrites } from "./ledger";
+export { getMoneyBalance, applyWalletWrites, isAlreadyApplied } from "./ledger";
+export type { WalletWrite } from "./ledger";

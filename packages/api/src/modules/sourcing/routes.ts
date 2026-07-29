@@ -19,7 +19,7 @@ import {
   publishDraft,
   toPublicDraft,
 } from "./service";
-import { toPublicProperty } from "../listings/service";
+import { toPublicProperty } from "../listings";
 
 export default async function sourcingRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
