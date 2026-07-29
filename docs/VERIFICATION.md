@@ -19,7 +19,7 @@ the two applies.
 | Fee arithmetic (10% + 10%) | Yes | Partly | Booking payments have run; marketplace orders have not |
 | Credit redemption cap | Yes | No | `redemption.test.ts` sweeps the invariant |
 | Auction proxy resolution | Yes | **No** | Every live auction has `bidCount: 0` |
-| Auction closing / settlement | No | No | Still reachable only through Prisma + BullMQ — the next integration file to write |
+| Auction closing / settlement | Yes | **No** | 13 integration tests: close, reserve, UNMET, idempotency, auto-settle, both directions |
 | Money & credit ledgers | Yes | Partly | Concurrency, non-negativity and idempotency asserted against real Postgres |
 | Marketplace orders | Yes | **No** | Order + settle path integration-tested; `GET /market` still returns 0 listings |
 | Design tokens & contrast | Yes | n/a | `designAudit.test.ts`, incl. known-bad fixtures |
@@ -110,10 +110,20 @@ npm run lint && npm run typecheck && npm test
 DATABASE_URL=postgresql://... npm run test:integration
 ```
 
-7 tests against a real Postgres, covering what no unit test can reach: oversell
+19 tests against a real Postgres, covering what no unit test can reach: oversell
 under 8 concurrent buyers on 1 unit of stock, 10 concurrent wallet spends, the
-read-then-write gap, index-enforced idempotency on a duplicated top-up, and the
-outbox relay.
+read-then-write gap, index-enforced idempotency on a duplicated top-up, auction
+close and settlement in both directions, and the outbox relay.
+
+The suite is hermetic: run back to back it passes 19/19 twice and leaves no rows
+behind. That took a fix — the auction tests were leaking PENDING outbox events,
+and because `drainOutboxOnce` claims the 20 *oldest* pending rows, a leftover
+backlog pushed the outbox suite's own event out of its batch. That test then
+failed for a reason with nothing to do with the outbox. Tests that leak state
+don't fail themselves; they fail whatever runs next. Teardown now removes any
+event mentioning a fixture id, and the outbox test drains until its own row is
+processed rather than assuming one batch reaches it — which is also what the
+production relay actually does, polling on a timer.
 
 **This suite had never actually run.** `npm run test:integration` loaded `.env`
 via `-r dotenv/config`, but `node --test` spawns each file in a *child* process

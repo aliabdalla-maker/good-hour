@@ -53,9 +53,9 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-010 | Money wallet on an append-only ledger | Must | Balance is always `SUM(entries)`; no balance column exists; no path yields a negative except a clawback | Met | `test:packages/api/src/test/concurrency.itest.ts` — balance vs ledger sum asserted after contention |
 | FR-011 | Time credit economy: buy, redeem, transfer, exchange | Must | Credits are granted only on confirmed payment, and redemption value never exceeds acquisition value | Met | `test:packages/shared/src/redemption.test.ts` |
 | FR-012 | 10% buyer + 10% seller fee on every trade | Must | One shared helper computes every fee; no screen can display a stale rate | Met | `test:packages/shared/src/money.test.ts` |
-| FR-013 | Hourly auctions, forward and reverse | Must | A forward auction closes to the highest bid over reserve; a reverse auction to the lowest | Partially met | `test:packages/shared/src/auctions.test.ts` — **closing/settlement untested; every live auction has 0 bids** |
+| FR-013 | Hourly auctions, forward and reverse | Must | A forward auction closes to the highest bid over reserve and settles the money; a reverse auction closes to the lowest with creator as buyer | Met | `test:packages/api/src/test/auctionSettlement.itest.ts` — close, reserve, UNMET, idempotency, both directions. No real auction has run in production (see FR-030) |
 | FR-014 | Autonomous proxy bidding within a mandate ceiling | Must | The strongest mandate always ends in front, at one increment past the second-strongest, never above its own ceiling | Met | `test:packages/shared/src/proxyContest.test.ts` |
-| FR-015 | Settlement both human-confirmed and fully autonomous | Must | `autoSettle` defaults off; full autonomy is opt-in per bid and a broke winner cannot loop the job | Met | `test:packages/shared/src/auctions.test.ts` |
+| FR-015 | Settlement both human-confirmed and fully autonomous | Must | `autoSettle` defaults off; full autonomy is opt-in per bid; only the buyer may settle manually; settling twice moves money once; a broke winner cannot loop the close job | Met | `test:packages/api/src/test/auctionSettlement.itest.ts` |
 | FR-016 | ERP: revenue, liability, agent performance, pipeline | Should | Every figure is derived from a query, with no hardcoded values | Partially met | `code:packages/api/src/modules/erp/service.ts` — figures are real but near-zero, so unvalidated at scale |
 | FR-017 | CRM console for the operator | Should | Accounts, notes and timeline are visible and editable by an admin | Met | `manual:` |
 | FR-018 | ERP connected to CRM and the bidding system | Should | Auction and bidding activity appears in ERP metrics and CRM records | Partially met | `code:packages/api/src/modules/erp/service.ts` — connected in code, no data flowing |
@@ -120,10 +120,10 @@ law does not care that they were never in the brief.
 
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
-| Functional | 34 | 22 | 7 | 2 | 3 |
+| Functional | 34 | 23 | 6 | 2 | 3 |
 | Non-functional | 12 | 8 | 1 | 2 | 1 |
 | Compliance | 6 | 1 | 3 | 0 | 2 |
-| **All** | **52** | **31** | **11** | **4** | **6** |
+| **All** | **52** | **32** | **10** | **4** | **6** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

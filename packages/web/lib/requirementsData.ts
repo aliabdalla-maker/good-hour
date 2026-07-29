@@ -171,12 +171,12 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Hourly auctions, forward and reverse",
     "priority": "Must",
-    "criterion": "A forward auction closes to the highest bid over reserve; a reverse auction to the lowest",
-    "verdict": "Partially met",
+    "criterion": "A forward auction closes to the highest bid over reserve and settles the money; a reverse auction closes to the lowest with creator as buyer",
+    "verdict": "Met",
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/shared/src/auctions.test.ts — **closing/settlement untested; every live auction has 0 bids"
+    "evidence": "test:packages/api/src/test/auctionSettlement.itest.ts — close, reserve, UNMET, idempotency, both directions. No real auction has run in production (see FR-030)"
   },
   {
     "id": "FR-014",
@@ -195,12 +195,12 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Settlement both human-confirmed and fully autonomous",
     "priority": "Must",
-    "criterion": "`autoSettle` defaults off; full autonomy is opt-in per bid and a broke winner cannot loop the job",
+    "criterion": "`autoSettle` defaults off; full autonomy is opt-in per bid; only the buyer may settle manually; settling twice moves money once; a broke winner cannot loop the close job",
     "verdict": "Met",
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/shared/src/auctions.test.ts"
+    "evidence": "test:packages/api/src/test/auctionSettlement.itest.ts"
   },
   {
     "id": "FR-016",

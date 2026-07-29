@@ -144,7 +144,32 @@ export async function walletBalance(userId: string): Promise<number> {
  * otherwise surface as a confusing FK error in an unrelated test.
  */
 export async function teardown(f: Fixture): Promise<void> {
+  // Domain events first.
+  //
+  // Publishing goes through the transactional outbox, so every auction close,
+  // settlement and order in these tests leaves a PENDING row behind. The relay
+  // drains the *20 oldest* pending rows per call — so ~20 leftover auction events
+  // silently crowded the outbox suite's own row out of its batch, and that test
+  // failed for reasons entirely unrelated to the outbox. Tests that leak state
+  // don't fail themselves; they fail whatever runs next.
+  //
+  // Matching on payload text rather than a known key: the payload shape differs
+  // per event type (auctionId, buyerId, orderId, userId), and "any event
+  // mentioning something this fixture created" is exactly the intent. Parameterised,
+  // so the ids are never interpolated into SQL.
+  const ownedIds = [...f.auctionIds, ...f.listingIds, ...f.userIds];
+  for (const id of ownedIds) {
+    await prisma.$executeRaw`DELETE FROM outbox_events WHERE payload::text LIKE ${`%${id}%`}`;
+  }
+
   if (f.auctionIds.length) {
+    // winningBidId is a FK onto AuctionBid, so it has to be released before the
+    // bids go — otherwise teardown fails on a constraint rather than on anything
+    // the test was about.
+    await prisma.marketplaceAuction.updateMany({
+      where: { id: { in: f.auctionIds } },
+      data: { winningBidId: null },
+    });
     await prisma.auctionBid.deleteMany({ where: { auctionId: { in: f.auctionIds } } });
     await prisma.marketplaceAuction.deleteMany({ where: { id: { in: f.auctionIds } } });
   }

@@ -23,7 +23,18 @@ test("publish records a durable PENDING row; the relay drains it to a handler an
     await prisma.$disconnect();
   });
 
-  await drainOutboxOnce();
+  // Drain until OUR row is processed, rather than assuming one batch reaches it.
+  //
+  // drainOutboxOnce takes the 20 OLDEST pending rows, so a single call only sees
+  // this event if fewer than 20 are already queued. A leftover backlog from
+  // another suite pushed it out of the batch and this test failed for a reason
+  // that had nothing to do with the outbox. In production the relay polls on a
+  // timer and a backlog simply takes a few more ticks — so the loop below is what
+  // the real behaviour looks like, and the old single call was the unrealistic part.
+  for (let attempt = 0; attempt < 10 && !seen.includes(marker); attempt += 1) {
+    const { processed } = await drainOutboxOnce();
+    if (processed === 0) break;
+  }
 
   assert.ok(seen.includes(marker), "the handler ran for our event");
   const after = await prisma.outboxEvent.findUnique({ where: { id: row!.id } });
