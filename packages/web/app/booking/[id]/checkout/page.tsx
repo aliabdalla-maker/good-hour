@@ -136,9 +136,9 @@ function CheckoutPageInner() {
         </dl>
 
         {confirmed ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-            <p className="text-lg font-semibold text-emerald-800">Booking confirmed</p>
-            <p className="mt-1 text-sm text-emerald-700">
+          <div className="rounded-xl border border-success-200 bg-success-50 p-4 text-center">
+            <p className="text-lg font-semibold text-success-800">Booking confirmed</p>
+            <p className="mt-1 text-sm text-success-700">
               {new Date(booking.startsAt).toLocaleString()} – {new Date(booking.endsAt).toLocaleString()}
             </p>
             <Button className="mt-4" onClick={() => router.push("/dashboard/traveller")}>
@@ -156,8 +156,8 @@ function CheckoutPageInner() {
             <Spinner /> Preparing secure payment…
           </div>
         ) : intentState === "simulated" ? (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="mb-3 text-sm text-amber-800">
+          <div className="rounded-xl border border-warning-200 bg-warning-50 p-4">
+            <p className="mb-3 text-sm text-warning-800">
               Stripe keys aren&apos;t configured in this environment, so payment is simulated.
             </p>
             <Button variant="primary" onClick={handleSimulatePayment} disabled={simulating}>
@@ -166,8 +166,8 @@ function CheckoutPageInner() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm text-amber-900">
+          <div className="rounded-xl border border-warning-200 bg-warning-50 p-4">
+            <p className="text-sm text-warning-900">
               {intentError ?? "We couldn't start the payment for this booking."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">

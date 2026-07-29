@@ -49,7 +49,7 @@ function MyAuctionsInner() {
           title="Nothing yet"
           description="Auctions you open, and ones you've bid on, appear here."
           action={
-            <Link href="/auctions/new" className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white">
+            <Link href="/auctions/new" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
               Start an auction
             </Link>
           }
@@ -93,7 +93,7 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
                   <td className="px-3 py-2 text-slate-600">{AUCTION_KIND_LABELS[a.kind]}</td>
                   <td className="px-3 py-2 text-right font-medium">
                     {a.leadingPerHour === null ? "—" : `${a.currency} ${a.leadingPerHour.toFixed(2)}/hr`}
-                    {a.viewerIsLeading && <span className="ml-1 text-xs text-emerald-700">✓</span>}
+                    {a.viewerIsLeading && <span className="ml-1 text-xs text-success-700">✓</span>}
                   </td>
                   <td className="px-3 py-2 text-slate-600">{timeLeft(a.closesAt)}</td>
                   <td className="px-3 py-2">

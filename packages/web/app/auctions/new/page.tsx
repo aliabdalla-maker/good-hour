@@ -77,7 +77,7 @@ function NewAuctionInner() {
                 onClick={() => setKind(k)}
                 className={`rounded-lg border p-3 text-left text-sm transition ${
                   kind === k
-                    ? "border-brand-700 bg-brand-50 text-brand-900"
+                    ? "border-brand-600 bg-brand-50 text-brand-900"
                     : "border-slate-200 text-slate-600 hover:border-slate-300"
                 }`}
               >
@@ -172,11 +172,11 @@ function NewAuctionInner() {
             </p>
           </div>
 
-          {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+          {error && <p className="mb-3 text-sm text-danger-600">{error}</p>}
           <button
             onClick={() => create.mutate()}
             disabled={!canSubmit || create.isPending}
-            className="w-full rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+            className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
           >
             {create.isPending ? "Opening…" : "Open auction"}
           </button>

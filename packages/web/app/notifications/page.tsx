@@ -91,7 +91,7 @@ function NotificationsPageInner() {
             </button>
           </div>
         </label>
-        {savedNote && <p className="mt-2 text-xs text-emerald-600">{savedNote}</p>}
+        {savedNote && <p className="mt-2 text-xs text-success-600">{savedNote}</p>}
       </section>
 
       <div className="flex flex-col gap-2">

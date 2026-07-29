@@ -94,7 +94,7 @@ export default function AuctionDetailPage() {
         title="Auction not found"
         description="It may have been removed."
         action={
-          <Link href="/auctions" className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white">
+          <Link href="/auctions" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
             All auctions
           </Link>
         }
@@ -193,7 +193,7 @@ export default function AuctionDetailPage() {
             Total for {a.hours}h: {a.currency} {a.leadingTotal.toFixed(2)}
           </p>
         )}
-        {a.viewerIsLeading && <p className="mt-2 text-sm font-medium text-emerald-700">✓ You&apos;re leading</p>}
+        {a.viewerIsLeading && <p className="mt-2 text-sm font-medium text-success-700">✓ You&apos;re leading</p>}
 
         {data.feePreview && (
           <div className="mt-4 space-y-1 rounded-xl bg-slate-50 p-3 text-xs">
@@ -218,7 +218,7 @@ export default function AuctionDetailPage() {
           </div>
         )}
 
-        {isMine && <p className="mt-4 text-xs text-amber-700">This is your auction — you can&apos;t bid on it.</p>}
+        {isMine && <p className="mt-4 text-xs text-warning-700">This is your auction — you can&apos;t bid on it.</p>}
 
         {isOpen && !isMine && (
           <div className="mt-4">
@@ -283,7 +283,7 @@ export default function AuctionDetailPage() {
             <button
               onClick={() => bid.mutate()}
               disabled={bid.isPending || amount === null || (useAgent && !ceiling)}
-              className="mt-3 w-full rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+              className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
             >
               {bid.isPending ? "Bidding…" : useAgent ? "Bid & activate agent" : "Place bid"}
             </button>
@@ -291,17 +291,17 @@ export default function AuctionDetailPage() {
         )}
 
         {viewerMustSettle && (
-          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-            <p className="text-sm font-medium text-emerald-800">
+          <div className="mt-4 rounded-xl border border-success-200 bg-success-50 p-3">
+            <p className="text-sm font-medium text-success-800">
               {viewerWon ? "You won this auction" : "Your auction found a winner"}
             </p>
-            <p className="mt-1 text-xs text-emerald-700">
+            <p className="mt-1 text-xs text-success-700">
               Pay {a.currency} {(data.feePreview?.buyerTotal ?? 0).toFixed(2)} from your wallet to complete it.
             </p>
             <button
               onClick={() => settle.mutate()}
               disabled={settle.isPending}
-              className="mt-3 w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+              className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
             >
               {settle.isPending ? "Settling…" : "Confirm & pay"}
             </button>
@@ -309,7 +309,7 @@ export default function AuctionDetailPage() {
         )}
 
         {a.status === "SETTLED" && (
-          <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
+          <p className="mt-4 rounded-xl border border-success-200 bg-success-50 p-3 text-sm font-medium text-success-800">
             Settled — money has moved.
           </p>
         )}
@@ -319,7 +319,7 @@ export default function AuctionDetailPage() {
           </p>
         )}
 
-        {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-xs text-danger-600">{error}</p>}
       </Card>
     </div>
   );

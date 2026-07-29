@@ -79,7 +79,7 @@ export default function MarketListingPage() {
         title="Listing not found"
         description="It may have been removed or sold out."
         action={
-          <Link href="/market" className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white">
+          <Link href="/market" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
             Back to marketplace
           </Link>
         }
@@ -132,12 +132,12 @@ export default function MarketListingPage() {
         )}
 
         {placed && placed.status === "PAID" ? (
-          <div className="mt-4 animate-fade-in rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-            <p className="text-sm font-medium text-emerald-800">Order confirmed</p>
-            <p className="mt-1 text-xs text-emerald-700">
+          <div className="mt-4 animate-fade-in rounded-xl border border-success-200 bg-success-50 p-3">
+            <p className="text-sm font-medium text-success-800">Order confirmed</p>
+            <p className="mt-1 text-xs text-success-700">
               Paid {placed.currency} {placed.buyerTotal.toFixed(2)} from your wallet.
             </p>
-            <Link href="/market/orders" className="mt-2 inline-block text-xs font-medium text-emerald-800 underline">
+            <Link href="/market/orders" className="mt-2 inline-block text-xs font-medium text-success-800 underline">
               View my orders
             </Link>
           </div>
@@ -218,10 +218,10 @@ export default function MarketListingPage() {
               )}
             </div>
 
-            {isOwn && <p className="mt-3 text-xs text-amber-700">This is your own listing.</p>}
-            {soldOut && <p className="mt-3 text-xs text-red-600">This listing isn&apos;t available.</p>}
+            {isOwn && <p className="mt-3 text-xs text-warning-700">This is your own listing.</p>}
+            {soldOut && <p className="mt-3 text-xs text-danger-600">This listing isn&apos;t available.</p>}
             {walletShort && !soldOut && !isOwn && (
-              <p className="mt-3 text-xs text-amber-700">
+              <p className="mt-3 text-xs text-warning-700">
                 Not enough in your wallet —{" "}
                 <Link href="/wallet" className="font-medium underline">
                   top up
@@ -233,11 +233,11 @@ export default function MarketListingPage() {
             <button
               onClick={() => buy.mutate()}
               disabled={buy.isPending || isOwn || soldOut}
-              className="mt-4 w-full rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+              className="mt-4 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
             >
               {buy.isPending ? "Placing order…" : `Buy · ${listing.currency} ${quote.buyerTotal.toFixed(2)}`}
             </button>
-            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+            {error && <p className="mt-2 text-xs text-danger-600">{error}</p>}
           </>
         )}
       </Card>

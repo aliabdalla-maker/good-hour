@@ -112,7 +112,7 @@ function NewBookingRequestPageInner() {
           <input type="checkbox" checked={autoAcceptEnabled} onChange={(e) => setAutoAcceptEnabled(e.target.checked)} />
           Let my agent auto-accept the AI-recommended offer if it&apos;s within budget (A2B)
         </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={submitting} className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
           {submitting ? "Posting..." : "Post request"}
         </button>

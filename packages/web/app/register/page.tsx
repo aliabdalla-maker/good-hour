@@ -65,7 +65,7 @@ export default function RegisterPage() {
             <option value="SUPPLIER">Supplier (listing rooms, cars &amp; travel)</option>
           </select>
         </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button
           type="submit"
           disabled={submitting}

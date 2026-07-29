@@ -57,7 +57,7 @@ export default function AuctionsPage() {
             </Link>
             <Link
               href="/auctions/new"
-              className="inline-flex min-h-6 items-center rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+              className="inline-flex min-h-6 items-center rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
             >
               Start an auction
             </Link>
@@ -72,7 +72,7 @@ export default function AuctionsPage() {
             onClick={() => setKind(t.key)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               kind === t.key
-                ? "border-brand-700 bg-brand-700 text-white"
+                ? "border-brand-600 bg-brand-600 text-white"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`}
           >
@@ -91,7 +91,7 @@ export default function AuctionsPage() {
           action={
             <button
               onClick={() => refetch()}
-              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
             >
               Try again
             </button>
@@ -108,7 +108,7 @@ export default function AuctionsPage() {
             user ? (
               <Link
                 href="/auctions/new"
-                className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
               >
                 Start an auction
               </Link>
@@ -147,7 +147,7 @@ export default function AuctionsPage() {
                   </p>
                 </div>
                 {a.viewerIsLeading && (
-                  <p className="mt-2 text-xs font-medium text-emerald-700">✓ You&apos;re leading</p>
+                  <p className="mt-2 text-xs font-medium text-success-700">✓ You&apos;re leading</p>
                 )}
               </InteractiveCard>
             </Link>

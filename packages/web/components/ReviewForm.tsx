@@ -23,7 +23,7 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
     onError: (e) => setError(e instanceof ApiError ? e.message : "Could not submit review"),
   });
 
-  if (done) return <p className="mt-3 text-sm text-emerald-600">✓ Thanks for reviewing this booking!</p>;
+  if (done) return <p className="mt-3 text-sm text-success-600">✓ Thanks for reviewing this booking!</p>;
 
   return (
     <div className="mt-3 border-t border-slate-100 pt-3">
@@ -36,7 +36,7 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
               type="button"
               onClick={() => setRating(i)}
               aria-label={`${i} star${i > 1 ? "s" : ""}`}
-              className={`text-xl leading-none ${i <= rating ? "text-amber-400" : "text-slate-300"}`}
+              className={`text-xl leading-none ${i <= rating ? "text-warning-400" : "text-slate-300"}`}
             >
               ★
             </button>
@@ -53,7 +53,7 @@ export function ReviewForm({ bookingId }: { bookingId: string }) {
           {mutation.isPending ? "…" : "Submit"}
         </Button>
       </div>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger-600">{error}</p>}
     </div>
   );
 }

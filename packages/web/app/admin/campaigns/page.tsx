@@ -93,14 +93,14 @@ function CampaignsPageInner() {
           Message
           <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} className="rounded border border-slate-300 px-2 py-1" />
         </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button type="submit" disabled={sending} className="self-start rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50">
           {sending ? "Sending…" : "Send campaign"}
         </button>
       </form>
 
       {result && (
-        <div className="mt-4 rounded border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div className="mt-4 rounded border border-success-200 bg-success-50 p-4 text-sm text-success-800">
           Sent to <strong>{result.recipients}</strong> opted-in recipient(s) ({result.audience}). Email delivery:{" "}
           <strong>{result.emailDelivery === "provider" ? "sent via provider" : "logged (no email key set)"}</strong>.
           {result.skippedOptOut > 0 && <> {result.skippedOptOut} opted out of marketing email (in-app only).</>}

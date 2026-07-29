@@ -48,7 +48,7 @@ function Thread({ bookingId }: { bookingId: string }) {
             <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[80%] rounded-lg px-3 py-1.5 text-sm ${
-                  m.mine ? "bg-brand-700 text-white" : "bg-white text-slate-700 border border-slate-200"
+                  m.mine ? "bg-brand-600 text-white" : "bg-white text-slate-700 border border-slate-200"
                 }`}
               >
                 <p>{m.body}</p>
@@ -85,7 +85,7 @@ function Thread({ bookingId }: { bookingId: string }) {
           Send
         </button>
       </form>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger-600">{error}</p>}
     </div>
   );
 }

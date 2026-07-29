@@ -75,7 +75,7 @@ function SupplierDashboardPageInner() {
         </button>
       </form>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
 
       <h2 className="mb-3 font-medium">Your properties</h2>
       <div className="flex flex-col gap-4">
@@ -100,7 +100,7 @@ function EarningsSection() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div
           className="rounded-2xl p-5 text-white shadow-card"
-          style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
+          style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" }}
         >
           <p className="text-xs uppercase tracking-wide text-white/80">Total earned</p>
           <p className="mt-1 text-3xl font-semibold">{money(data.totalEarned)}</p>
@@ -108,7 +108,7 @@ function EarningsSection() {
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
           <p className="text-xs uppercase tracking-wide text-slate-500">Active bookings</p>
-          <p className="mt-1 text-3xl font-semibold text-brand-700">{data.confirmedCount}</p>
+          <p className="mt-1 text-3xl font-semibold text-brand-600">{data.confirmedCount}</p>
           <p className="mt-1 text-xs text-slate-500">confirmed &amp; upcoming</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
@@ -177,7 +177,7 @@ function VerificationCard() {
         <Badge tone={tone}>{status?.status ?? "…"}</Badge>
       </div>
       {status?.status === "VERIFIED" && (
-        <p className="mt-2 text-sm text-emerald-600">✓ Your listings show a Verified badge to travellers.</p>
+        <p className="mt-2 text-sm text-success-600">✓ Your listings show a Verified badge to travellers.</p>
       )}
       {status?.status === "PENDING" && (
         <p className="mt-2 text-sm text-slate-500">Your submission is under review by our team.</p>
@@ -188,14 +188,14 @@ function VerificationCard() {
             Get a Verified badge on your listings — submit your business details for review.
           </p>
           {status?.status === "REJECTED" && status.note && (
-            <p className="mb-2 text-sm text-red-600">Previous decision: {status.note}</p>
+            <p className="mb-2 text-sm text-danger-600">Previous decision: {status.note}</p>
           )}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <input placeholder="Business name" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
             <input placeholder="Registration ID (optional)" value={registrationId} onChange={(e) => setRegistrationId(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
             <input placeholder="Contact phone (optional)" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="rounded border border-slate-300 px-2 py-1 text-sm" />
           </div>
-          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-1 text-sm text-danger-600">{error}</p>}
           <button
             onClick={() => {
               setError(null);
@@ -307,7 +307,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
                   <button
                     type="button"
                     onClick={() => { setImageUrl(""); setImageIsAiGenerated(false); }}
-                    className="w-fit text-xs text-slate-500 hover:text-red-500"
+                    className="w-fit text-xs text-slate-500 hover:text-danger-500"
                   >
                     Remove photo
                   </button>
@@ -316,7 +316,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
             </div>
           </div>
 
-          {error && <p className="col-span-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="col-span-2 text-sm text-danger-600">{error}</p>}
           <button type="submit" className="col-span-2 rounded bg-slate-900 px-3 py-1.5 text-sm text-white sm:w-fit">
             Add room
           </button>
@@ -356,7 +356,7 @@ function AutoOfferToggle({
 
   return (
     <span className="flex items-center gap-2">
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-danger-600">{error}</span>}
       <button
         type="button"
         onClick={() => toggle.mutate()}
@@ -365,7 +365,7 @@ function AutoOfferToggle({
         title="When on, this room's agent bids automatically on matching booking requests"
         className={`inline-flex min-h-6 items-center rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-60 ${
           room.autoOfferEnabled
-            ? "bg-sky-100 text-sky-900 hover:bg-sky-200"
+            ? "bg-info-100 text-info-900 hover:bg-info-200"
             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
         }`}
       >

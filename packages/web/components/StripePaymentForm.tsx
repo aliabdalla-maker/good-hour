@@ -49,7 +49,7 @@ function PayButton({ onSucceeded, label }: { onSucceeded: () => void; label: str
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <PaymentElement />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger-600">{error}</p>}
       <button
         type="submit"
         disabled={!stripe || submitting}
@@ -73,7 +73,7 @@ export function StripePaymentForm({
   label?: string;
 }) {
   if (!stripePromise) {
-    return <p className="text-sm text-red-600">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured.</p>;
+    return <p className="text-sm text-danger-600">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not configured.</p>;
   }
   return (
     // Keyed on clientSecret: Elements caches the intent, so reusing the same

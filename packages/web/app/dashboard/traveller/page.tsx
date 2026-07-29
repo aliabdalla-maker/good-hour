@@ -29,11 +29,11 @@ function CancelButton({ bookingId }: { bookingId: string }) {
           }
         }}
         disabled={cancel.isPending}
-        className="text-sm font-medium text-red-600 underline disabled:opacity-60"
+        className="text-sm font-medium text-danger-600 underline disabled:opacity-60"
       >
         {cancel.isPending ? "Cancelling…" : "Cancel booking"}
       </button>
-      {err && <span className="ml-2 text-xs text-red-600">{err}</span>}
+      {err && <span className="ml-2 text-xs text-danger-600">{err}</span>}
     </span>
   );
 }
@@ -79,7 +79,7 @@ function TravellerDashboardPageInner() {
             </Link>
             <div className="mt-2">
               {REVIEWABLE.has(booking.status) && (
-                <Link href={`/booking/${booking.id}/receipt`} className="text-sm font-medium text-brand-700 underline">
+                <Link href={`/booking/${booking.id}/receipt`} className="text-sm font-medium text-brand-600 underline">
                   View receipt
                 </Link>
               )}

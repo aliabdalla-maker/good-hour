@@ -235,16 +235,16 @@ function RoomDetail() {
                     }
                     className="w-20 rounded border border-brand-300 px-2 py-1"
                   />
-                  <span className="text-brand-700">of {maxRedeemable.toFixed(2)} hrs available</span>
+                  <span className="text-brand-600">of {maxRedeemable.toFixed(2)} hrs available</span>
                 </label>
                 {redeemCreditHours > 0 && (
-                  <p className="mt-1 animate-fade-in text-xs text-brand-700">
+                  <p className="mt-1 animate-fade-in text-xs text-brand-600">
                     {redeemCreditHours.toFixed(2)}h covered by credits — only the remainder is charged.
                   </p>
                 )}
               </div>
             )}
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-danger-600">{error}</p>}
             <Button type="submit" disabled={submitting}>
               {submitting && <Spinner />}
               {submitting ? "Booking…" : "Book & continue to payment"}

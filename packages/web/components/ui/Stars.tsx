@@ -15,7 +15,7 @@ export function Stars({
     <span className="inline-flex items-center gap-1" aria-label={`${rating} out of 5`}>
       <span className="text-sm leading-none">
         {[1, 2, 3, 4, 5].map((i) => (
-          <span key={i} className={i <= full ? "text-amber-400" : "text-slate-300"}>
+          <span key={i} className={i <= full ? "text-warning-400" : "text-slate-300"}>
             ★
           </span>
         ))}

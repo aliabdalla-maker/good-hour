@@ -83,7 +83,7 @@ function ErpInner() {
     );
   }
   if (error || !data) {
-    return <p className="py-24 text-center text-sm text-red-600">Couldn&apos;t load the ERP overview.</p>;
+    return <p className="py-24 text-center text-sm text-danger-600">Couldn&apos;t load the ERP overview.</p>;
   }
 
   const {
@@ -146,7 +146,7 @@ function ErpInner() {
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Time-credit economy</h2>
-          <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+          <span className="rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700">
             Outstanding hours are a liability, not revenue
           </span>
         </div>
@@ -159,7 +159,7 @@ function ErpInner() {
           </div>
           <div>
             <p className="text-slate-500">Liability value</p>
-            <p className="text-xl font-semibold text-amber-700">{fmt(creditEconomy.outstandingValue)}</p>
+            <p className="text-xl font-semibold text-warning-700">{fmt(creditEconomy.outstandingValue)}</p>
           </div>
           <div>
             <p className="text-slate-500">Credits sold</p>
@@ -167,7 +167,7 @@ function ErpInner() {
           </div>
           <div>
             <p className="text-slate-500">Credit fee revenue</p>
-            <p className="text-xl font-semibold text-brand-700">{fmt(creditEconomy.creditFeeRevenue)}</p>
+            <p className="text-xl font-semibold text-brand-600">{fmt(creditEconomy.creditFeeRevenue)}</p>
           </div>
         </div>
       </section>
@@ -179,7 +179,7 @@ function ErpInner() {
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Hourly auctions</h2>
-          <Link href="/auctions" className="text-xs font-medium text-brand-700 hover:underline">
+          <Link href="/auctions" className="text-xs font-medium text-brand-600 hover:underline">
             Open auctions &rarr;
           </Link>
         </div>
@@ -229,7 +229,7 @@ function ErpInner() {
         >
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Products &amp; services</h2>
-            <Link href="/market" className="text-xs font-medium text-brand-700 hover:underline">
+            <Link href="/market" className="text-xs font-medium text-brand-600 hover:underline">
               Open marketplace →
             </Link>
           </div>
@@ -258,7 +258,7 @@ function ErpInner() {
             </div>
             <div>
               <p className="text-slate-500">Commission</p>
-              <p className="text-lg font-semibold text-brand-700">{fmt(marketplace.commissionRevenue)}</p>
+              <p className="text-lg font-semibold text-brand-600">{fmt(marketplace.commissionRevenue)}</p>
             </div>
             <div>
               <p className="text-slate-500">Seller proceeds</p>
@@ -273,14 +273,14 @@ function ErpInner() {
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold">Money wallets</h2>
-            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+            <span className="rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700">
               Held balances are a liability
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-slate-500">Held in user wallets</p>
-              <p className="text-xl font-semibold text-amber-700">{fmt(wallet.heldBalance)}</p>
+              <p className="text-xl font-semibold text-warning-700">{fmt(wallet.heldBalance)}</p>
             </div>
             <div>
               <p className="text-slate-500">Lifetime topped up</p>
@@ -299,7 +299,7 @@ function ErpInner() {
         <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">CRM contacts</h2>
-            <Link href="/admin/crm" className="text-xs font-medium text-brand-700 hover:underline">
+            <Link href="/admin/crm" className="text-xs font-medium text-brand-600 hover:underline">
               Open CRM →
             </Link>
           </div>
@@ -318,7 +318,7 @@ function ErpInner() {
         <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover" style={{ animationDelay: "60ms" }}>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Bidding pipeline</h2>
-            <Link href="/requests/new" className="text-xs font-medium text-brand-700 hover:underline">
+            <Link href="/requests/new" className="text-xs font-medium text-brand-600 hover:underline">
               New request →
             </Link>
           </div>
@@ -484,7 +484,7 @@ function StatCard({
       className={`animate-fade-in-up rounded-2xl p-4 shadow-card transition-transform hover:-translate-y-0.5 hover:shadow-card-hover ${gradient ? "text-white" : "border border-slate-200 bg-white"}`}
       style={{
         animationDelay: `${delay}ms`,
-        ...(gradient ? { backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" } : {}),
+        ...(gradient ? { backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" } : {}),
       }}
     >
       <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-500"}`}>{label}</p>

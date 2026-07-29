@@ -89,7 +89,7 @@ function BookingRequestOffersPageInner() {
         Status: {bookingRequest.status}
       </p>
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger-600">{error}</p>}
 
       <h2 className="mb-2 mt-6 font-medium">Offers</h2>
       <div className="flex flex-col gap-3">
@@ -99,12 +99,12 @@ function BookingRequestOffersPageInner() {
               <p className="font-medium">
                 {offer.offeredRate}/hr · total {offer.offeredTotal}
                 {offer.status === "RECOMMENDED" && (
-                  <span className="ml-2 rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-800">
+                  <span className="ml-2 rounded bg-success-100 px-2 py-0.5 text-xs text-success-800">
                     AI-recommended
                   </span>
                 )}
                 {offer.isAgentSubmitted && (
-                  <span className="ml-2 rounded bg-sky-100 px-2 py-0.5 text-xs text-sky-800">
+                  <span className="ml-2 rounded bg-info-100 px-2 py-0.5 text-xs text-info-800">
                     Auto-submitted by supplier agent
                   </span>
                 )}

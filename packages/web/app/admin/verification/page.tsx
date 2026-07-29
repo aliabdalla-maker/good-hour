@@ -45,14 +45,14 @@ function AdminVerificationPageInner() {
                 <button
                   onClick={() => decide.mutate({ userId: s.userId, approve: true })}
                   disabled={decide.isPending}
-                  className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
+                  className="rounded bg-success-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
                 >
                   Approve
                 </button>
                 <button
                   onClick={() => decide.mutate({ userId: s.userId, approve: false })}
                   disabled={decide.isPending}
-                  className="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
+                  className="rounded bg-danger-600 px-3 py-1.5 text-sm text-white disabled:opacity-60"
                 >
                   Reject
                 </button>

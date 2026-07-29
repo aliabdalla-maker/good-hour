@@ -70,7 +70,7 @@ export function AssistantWidget() {
         onClick={() => setOpen(true)}
         aria-label="Open the Good Hours assistant"
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-2xl text-white shadow-card-hover transition-transform hover:scale-105 animate-scale-in"
-        style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
+        style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" }}
       >
         ✦
       </button>
@@ -86,7 +86,7 @@ export function AssistantWidget() {
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 text-white"
-        style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
+        style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" }}
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">✦</span>
@@ -115,7 +115,7 @@ export function AssistantWidget() {
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                m.role === "user" ? "bg-brand-700 text-white" : "border border-slate-200 bg-white text-slate-700"
+                m.role === "user" ? "bg-brand-600 text-white" : "border border-slate-200 bg-white text-slate-700"
               }`}
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
@@ -125,7 +125,7 @@ export function AssistantWidget() {
                     <button
                       key={j}
                       onClick={() => go(a)}
-                      className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100"
+                      className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 ring-1 ring-brand-200 hover:bg-brand-100"
                     >
                       {a.label} →
                     </button>
@@ -159,7 +159,7 @@ export function AssistantWidget() {
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-full bg-brand-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-full bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           Send
         </button>

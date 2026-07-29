@@ -84,7 +84,7 @@ export function NavBar() {
 
   const Wordmark = (
     <Link href="/browse" className="flex items-center gap-2 text-lg font-semibold text-slate-900" onClick={() => setOpen(false)}>
-      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm text-white">◷</span>
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm text-white">◷</span>
       Good Hours
     </Link>
   );
@@ -99,7 +99,7 @@ export function NavBar() {
       >
         Notifications
         {unread > 0 && (
-          <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-700 px-1 text-[10px] font-semibold text-white">
+          <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -128,7 +128,7 @@ export function NavBar() {
               <Link href="/login" className="inline-flex min-h-6 items-center text-slate-600 hover:text-slate-900">
                 Log in
               </Link>
-              <Link href="/register" className="rounded-lg bg-brand-700 px-3 py-1.5 font-medium text-white hover:bg-brand-800">
+              <Link href="/register" className="rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-white hover:bg-brand-700">
                 Register
               </Link>
             </>
@@ -156,7 +156,7 @@ export function NavBar() {
           ))}
           {user && (
             <Link href="/notifications" onClick={() => setOpen(false)} className="rounded-lg px-2 py-2 text-slate-700 hover:bg-slate-100">
-              Notifications {unread > 0 && <span className="ml-1 rounded-full bg-brand-700 px-1.5 text-[10px] text-white">{unread}</span>}
+              Notifications {unread > 0 && <span className="ml-1 rounded-full bg-brand-600 px-1.5 text-[10px] text-white">{unread}</span>}
             </Link>
           )}
           <div className="mt-2 border-t border-slate-100 pt-2">
@@ -169,7 +169,7 @@ export function NavBar() {
                 <Link href="/login" onClick={() => setOpen(false)} className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-center">
                   Log in
                 </Link>
-                <Link href="/register" onClick={() => setOpen(false)} className="flex-1 rounded-lg bg-brand-700 px-3 py-2 text-center font-medium text-white">
+                <Link href="/register" onClick={() => setOpen(false)} className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-center font-medium text-white">
                   Register
                 </Link>
               </div>

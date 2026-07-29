@@ -9,9 +9,9 @@ import { RequireAuth } from "../../../components/RequireAuth";
 const STAGES: CrmStage[] = ["LEAD", "ACTIVE", "VIP", "DORMANT"];
 const STAGE_TONE: Record<CrmStage, string> = {
   LEAD: "bg-slate-100 text-slate-600",
-  ACTIVE: "bg-emerald-50 text-emerald-700",
+  ACTIVE: "bg-success-50 text-success-700",
   VIP: "bg-ai-50 text-ai-700",
-  DORMANT: "bg-amber-50 text-amber-700",
+  DORMANT: "bg-warning-50 text-warning-700",
 };
 
 export default function CrmPage() {
@@ -97,7 +97,7 @@ function StatCard({ label, value, gradient }: { label: string; value: number; gr
   return (
     <div
       className={`rounded-2xl p-4 shadow-card ${gradient ? "text-white" : "border border-slate-200 bg-white"}`}
-      style={gradient ? { backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" } : undefined}
+      style={gradient ? { backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" } : undefined}
     >
       <p className={`text-xs uppercase tracking-wide ${gradient ? "text-white/80" : "text-slate-500"}`}>{label}</p>
       <p className={`mt-1 text-2xl font-semibold ${gradient ? "" : "text-slate-900"}`}>{value}</p>
@@ -160,7 +160,7 @@ function ContactDetail({ userId }: { userId: string }) {
           {c.tags.map((t) => (
             <span key={t} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
               {t}
-              <button onClick={() => patch.mutate({ tags: c.tags.filter((x) => x !== t) })} className="text-slate-500 hover:text-red-500">×</button>
+              <button onClick={() => patch.mutate({ tags: c.tags.filter((x) => x !== t) })} className="text-slate-500 hover:text-danger-500">×</button>
             </span>
           ))}
           <form

@@ -59,7 +59,7 @@ export default function MarketPage() {
             </Link>
             <Link
               href="/market/new"
-              className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+              className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
             >
               Sell something
             </Link>
@@ -105,7 +105,7 @@ export default function MarketPage() {
             onClick={() => setKind(t.key)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               kind === t.key
-                ? "border-brand-700 bg-brand-700 text-white"
+                ? "border-brand-600 bg-brand-600 text-white"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
             }`}
           >
@@ -148,7 +148,7 @@ export default function MarketPage() {
           action={
             <button
               onClick={() => refetch()}
-              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
             >
               Try again
             </button>
@@ -169,7 +169,7 @@ export default function MarketPage() {
             user ? (
               <Link
                 href="/market/new"
-                className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
               >
                 Sell something
               </Link>

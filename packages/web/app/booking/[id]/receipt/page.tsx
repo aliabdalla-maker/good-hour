@@ -29,7 +29,7 @@ function ReceiptPageInner() {
     queryFn: () => api.get<ReceiptView>(`/bookings/${id}/receipt`),
   });
 
-  if (error) return <p className="text-sm text-red-600">Couldn&apos;t load this receipt.</p>;
+  if (error) return <p className="text-sm text-danger-600">Couldn&apos;t load this receipt.</p>;
   if (!r) return <p className="text-slate-500">Loading receipt…</p>;
 
   const money = (n: number) => `${r.currency} ${n.toFixed(2)}`;

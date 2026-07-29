@@ -66,7 +66,7 @@ function LoginForm() {
             className="rounded border border-slate-300 px-3 py-2"
           />
         </label>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger-600">{error}</p>}
         <button
           type="submit"
           disabled={submitting}

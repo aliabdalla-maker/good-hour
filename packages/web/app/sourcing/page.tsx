@@ -50,9 +50,9 @@ function PublishForm({ draft, onDone }: { draft: SourcedDraftPublic; onDone: () 
       <label className="flex flex-col gap-1">Amenities (comma)<input value={amenities} onChange={(e) => setAmenities(e.target.value)} className="rounded border border-slate-300 px-2 py-1" /></label>
       <label className="flex flex-col gap-1">Hourly rate<input value={rate} onChange={(e) => setRate(e.target.value)} className="rounded border border-slate-300 px-2 py-1" /></label>
       <label className="flex flex-col gap-1">Capacity<input value={capacity} onChange={(e) => setCapacity(e.target.value)} className="rounded border border-slate-300 px-2 py-1" /></label>
-      {error && <p className="col-span-2 text-red-600">{error}</p>}
+      {error && <p className="col-span-2 text-danger-600">{error}</p>}
       <div className="col-span-2">
-        <button onClick={publish} disabled={busy} className="rounded bg-emerald-600 px-3 py-1 text-white disabled:opacity-50">
+        <button onClick={publish} disabled={busy} className="rounded bg-success-600 px-3 py-1 text-white disabled:opacity-50">
           {busy ? "Publishing…" : "Publish as bookable listing"}
         </button>
       </div>
@@ -176,8 +176,8 @@ function SourcingPageInner() {
         </section>
       </div>
 
-      {note && <p className="mt-3 text-sm text-emerald-600">{note}</p>}
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {note && <p className="mt-3 text-sm text-success-600">{note}</p>}
+      {error && <p className="mt-3 text-sm text-danger-600">{error}</p>}
 
       <h2 className="mb-2 mt-8 text-lg font-medium">Draft listings ({drafts?.length ?? 0})</h2>
       <div className="flex flex-col gap-3">
@@ -195,7 +195,7 @@ function SourcingPageInner() {
                 <button onClick={() => setExpanded(expanded === d.id ? null : d.id)} className="rounded border border-slate-300 px-3 py-1 hover:border-slate-500">
                   {expanded === d.id ? "Cancel" : "Review & publish"}
                 </button>
-                <button onClick={() => discard(d.id)} className="rounded px-3 py-1 text-slate-500 hover:text-red-600">Discard</button>
+                <button onClick={() => discard(d.id)} className="rounded px-3 py-1 text-slate-500 hover:text-danger-600">Discard</button>
               </div>
             </div>
             {expanded === d.id && <PublishForm draft={d} onDone={() => { setExpanded(null); refresh(); }} />}

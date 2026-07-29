@@ -5,8 +5,8 @@ import { useState } from "react";
 const GRADIENTS = [
   "from-brand-400 to-brand-600",
   "from-ai-400 to-ai-600",
-  "from-amber-300 to-amber-500",
-  "from-sky-400 to-sky-600",
+  "from-warning-300 to-warning-500",
+  "from-info-400 to-info-600",
 ];
 function grad(seed: string) {
   return GRADIENTS[seed.charCodeAt(0) % GRADIENTS.length];

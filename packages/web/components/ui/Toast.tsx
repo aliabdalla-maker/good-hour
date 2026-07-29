@@ -17,8 +17,8 @@ export function useToast() {
 }
 
 const TONE_STYLES: Record<Tone, string> = {
-  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  error: "border-red-200 bg-red-50 text-red-800",
+  success: "border-success-200 bg-success-50 text-success-800",
+  error: "border-danger-200 bg-danger-50 text-danger-800",
   info: "border-slate-200 bg-white text-slate-800",
 };
 

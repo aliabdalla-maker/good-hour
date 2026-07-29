@@ -66,7 +66,7 @@ function WalletInner() {
         action={
           <button
             onClick={() => refetch()}
-            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
           >
             Try again
           </button>
@@ -90,7 +90,7 @@ function WalletInner() {
       <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div
           className="animate-fade-in-up rounded-2xl p-4 text-white shadow-card"
-          style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#6d28d9)" }}
+          style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" }}
         >
           <p className="text-xs uppercase tracking-wide text-white/80">Hours held</p>
           <p className="mt-1 text-2xl font-semibold">
@@ -171,7 +171,7 @@ function WalletInner() {
                       {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
                     <td className="px-3 py-2 text-slate-500">{CATEGORY_LABELS[r.category] ?? r.category}</td>
-                    <td className={`px-3 py-2 text-right font-medium ${r.hours < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                    <td className={`px-3 py-2 text-right font-medium ${r.hours < 0 ? "text-danger-600" : "text-success-700"}`}>
                       {r.hours > 0 ? "+" : ""}
                       {r.hours.toFixed(2)}
                     </td>
@@ -248,7 +248,7 @@ function MoneySection() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div
           className="animate-fade-in-up rounded-2xl p-4 text-white shadow-card lg:col-span-2"
-          style={{ backgroundImage: "linear-gradient(135deg,#0f766e,#115e59 55%,#075985)" }}
+          style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#005d8f)" }}
         >
           <p className="text-xs uppercase tracking-wide text-white/80">Wallet balance</p>
           <p className="mt-1 text-3xl font-semibold">
@@ -308,7 +308,7 @@ function MoneySection() {
                     onClick={() => setAmount(v)}
                     className={`flex-1 rounded-lg border px-2 py-1 text-xs transition ${
                       amount === v
-                        ? "border-brand-700 bg-brand-700 text-white"
+                        ? "border-brand-600 bg-brand-600 text-white"
                         : "border-slate-200 text-slate-600 hover:border-slate-300"
                     }`}
                   >
@@ -322,14 +322,14 @@ function MoneySection() {
               <button
                 onClick={() => start.mutate()}
                 disabled={start.isPending || amount < MIN_TOPUP_AMOUNT}
-                className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+                className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
               >
                 {start.isPending ? "Working…" : "Continue to card"}
               </button>
             </>
           )}
-          {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
-          {notice && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{notice}</p>}
+          {err.message && <p className="mt-2 text-xs text-danger-600">{err.message}</p>}
+          {notice && <p className="mt-2 animate-fade-in text-xs text-success-700">{notice}</p>}
         </Card>
       </div>
 
@@ -352,7 +352,7 @@ function MoneySection() {
                       {WALLET_KIND_LABELS[r.kind] ?? r.kind}
                       {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
-                    <td className={`px-3 py-2 text-right font-medium ${r.amount < 0 ? "text-red-600" : "text-emerald-700"}`}>
+                    <td className={`px-3 py-2 text-right font-medium ${r.amount < 0 ? "text-danger-600" : "text-success-700"}`}>
                       {r.amount > 0 ? "+" : ""}
                       {r.amount.toFixed(2)}
                     </td>
@@ -435,12 +435,12 @@ function BuyHours({ onDone }: { onDone: () => void }) {
       <button
         onClick={() => buy.mutate()}
         disabled={buy.isPending}
-        className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-800 disabled:opacity-50"
+        className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
       >
         {buy.isPending ? "Working…" : "Buy hours"}
       </button>
-      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
-      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+      {err.message && <p className="mt-2 text-xs text-danger-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-success-700">{ok}</p>}
     </Card>
   );
 }
@@ -514,8 +514,8 @@ function GiftHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () => voi
       >
         {send.isPending ? "Sending…" : "Send gift"}
       </button>
-      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
-      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+      {err.message && <p className="mt-2 text-xs text-danger-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-success-700">{ok}</p>}
     </Card>
   );
 }
@@ -639,8 +639,8 @@ function ExchangeHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () =>
       {fromCategory === toCategory && (
         <p className="mt-2 text-xs text-slate-500">Pick two different buckets to exchange between.</p>
       )}
-      {err.message && <p className="mt-2 text-xs text-red-600">{err.message}</p>}
-      {ok && <p className="mt-2 animate-fade-in text-xs text-emerald-700">{ok}</p>}
+      {err.message && <p className="mt-2 text-xs text-danger-600">{err.message}</p>}
+      {ok && <p className="mt-2 animate-fade-in text-xs text-success-700">{ok}</p>}
     </Card>
   );
 }

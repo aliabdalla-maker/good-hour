@@ -12,7 +12,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-6 py-10 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm text-white">◷</span>
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm text-white">◷</span>
             Good Hours
           </div>
           <p className="mt-2 max-w-xs text-sm text-slate-500">
@@ -33,7 +33,7 @@ export function SiteFooter() {
           <p className="mb-2 font-medium text-slate-700">Contact</p>
           <ul className="space-y-1 text-slate-500">
             <li>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-6 items-center text-brand-700 hover:text-brand-800">
+              <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-6 items-center text-brand-600 hover:text-brand-700">
                 {CONTACT_EMAIL}
               </a>
             </li>
