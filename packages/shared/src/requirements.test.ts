@@ -164,3 +164,28 @@ test("compliance requirements are present and none are silently Met", () => {
     }
   }
 });
+
+test("the summary table matches the rows it summarises", () => {
+  // The first hand-typed version of that table said 19 functional requirements
+  // were Met where the rows said 22 — the register's own defect, committed inside
+  // the register. Counts are asserted now rather than transcribed.
+  const families: Record<string, string> = {
+    Functional: "FR",
+    "Non-functional": "NFR",
+    Compliance: "CR",
+  };
+  for (const [label, prefix] of Object.entries(families)) {
+    const sub = rows.filter((r) => r.id.startsWith(`${prefix}-`));
+    const counts = VERDICTS.map((v) => sub.filter((r) => r.verdict === v).length);
+    const expected = `| ${label} | ${sub.length} | ${counts.join(" | ")} |`;
+    assert.ok(
+      doc.includes(expected),
+      `summary row for ${label} is stale — should read: ${expected}`
+    );
+  }
+  const all = VERDICTS.map((v) => rows.filter((r) => r.verdict === v).length);
+  assert.ok(
+    doc.includes(`| **All** | **${rows.length}** | ${all.map((n) => `**${n}**`).join(" | ")} |`),
+    `the All row is stale — should total ${rows.length}: ${all.join("/")}`
+  );
+});

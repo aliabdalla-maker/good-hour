@@ -113,11 +113,17 @@ law does not care that they were never in the brief.
 
 ## Summary
 
-| | Met | Partially met | Not met | Not started |
-| --- | --- | --- | --- | --- |
-| Functional (34) | 19 | 8 | 2 | 5 |
-| Non-functional (12) | 6 | 3 | 2 | 1 |
-| Compliance (6) | 1 | 3 | 0 | 2 |
+<!-- COUNTS: asserted against the rows above by requirements.test.ts.
+     The first version of this table was typed by hand and was wrong — 19 where
+     the rows said 22. Exactly the defect the register exists to catch, committed
+     inside the register itself. -->
+
+| Family | Total | Met | Partially met | Not met | Not started |
+| --- | --- | --- | --- | --- | --- |
+| Functional | 34 | 22 | 7 | 2 | 3 |
+| Non-functional | 12 | 7 | 2 | 2 | 1 |
+| Compliance | 6 | 1 | 3 | 0 | 2 |
+| **All** | **52** | **30** | **12** | **4** | **6** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.
