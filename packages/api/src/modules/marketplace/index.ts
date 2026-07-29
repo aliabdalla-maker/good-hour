@@ -5,4 +5,12 @@ export default async function marketplaceModule(app: FastifyInstance) {
   app.register(marketplaceRoutes, { prefix: "/market" });
 }
 
-export { settleOrder, markOrderFailed, refundOrder, getMarketplaceStats } from "./service";
+// placeOrder is exported for the integration suite, which drives the real
+// concurrency paths through the same entry point the routes use.
+export {
+  placeOrder,
+  settleOrder,
+  markOrderFailed,
+  refundOrder,
+  getMarketplaceStats,
+} from "./service";

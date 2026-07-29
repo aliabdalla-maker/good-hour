@@ -5,4 +5,4 @@ export default async function auctionsModule(app: FastifyInstance) {
   app.register(auctionRoutes, { prefix: "/auctions" });
 }
 
-export { closeAuction, settleAuction, getAuctionStats } from "./service";
+export { placeBid, closeAuction, settleAuction, getAuctionStats } from "./service";

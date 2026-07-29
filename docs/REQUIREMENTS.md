@@ -48,9 +48,9 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-005 | Matching agent ranks offers but never auto-accepts | Must | The agent returns a ranking; the money-moving accept requires a human click | Met | `test:packages/api/src/modules/negotiation-agent/prompt.test.ts` |
 | FR-006 | Stripe payments with idempotent webhook handling | Must | Replaying any webhook produces no second ledger effect, enforced by a unique index | Met | `prod:` live payments; `code:packages/api/src/modules/payments` |
 | FR-007 | Refunds across cancel, chargeback and card-refund paths | Must | Each path reverses the money exactly once and cannot drive a balance wrong | Met | `code:packages/api/src/modules/marketplace/service.ts` `manual:` |
-| FR-008 | Products and services marketplace | Must | A seller lists a product or service; a buyer orders it and pays by wallet or card | Partially met | `test:packages/shared/src/marketplace.test.ts` — **never exercised: `GET /market` returns 0 listings** |
+| FR-008 | Products and services marketplace | Must | A seller lists a product or service; a buyer orders it and pays by wallet or card | Partially met | `test:packages/api/src/test/concurrency.itest.ts` drives the real order path — **still never exercised by a real user: `GET /market` returns 0 listings** |
 | FR-009 | Search across products and services | Must | Query, category and price filters return matching listings | Met | `test:packages/shared/src/marketplace.test.ts` |
-| FR-010 | Money wallet on an append-only ledger | Must | Balance is always `SUM(entries)`; no balance column exists; no path yields a negative except a clawback | Met | `code:packages/api/src/modules/wallet/ledger.ts` `manual:` |
+| FR-010 | Money wallet on an append-only ledger | Must | Balance is always `SUM(entries)`; no balance column exists; no path yields a negative except a clawback | Met | `test:packages/api/src/test/concurrency.itest.ts` — balance vs ledger sum asserted after contention |
 | FR-011 | Time credit economy: buy, redeem, transfer, exchange | Must | Credits are granted only on confirmed payment, and redemption value never exceeds acquisition value | Met | `test:packages/shared/src/redemption.test.ts` |
 | FR-012 | 10% buyer + 10% seller fee on every trade | Must | One shared helper computes every fee; no screen can display a stale rate | Met | `test:packages/shared/src/money.test.ts` |
 | FR-013 | Hourly auctions, forward and reverse | Must | A forward auction closes to the highest bid over reserve; a reverse auction to the lowest | Partially met | `test:packages/shared/src/auctions.test.ts` — **closing/settlement untested; every live auction has 0 bids** |
@@ -82,11 +82,11 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | --- | --- | --- | --- | --- | --- |
 | NFR-001 | WCAG 2.2 AA for colour and target size | Must | Every default interactive shade clears 4.5:1; no ramp is non-monotonic; no target under 24px | Met | `test:packages/web/lib/designAudit.test.ts` |
 | NFR-002 | Agent calls are bounded, and no model output can spend beyond mandate or need | Must | Every agent call has a timeout and a deterministic fallback; no model output can bid past the mandate, nor pay more than the minimum needed to lead | Met | `test:packages/shared/src/proxyContest.test.ts` |
-| NFR-003 | Money correctness: no negative balances, no double-apply | Must | Ledger writes run at Serializable with the assertion after the insert; idempotency is enforced by unique index, not by a check | Met | `code:packages/api/src/modules/wallet/ledger.ts` `manual:` |
+| NFR-003 | Money correctness: no negative balances, no double-apply | Must | Ledger writes run at Serializable with the assertion after the insert; idempotency is enforced by unique index, not by a check; a serialisation conflict is retried rather than shown to the user | Met | `test:packages/api/src/test/concurrency.itest.ts` |
 | NFR-004 | No privilege escalation, IDOR or PII leak | Must | Self-registration cannot mint an ADMIN; booking reads are ownership-checked; seller emails are masked | Met | `code:packages/shared/src/schemas/auth.ts` `manual:` |
 | NFR-005 | Availability target with alerting | Must | A stated SLO, monitored, alerting a human on breach | Not met | No SLO stated, no monitoring, no alerting. Outages are found by looking |
 | NFR-006 | Latency budgets for pages and API | Should | Stated p95 targets, measured continuously | Not started | Never specified, never measured |
-| NFR-007 | Correctness under concurrency | Must | Simultaneous bids, orders and redemptions cannot oversell or double-spend | Partially met | Serializable transactions and conditional stock updates exist; **no test exercises concurrent writes** |
+| NFR-007 | Correctness under concurrency | Must | Simultaneous orders and spends cannot oversell or double-spend, proven against a real Postgres | Met | `test:packages/api/src/test/concurrency.itest.ts` — 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up |
 | NFR-008 | Observability: structured logs and error tracking | Should | Errors are aggregated somewhere a human sees them | Partially met | Fastify logs to stdout; no aggregation or error tracker |
 | NFR-009 | Backup and tested restore | Must | A restore has been performed and verified within the retention window | Not met | Managed Postgres snapshots are assumed; **no restore has ever been tested** |
 | NFR-010 | Module boundaries enforced, not conventional | Should | A cross-module deep import fails the lint gate | Met | `test:eslint.config.mjs` |
@@ -121,9 +121,9 @@ law does not care that they were never in the brief.
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
 | Functional | 34 | 22 | 7 | 2 | 3 |
-| Non-functional | 12 | 7 | 2 | 2 | 1 |
+| Non-functional | 12 | 8 | 1 | 2 | 1 |
 | Compliance | 6 | 1 | 3 | 0 | 2 |
-| **All** | **52** | **30** | **12** | **4** | **6** |
+| **All** | **52** | **31** | **11** | **4** | **6** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

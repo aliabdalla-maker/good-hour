@@ -19,9 +19,9 @@ the two applies.
 | Fee arithmetic (10% + 10%) | Yes | Partly | Booking payments have run; marketplace orders have not |
 | Credit redemption cap | Yes | No | `redemption.test.ts` sweeps the invariant |
 | Auction proxy resolution | Yes | **No** | Every live auction has `bidCount: 0` |
-| Auction closing / settlement | No | No | Reachable only through Prisma + BullMQ |
-| Money & credit ledgers | Partly | Partly | Ledger maths untested at the DB level; Serializable retry paths unexercised |
-| Marketplace orders | Schemas only | **No** | `GET /market` returns 0 listings |
+| Auction closing / settlement | No | No | Still reachable only through Prisma + BullMQ — the next integration file to write |
+| Money & credit ledgers | Yes | Partly | Concurrency, non-negativity and idempotency asserted against real Postgres |
+| Marketplace orders | Yes | **No** | Order + settle path integration-tested; `GET /market` still returns 0 listings |
 | Design tokens & contrast | Yes | n/a | `designAudit.test.ts`, incl. known-bad fixtures |
 | Module boundaries | Yes (lint) | n/a | Enumerated, not exhaustive — see ARCHITECTURE.md |
 | ADMIN self-registration block | Code-level | Not re-verified | See "Verifying a security fix" below |
@@ -102,6 +102,31 @@ ceiling gap from £0.50 to £40.
 npm run lint && npm run typecheck && npm test
 ```
 
-74 tests at the time of writing. `npm run test:integration` covers `*.itest.ts`
-and is currently empty — the DB-level ledger and settlement paths in the table
-above are what belong there.
+94 unit tests at the time of writing.
+
+## Integration gate
+
+```bash
+DATABASE_URL=postgresql://... npm run test:integration
+```
+
+7 tests against a real Postgres, covering what no unit test can reach: oversell
+under 8 concurrent buyers on 1 unit of stock, 10 concurrent wallet spends, the
+read-then-write gap, index-enforced idempotency on a duplicated top-up, and the
+outbox relay.
+
+**This suite had never actually run.** `npm run test:integration` loaded `.env`
+via `-r dotenv/config`, but `node --test` spawns each file in a *child* process
+and a CJS `--require` does not carry across — so `DATABASE_URL` was absent in the
+child and the run hung with no output rather than failing. Two pre-existing
+`.itest.ts` files had therefore never executed. `scripts/run-itest.mjs` now loads
+`.env` and passes the resolved environment to the children, and exits with a
+readable message when `DATABASE_URL` is missing instead of hanging.
+
+It found a real defect on its first successful run: ten concurrent £20 spends
+against a £100 balance had only **two** succeed. The other three affordable ones
+were rejected with a serialisation conflict — safe, but a user with money was
+told to try again because someone else transacted at the same moment. P2034 is
+precisely the error Postgres raises to mean "retry me", so `applyWalletWrites`
+now retries up to three times with jittered backoff. Idempotency is
+index-enforced, so a retry can never double-apply.

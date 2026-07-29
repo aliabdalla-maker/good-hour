@@ -130,8 +130,70 @@ async function getBiddingPipeline(): Promise<ErpOverview["bidding"]> {
   };
 }
 
+/**
+ * Liquidity — FR-030.
+ *
+ * The one metric that answers "is this a business?" rather than "is this built?".
+ * It is computed here, from the same database everything else reads, so it cannot
+ * drift from reality the way a hand-maintained status note would.
+ */
+async function getLiquidity(): Promise<ErpOverview["liquidity"]> {
+  const [
+    sellers,
+    activeUnits,
+    activeListings,
+    auctionsCreated,
+    bidsPlaced,
+    proxyMandates,
+    bookingsConfirmed,
+    ordersPaid,
+    agentDecisions,
+    agentWithOutcome,
+  ] = await Promise.all([
+    prisma.user.count({ where: { role: "SUPPLIER" } }),
+    prisma.room.count({ where: { status: "ACTIVE" } }),
+    prisma.marketplaceListing.count({ where: { status: "ACTIVE" } }),
+    prisma.marketplaceAuction.count(),
+    prisma.auctionBid.count(),
+    prisma.auctionBid.count({ where: { maxPerHour: { not: null } } }),
+    prisma.booking.count({ where: { status: { in: [...REVENUE_STATUSES] } } }),
+    prisma.marketplaceOrder.count({ where: { status: "PAID" } }),
+    prisma.agentDecisionLog.count(),
+    prisma.agentDecisionLog.count({ where: { NOT: { outcomeAccepted: null } } }),
+  ]);
+
+  const supply = activeUnits + activeListings;
+  const demand = bookingsConfirmed + ordersPaid + bidsPlaced;
+
+  return {
+    sellers,
+    activeUnits,
+    activeListings,
+    auctionsCreated,
+    bidsPlaced,
+    proxyMandates,
+    bookingsConfirmed,
+    ordersPaid,
+    supply,
+    demand,
+    verdict:
+      supply === 0 && demand === 0
+        ? "NO_MARKET"
+        : supply === 0
+          ? "NO_SUPPLY"
+          : demand === 0
+            ? "NO_DEMAND"
+            : "TRADING",
+    agentDecisions,
+    // Without outcomes there is evidence the agents decide, not that they decide
+    // well. Surfaced so the gap is visible rather than assumed closed.
+    agentOutcomeCoverage: agentDecisions > 0 ? agentWithOutcome / agentDecisions : 0,
+  };
+}
+
 export async function getErpOverview(): Promise<ErpOverview> {
   const [
+    liquidity,
     financial,
     bookingPipeline,
     supplierLedger,
@@ -143,6 +205,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
     wallet,
     auctions,
   ] = await Promise.all([
+    getLiquidity(),
     getFinancial(),
     getBookingPipeline(),
     getSupplierLedger(),
@@ -156,6 +219,9 @@ export async function getErpOverview(): Promise<ErpOverview> {
   ]);
 
   const aiInsights = await generateAiInsights({
+    // liquidity first, deliberately: an insights agent that talks about fee
+    // revenue while supply is zero is optimising the wrong thing.
+    liquidity,
     financial,
     bookingPipeline,
     supplierLedger,
@@ -169,6 +235,7 @@ export async function getErpOverview(): Promise<ErpOverview> {
   });
 
   return {
+    liquidity,
     financial,
     bookingPipeline,
     supplierLedger,

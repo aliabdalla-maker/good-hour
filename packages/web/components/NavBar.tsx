@@ -88,7 +88,12 @@ export function NavBar() {
       : []),
     // Not a role check -- this one link is for the single owner-operator
     // account only, hidden from every other ADMIN too.
-    ...(user?.email === ERP_ADMIN_EMAIL ? [{ href: "/admin/erp", label: "ERP" }] : []),
+    ...(user?.email === ERP_ADMIN_EMAIL
+      ? [
+          { href: "/admin/erp", label: "ERP" },
+          { href: "/admin/readiness", label: "Readiness" },
+        ]
+      : []),
   ];
 
   const Wordmark = (

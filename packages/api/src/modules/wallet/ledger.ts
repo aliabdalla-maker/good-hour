@@ -73,6 +73,29 @@ export interface ApplyOptions {
   allowNegative?: boolean;
 }
 
+/**
+ * How many times a serialisation conflict is retried before the caller sees it.
+ *
+ * Found by the integration suite, not by reading: ten concurrent £20 spends
+ * against a £100 balance had only TWO succeed. The other three affordable ones
+ * were rejected with a write conflict. Safe — the balance never went negative —
+ * but wrong, because a user with money in their wallet was told to try again
+ * purely because someone else transacted at the same moment.
+ *
+ * P2034 is precisely the error Postgres raises to say "retry me": the transaction
+ * did not commit, so there is nothing to undo, and a retry is not a double-spend
+ * risk. Idempotency is separately guaranteed by unique index, so even a retry of a
+ * write that *did* land surfaces as P2002 rather than a duplicate.
+ *
+ * Three attempts with jittered backoff. Jitter matters: without it, conflicting
+ * transactions retry in lockstep and collide again.
+ */
+const MAX_SERIALISATION_ATTEMPTS = 3;
+
+function isSerialisationConflict(error: unknown): boolean {
+  return (error as { code?: string })?.code === "P2034";
+}
+
 export async function applyWalletWrites(
   writes: WalletWrite[],
   options: ApplyOptions = {}
@@ -81,23 +104,33 @@ export async function applyWalletWrites(
   const touched = [...new Set(writes.map((w) => w.userId))];
 
   try {
-    await prisma.$transaction(
-      async (tx) => {
-        await tx.walletLedgerEntry.createMany({ data: writes.map(toData) });
-        if (options.allowNegative) return;
-        for (const userId of touched) {
-          const balance = await getMoneyBalance(userId, tx);
-          if (balance < 0) {
-            throw new AppError(
-              409,
-              "Not enough money in your wallet — top up and try again",
-              "INSUFFICIENT_FUNDS"
-            );
-          }
-        }
-      },
-      { isolationLevel: "Serializable" }
-    );
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            await tx.walletLedgerEntry.createMany({ data: writes.map(toData) });
+            if (options.allowNegative) return;
+            for (const userId of touched) {
+              const balance = await getMoneyBalance(userId, tx);
+              if (balance < 0) {
+                throw new AppError(
+                  409,
+                  "Not enough money in your wallet — top up and try again",
+                  "INSUFFICIENT_FUNDS"
+                );
+              }
+            }
+          },
+          { isolationLevel: "Serializable" }
+        );
+        break;
+      } catch (error) {
+        // INSUFFICIENT_FUNDS is a real answer, not a conflict — never retry it.
+        if (!isSerialisationConflict(error) || attempt >= MAX_SERIALISATION_ATTEMPTS) throw error;
+        const backoffMs = 15 * attempt + Math.floor(Math.random() * 25);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
+    }
   } catch (error) {
     if (error instanceof AppError) throw error;
     const code = (error as { code?: string }).code;

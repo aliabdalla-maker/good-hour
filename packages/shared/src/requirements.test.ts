@@ -189,3 +189,26 @@ test("the summary table matches the rows it summarises", () => {
     `the All row is stale — should total ${rows.length}: ${all.join("/")}`
   );
 });
+
+test("the generated UI data matches the register", () => {
+  // The Readiness page renders a generated module rather than parsing markdown at
+  // runtime, because the API container does not ship docs/ and a page that
+  // silently rendered an empty register would be the same silent-empty failure
+  // this project keeps re-learning. Drift is a test failure instead.
+  const generated = readFileSync(
+    path.join(repoRoot, "packages/web/lib/requirementsData.ts"),
+    "utf8"
+  );
+  for (const r of rows) {
+    assert.ok(
+      generated.includes(`"id": "${r.id}"`),
+      `${r.id} missing from requirementsData.ts — run \`npm run docs:requirements\``
+    );
+    assert.ok(
+      generated.includes(`"verdict": "${r.verdict}"`) ,
+      `no row carries verdict ${r.verdict} in requirementsData.ts — regenerate it`
+    );
+  }
+  const idCount = (generated.match(/"id": "(?:FR|NFR|CR)-\d{3}"/g) ?? []).length;
+  assert.equal(idCount, rows.length, "requirementsData.ts is stale — regenerate it");
+});

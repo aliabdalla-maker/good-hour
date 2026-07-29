@@ -96,7 +96,46 @@ export const erpAuctionsSchema = z.object({
 });
 export type ErpAuctions = z.infer<typeof erpAuctionsSchema>;
 
+/**
+ * Liquidity — FR-030, the only Must-have requirement whose failure makes every
+ * other metric on this page meaningless.
+ *
+ * It sits at the top of the ERP because it went unnoticed for an entire build:
+ * 76 capability tasks completed against a marketplace with no listings, no bids
+ * and no orders. Capability metrics cannot detect that. This one can.
+ *
+ * Supply and demand are reported separately because "nothing to buy" and "nobody
+ * buying" are different problems with different fixes.
+ */
+export const erpLiquiditySchema = z.object({
+  sellers: z.number(),
+  activeUnits: z.number(),
+  activeListings: z.number(),
+  auctionsCreated: z.number(),
+  bidsPlaced: z.number(),
+  proxyMandates: z.number(),
+  bookingsConfirmed: z.number(),
+  ordersPaid: z.number(),
+  /** activeUnits + activeListings — is there anything to buy at all? */
+  supply: z.number(),
+  /** bookingsConfirmed + ordersPaid + bidsPlaced — is anyone transacting? */
+  demand: z.number(),
+  verdict: z.enum(["NO_MARKET", "NO_SUPPLY", "NO_DEMAND", "TRADING"]),
+  /** Share of agent decisions with a recorded outcome, 0..1. */
+  agentOutcomeCoverage: z.number(),
+  agentDecisions: z.number(),
+});
+export type ErpLiquidity = z.infer<typeof erpLiquiditySchema>;
+
+export const LIQUIDITY_VERDICT_LABELS: Record<ErpLiquidity["verdict"], string> = {
+  NO_MARKET: "No market — no supply and no demand",
+  NO_SUPPLY: "No supply — demand with nothing to buy",
+  NO_DEMAND: "No demand — supply with no transactions",
+  TRADING: "Trading",
+};
+
 export const erpOverviewSchema = z.object({
+  liquidity: erpLiquiditySchema,
   auctions: erpAuctionsSchema,
   creditEconomy: erpCreditEconomySchema,
   marketplace: erpMarketplaceSchema,

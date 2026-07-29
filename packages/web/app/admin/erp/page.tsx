@@ -12,6 +12,7 @@ import { RequireAuth } from "../../../components/RequireAuth";
 import { Spinner } from "../../../components/ui/Spinner";
 import { AnimatedNumber } from "../../../components/ui/AnimatedNumber";
 import { AiBadge } from "../../../components/ai/AiBadge";
+import { LiquidityPanel } from "../../../components/erp/LiquidityPanel";
 
 const PIPELINE_LABELS: Record<string, string> = {
   PENDING_PAYMENT: "Pending payment",
@@ -98,6 +99,7 @@ function ErpInner() {
     wallet,
     auctions,
     aiInsights,
+    liquidity,
   } = data;
   const fmt = (n: number) => `${financial.currency} ${n.toFixed(2)}`;
 
@@ -107,6 +109,12 @@ function ErpInner() {
       <p className="mb-6 text-sm text-slate-500">
         Owner-only financial and operations overview — not visible to any other account.
       </p>
+
+      {/* Liquidity first — FR-030.
+          Above the AI insights and above revenue, because a platform with no
+          supply and no demand has no revenue to analyse. This metric went
+          unmeasured for the whole build while capability dashboards read green. */}
+      <LiquidityPanel liquidity={liquidity} />
 
       {/* Agentic AI insights */}
       <section className="mb-8 animate-fade-in-up rounded-2xl border border-ai-200 bg-gradient-to-br from-ai-50 via-white to-brand-50 bg-[length:200%_200%] p-5 shadow-card animate-gradient-pan">
