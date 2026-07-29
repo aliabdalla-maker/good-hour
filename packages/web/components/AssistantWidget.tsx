@@ -92,7 +92,7 @@ export function AssistantWidget() {
           <span className="text-lg">✦</span>
           <div>
             <p className="text-sm font-semibold leading-none">Good Hours assistant</p>
-            <p className="mt-0.5 text-[11px] text-white/75">AI concierge · rooms, cars &amp; travel</p>
+            <p className="mt-0.5 text-xs text-white/75">AI concierge · rooms, cars &amp; travel</p>
           </div>
         </div>
         <div className="flex items-center gap-1">

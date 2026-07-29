@@ -616,7 +616,7 @@ function ExchangeHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () =>
             Rate {quote.rate.toFixed(3)} · fee {quote.feeHours.toFixed(2)}h
           </p>
           <p className="mt-1 text-xs text-slate-600">{quote.reasoning}</p>
-          <p className="mt-1 text-[11px] text-slate-500">Quoted by {quote.quotedBy}</p>
+          <p className="mt-1 text-xs text-slate-500">Quoted by {quote.quotedBy}</p>
         </div>
       )}
 

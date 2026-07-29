@@ -114,7 +114,7 @@ export default function SearchPage() {
                     {room.city}
                   </span>
                   {room.imageIsAiGenerated && (
-                    <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+                    <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                       ✨ AI-generated photo
                     </span>
                   )}

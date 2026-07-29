@@ -1,4 +1,4 @@
-import { bidBeats, type AuctionKind } from "./schemas/auctions";
+import { bidBeats, nextValidBid, type AuctionKind } from "./schemas/auctions";
 
 /**
  * Proxy-auction resolution, extracted from the auctions service so it can be
@@ -79,4 +79,54 @@ export function resolveProxyContest(input: ProxyContestInput): ProxyContestOutco
     championAutoSettle: champion.autoSettle ?? false,
     referencePerHour,
   };
+}
+
+/**
+ * Clamps a proposed bid into the only range legal for this mandate.
+ *
+ * FORWARD: must beat the leader, must not exceed the ceiling.
+ * REVERSE: must undercut the leader, must not fall below the floor.
+ *
+ * Runs on every path, including the model's own answer. The model is told the
+ * ceiling and is never trusted to respect it — here it is spending real money.
+ *
+ * Moved out of the auctions module for the same reason as resolveProxyContest:
+ * it was a pure function sitting behind an OpenAI call, so nothing could test the
+ * one guarantee that matters — that no model output, however wrong, can bid past
+ * the mandate.
+ *
+ * Moving it found a second defect the mandate bound was hiding. The old version
+ * clamped into the legal *range* and then took the model's magnitude: told the
+ * lead was £60 and the ceiling £70, a model answer of "£70" bid £70, when £60.50
+ * would have taken the lead. Within mandate, and a 16% overpay — every time the
+ * model felt bullish. Reverse auctions had the mirror defect: the agent would
+ * undercut to £60 when £79.50 already won, giving away the seller's margin.
+ *
+ * So the magnitude is no longer the model's to choose. In a proxy contest any
+ * amount beyond the minimum needed to lead is pure waste: it buys the same lead
+ * for more money and reveals the mandate. The model decides **whether** to bid;
+ * the price is deterministic. `proposed` is read only as willingness — a model
+ * unwilling to reach the minimum is expressing a hold.
+ *
+ * This is what makes resolveProxyContest's guarantee actually pay: the winner
+ * ends up one increment above the runner-up's ceiling, not at their own.
+ */
+export function clampToMandate(
+  kind: AuctionKind,
+  proposed: number,
+  leadingPerHour: number | null,
+  ceiling: number,
+  reservePerHour: number
+): number | null {
+  const minimum = nextValidBid(kind, reservePerHour, leadingPerHour);
+
+  if (kind === "FORWARD") {
+    // Unwilling to reach the minimum -> hold. NaN falls through to the bid, since
+    // a nonsense magnitude must not be read as a decision to withdraw.
+    if (proposed < minimum) return null;
+    return minimum <= ceiling && bidBeats(kind, minimum, leadingPerHour) ? minimum : null;
+  }
+  // REVERSE: `ceiling` is a floor — the least the seller will accept.
+  if (proposed > minimum) return null;
+  return minimum >= ceiling && bidBeats(kind, minimum, leadingPerHour) ? minimum : null;
 }

@@ -187,7 +187,7 @@ function ContactDetail({ userId }: { userId: string }) {
           {data.notes.map((n) => (
             <div key={n.id} className="rounded-lg bg-slate-50 px-2 py-1.5 text-sm text-slate-700">
               {n.body}
-              <span className="ml-1 text-[11px] text-slate-500">· {new Date(n.createdAt).toLocaleDateString()}</span>
+              <span className="ml-1 text-xs text-slate-500">· {new Date(n.createdAt).toLocaleDateString()}</span>
             </div>
           ))}
           {data.notes.length === 0 && <p className="text-xs text-slate-500">No notes yet.</p>}
@@ -203,7 +203,7 @@ function ContactDetail({ userId }: { userId: string }) {
               <span className="absolute -left-[17px] top-1.5 h-2 w-2 rounded-full bg-brand-400" />
               <p className="text-slate-700">{t.label}</p>
               {t.detail && <p className="text-xs text-slate-500">{t.detail}</p>}
-              <p className="text-[11px] text-slate-300">{new Date(t.at).toLocaleString()}</p>
+              <p className="text-xs text-slate-300">{new Date(t.at).toLocaleString()}</p>
             </li>
           ))}
         </ol>

@@ -53,12 +53,21 @@ export function NavBar() {
     }
   }
 
+  // Four primary destinations, deliberately.
+  //
+  // "Auctions" and "Request a match" used to sit here as siblings, which read as
+  // two products when they are two directions of one mechanic: a buyer states what
+  // they want and sellers compete downward. That duplication is real below the UI
+  // too — BookingRequest/SupplierOffer and REVERSE auctions are separate tables —
+  // and merging the schemas would mean migrating live booking data. Presenting one
+  // door is the part that can be fixed today without touching production rows.
+  //
+  // Discovery is preserved: /browse carries a prominent "Request a match" card.
   const primaryLinks = [
     { href: "/browse", label: "Browse" },
     { href: "/search", label: "Search by time" },
     { href: "/market", label: "Products & services" },
-    { href: "/auctions", label: "Auctions" },
-    { href: "/requests/new", label: "Request a match" },
+    { href: "/auctions", label: "Auctions & requests" },
   ];
   const roleLinks = [
     // The wallet belongs to every signed-in account, not a single role.
@@ -99,7 +108,7 @@ export function NavBar() {
       >
         Notifications
         {unread > 0 && (
-          <span className="ml-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white">
+          <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-semibold text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -156,7 +165,7 @@ export function NavBar() {
           ))}
           {user && (
             <Link href="/notifications" onClick={() => setOpen(false)} className="rounded-lg px-2 py-2 text-slate-700 hover:bg-slate-100">
-              Notifications {unread > 0 && <span className="ml-1 rounded-full bg-brand-600 px-1.5 text-[10px] text-white">{unread}</span>}
+              Notifications {unread > 0 && <span className="ml-1 rounded-full bg-brand-600 px-1.5 text-xs text-white">{unread}</span>}
             </Link>
           )}
           <div className="mt-2 border-t border-slate-100 pt-2">

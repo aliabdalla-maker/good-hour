@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveProxyContest } from "./proxyContest";
+import { clampToMandate, resolveProxyContest } from "./proxyContest";
 import { MIN_BID_INCREMENT, nextValidBid } from "./schemas/auctions";
 
 test("REGRESSION: the higher ceiling wins, whatever the increment", () => {
@@ -154,4 +154,61 @@ test("autoSettle travels with the winning mandate, defaulting to off", () => {
   });
   // Full autonomy must be chosen explicitly, never inherited by omission.
   assert.equal(withoutSettle?.championAutoSettle, false);
+});
+
+// --- clampToMandate: the guarantee that a wrong model answer cannot spend ----
+
+test("GUARANTEE: no proposed amount can bid past a FORWARD ceiling", () => {
+  // Sweep absurd model outputs, including ones far above the mandate. The point
+  // of the clamp is that the model is told the ceiling and never trusted with it.
+  for (const proposed of [0, -50, 55, 62, 69.99, 70, 70.01, 1000, 1e9, NaN]) {
+    const bid = clampToMandate("FORWARD", proposed, 60, 70, 40);
+    if (bid === null) continue;
+    assert.ok(bid <= 70, `clamped to ${bid}, above the £70 ceiling (proposed ${proposed})`);
+    assert.ok(bid > 60, `clamped to ${bid}, which does not beat the £60 lead`);
+  }
+});
+
+test("GUARANTEE: no proposed amount can bid below a REVERSE floor", () => {
+  for (const proposed of [0, -50, 54.99, 55, 60, 79.99, 1000, NaN]) {
+    const bid = clampToMandate("REVERSE", proposed, 80, 55, 90);
+    if (bid === null) continue;
+    assert.ok(bid >= 55, `clamped to ${bid}, below the £55 floor (proposed ${proposed})`);
+    assert.ok(bid < 80, `clamped to ${bid}, which does not undercut the £80 lead`);
+  }
+});
+
+test("clamping takes the lead as cheaply as the mandate allows", () => {
+  // An over-eager model answer must not overpay: leading £60, ceiling £70, and
+  // the model says £70 — the correct bid is one increment over the lead, not the
+  // ceiling.
+  assert.equal(clampToMandate("FORWARD", 70, 60, 70, 40), 60 + MIN_BID_INCREMENT);
+});
+
+test("clamping returns null rather than an illegal bid when the mandate is spent", () => {
+  // Leading £70 with a £70 ceiling: nothing legal remains, so the agent holds.
+  assert.equal(clampToMandate("FORWARD", 75, 70, 70, 40), null);
+  assert.equal(clampToMandate("REVERSE", 50, 55, 55, 90), null);
+});
+
+test("the first bid in an empty auction prices off the reserve, inside the mandate", () => {
+  assert.equal(clampToMandate("FORWARD", 999, null, 70, 45), 45);
+  assert.equal(clampToMandate("REVERSE", 0, null, 55, 90), 90);
+});
+
+test("REGRESSION: a bullish model answer cannot overpay within the mandate", () => {
+  // Found by writing the test above. The old clamp took the model's magnitude
+  // after bounding it: lead £60, ceiling £70, model says £70 -> it bid £70, a 16%
+  // overpay for the same lead. The winner must pay one increment over the lead.
+  assert.equal(clampToMandate("FORWARD", 70, 60, 70, 40), 60.5);
+  assert.equal(clampToMandate("FORWARD", 1000, 60, 70, 40), 60.5);
+  // And the mirror: a seller's agent must not concede more than it has to.
+  assert.equal(clampToMandate("REVERSE", 60, 80, 55, 90), 79.5);
+});
+
+test("an unwilling model answer reads as a hold, not as a cheap bid", () => {
+  // Below the minimum needed to lead: the agent holds rather than placing an
+  // invalid bid or silently topping it up.
+  assert.equal(clampToMandate("FORWARD", 55, 60, 70, 40), null);
+  assert.equal(clampToMandate("REVERSE", 85, 80, 55, 90), null);
 });

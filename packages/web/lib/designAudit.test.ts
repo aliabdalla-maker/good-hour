@@ -9,6 +9,7 @@ import {
   auditPalette,
   findHoverEqualsBase,
   findRawDefaultFamilies,
+  findUndersizedType,
   parsePalette,
   renderTokenTable,
 } from "./designAudit";
@@ -112,6 +113,21 @@ test("no raw Tailwind default families are used in app/ or components/", () => {
   const findings = sourceFiles().flatMap(({ file, source }) =>
     findRawDefaultFamilies(file, source)
   );
+  assert.deepEqual(
+    findings.map((f) => `${f.file}: ${f.detail}`),
+    []
+  );
+});
+
+test("findUndersizedType flags below-floor sizes and spares the floor itself", () => {
+  assert.equal(findUndersizedType("f.tsx", `className="text-[11px]"`).length, 1);
+  assert.equal(findUndersizedType("f.tsx", `className="text-[10px]"`).length, 1);
+  assert.equal(findUndersizedType("f.tsx", `className="text-[12px]"`).length, 0);
+  assert.equal(findUndersizedType("f.tsx", `className="text-xs"`).length, 0);
+});
+
+test("no type in app/ or components/ falls below the 12px floor", () => {
+  const findings = sourceFiles().flatMap(({ file, source }) => findUndersizedType(file, source));
   assert.deepEqual(
     findings.map((f) => `${f.file}: ${f.detail}`),
     []

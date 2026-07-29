@@ -130,7 +130,7 @@ function EarningsSection() {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-slate-800">{money(b.payout)}</p>
-                  <span className="text-[11px] uppercase tracking-wide text-slate-500">{b.status}</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-500">{b.status}</span>
                 </div>
               </div>
             ))}

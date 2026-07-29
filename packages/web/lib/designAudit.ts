@@ -110,6 +110,21 @@ export function findRawDefaultFamilies(file: string, source: string): ClassFindi
 }
 
 /**
+ * Finds type below the 12px legibility floor.
+ *
+ * Eight places were running at 11px and two at 10px — timestamps, badge overlays,
+ * a "quoted by" line. All passed contrast, which is exactly why they survived
+ * three separate accessibility passes: WCAG sets no minimum size, so an automated
+ * contrast check can never surface them. The floor has to be asserted separately
+ * or it isn't asserted at all.
+ */
+export function findUndersizedType(file: string, source: string): ClassFinding[] {
+  return [...source.matchAll(/text-\[(\d+)px\]/g)]
+    .filter((m) => Number(m[1]) < 12)
+    .map((m) => ({ file, detail: `${m[0]} is below the 12px floor — use text-xs or larger` }));
+}
+
+/**
  * Renders the published contrast table.
  *
  * Generated, never typed. The hand-typed version had nine of twelve figures

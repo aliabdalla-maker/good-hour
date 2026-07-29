@@ -52,7 +52,7 @@ function Thread({ bookingId }: { bookingId: string }) {
                 }`}
               >
                 <p>{m.body}</p>
-                <p className={`mt-0.5 text-[10px] ${m.mine ? "text-white/70" : "text-slate-500"}`}>
+                <p className={`mt-0.5 text-xs ${m.mine ? "text-white/70" : "text-slate-500"}`}>
                   {m.senderRole} · {new Date(m.createdAt).toLocaleString()}
                 </p>
               </div>

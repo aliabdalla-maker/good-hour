@@ -197,7 +197,7 @@ export default function MarketPage() {
                   <span className="absolute bottom-2 left-2 rounded-md bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                     {l.currency} {l.price.toFixed(2)} {PRICING_UNIT_LABELS[l.pricingUnit]}
                   </span>
-                  <span className="absolute right-2 top-2 rounded-md bg-white/90 px-2 py-0.5 text-[11px] font-medium text-slate-700 backdrop-blur">
+                  <span className="absolute right-2 top-2 rounded-md bg-white/90 px-2 py-0.5 text-xs font-medium text-slate-700 backdrop-blur">
                     {l.kind === "PRODUCT" ? "📦 Product" : "🧑‍💼 Service"}
                   </span>
                 </div>

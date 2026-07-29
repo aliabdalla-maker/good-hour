@@ -83,7 +83,7 @@ export default function BrowsePage() {
                 href="/requests/new"
                 className="group rounded-xl bg-white/10 p-4 text-white ring-1 ring-white/25 backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/15"
               >
-                <h2 className="flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-[11px]">AI reverse auction</span></h2>
+                <h2 className="flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-xs">AI reverse auction</span></h2>
                 <p className="mt-1 text-sm text-white/80">Post what you need — hosts &amp; their agents bid for you.</p>
               </Link>
             </div>
@@ -169,7 +169,7 @@ export default function BrowsePage() {
                           {room.currency} {room.baseHourlyRate.toFixed(2)}{meta.unit}
                         </span>
                         {room.imageIsAiGenerated && (
-                          <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">
+                          <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                             ✨ AI-generated photo
                           </span>
                         )}

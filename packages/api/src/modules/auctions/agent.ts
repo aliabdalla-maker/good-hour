@@ -1,5 +1,7 @@
 import type { AuctionKind } from "@gihtcx/shared";
-import { MIN_BID_INCREMENT, nextValidBid, bidBeats } from "@gihtcx/shared";
+// clampToMandate is shared so its guarantee — no model output can bid past the
+// mandate — is asserted by a test rather than by the comment above it.
+import { MIN_BID_INCREMENT, nextValidBid, clampToMandate } from "@gihtcx/shared";
 import { getOpenAIClient, OPENAI_MODEL } from "../../lib/openaiClient";
 import { logAgentDecision } from "../agent-log";
 
@@ -39,36 +41,6 @@ const COUNTER_TOOL = {
     },
   },
 };
-
-/**
- * Clamps a proposed bid into the only range that is legal for this mandate.
- *
- * FORWARD: must beat the leader, must not exceed the ceiling.
- * REVERSE: must undercut the leader, must not fall below the floor.
- *
- * This runs on every path, including the model's own answer. The model is told
- * the ceiling but is never trusted to respect it — the same rule the pricing
- * agent follows, and here it is spending real money.
- */
-function clampToMandate(
-  kind: AuctionKind,
-  proposed: number,
-  leadingPerHour: number | null,
-  ceiling: number,
-  reservePerHour: number
-): number | null {
-  const round2 = (n: number) => Math.round(n * 100) / 100;
-  const minimum = nextValidBid(kind, reservePerHour, leadingPerHour);
-
-  if (kind === "FORWARD") {
-    // Cheapest bid that takes the lead; never pay more than mandated.
-    const bid = round2(Math.max(minimum, Math.min(proposed, ceiling)));
-    return bid <= ceiling && bidBeats(kind, bid, leadingPerHour) ? bid : null;
-  }
-  // REVERSE: `ceiling` is a floor — the least the seller will accept.
-  const bid = round2(Math.min(minimum, Math.max(proposed, ceiling)));
-  return bid >= ceiling && bidBeats(kind, bid, leadingPerHour) ? bid : null;
-}
 
 export interface CounterBidInput {
   auctionId: string;
