@@ -124,3 +124,51 @@ Both are audit-visible: every accepted/rejected offer traces back to an `AgentDe
 3. `docker compose up -d postgres redis` (or all four services)
 4. `npm run db:generate && npm run db:migrate && npm run db:seed`
 5. `npm run dev` (Turborepo runs `api`, `worker`, `web` dev servers together) — or run `docker compose up` for `api`+`worker` and `npm run dev --workspace=packages/web` separately for fast frontend HMR.
+
+## Languages
+
+Forty locales are registered in `packages/shared/src/locales.ts`, ordered by
+approximate speaker count, each with a BCP-47 tag, its endonym (its name in its own
+script), text direction and translation status.
+
+**Listing a language is not translating into it, and the code refuses to conflate
+the two.** Every locale carries a status — `source` (English), `unreviewed` (a
+translation exists, no speaker has checked it), or `pending` (no strings yet) — and
+`locales.test.ts` asserts that a locale claiming a translation has a complete
+catalogue and that a `pending` one has none. A locale cannot drift into claiming
+something it does not have.
+
+The catalogue is deliberately small: navigation and orientation strings only.
+Machine-generating thousands of strings into forty languages produces text nobody
+involved can read, and a confidently wrong translation of "You pay" is worse than
+English, because a reader seeing English knows they are reading a foreign language.
+Money, fees and binding terms stay in English until a speaker reviews them — a
+mistranslated auction clause is a legal problem, not a UX blemish. Fallback is **per
+key**, so the catalogue can grow one string at a time.
+
+### Which forty
+
+The most-spoken languages **restricted to those with a standard written form and a
+stable BCP-47 tag**, because a marketplace ships text. That restriction is why Wu,
+Yue, Hakka and Min Nan Chinese appear as `zh-Hans`/`zh-Hant` rather than as
+spoken-variety tags, and why Nigerian Pidgin (~120M speakers, no standardised
+orthography) is absent. Their places go to Polish, Ukrainian, Dutch, Malay, Romanian
+and Greek — languages a user realistically wants an interface in.
+
+Speaker figures are approximate, rounded, and used only for ordering. Totals vary by
+tens of millions between sources.
+
+### Right-to-left
+
+Arabic, Persian and Urdu are RTL — roughly 680 million speakers. Support is not
+nominal: 82 physical direction utilities (`ml-`, `text-right`, `right-3`) were
+converted to Tailwind's logical equivalents (`ms-`, `text-end`, `end-3`), and
+`designAudit.test.ts` fails if a physical one reappears. Without that, an RTL layout
+is subtly wrong in dozens of places at once rather than obviously broken in one.
+
+### The known gap
+
+`lang` and `dir` are corrected on hydration, so a non-English reader sees a flash of
+English navigation on first paint. Fixing it needs middleware reading the locale
+cookie and `Accept-Language` before render. It is stated in `useLocale.ts` rather
+than glossed over.

@@ -30,7 +30,7 @@ export function RequireAuth({ children, roles }: { children: React.ReactNode; ro
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }

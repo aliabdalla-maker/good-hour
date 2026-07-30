@@ -54,7 +54,7 @@ function WalletInner() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading your wallet…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading your wallet…</span>
       </div>
     );
   }
@@ -155,12 +155,12 @@ function WalletInner() {
         <div className="overflow-x-auto">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
             <table className="w-full min-w-[34rem] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">When</th>
                   <th className="px-3 py-2">What</th>
                   <th className="px-3 py-2">Bucket</th>
-                  <th className="px-3 py-2 text-right">Hours</th>
+                  <th className="px-3 py-2 text-end">Hours</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +172,7 @@ function WalletInner() {
                       {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
                     <td className="px-3 py-2 text-slate-500">{CATEGORY_LABELS[r.category] ?? r.category}</td>
-                    <td className={`px-3 py-2 text-right font-medium ${r.hours < 0 ? "text-danger-600" : "text-success-700"}`}>
+                    <td className={`px-3 py-2 text-end font-medium ${r.hours < 0 ? "text-danger-600" : "text-success-700"}`}>
                       {r.hours > 0 ? "+" : ""}
                       {r.hours.toFixed(2)}
                     </td>
@@ -338,11 +338,11 @@ function MoneySection() {
         <div className="mt-3 overflow-x-auto">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
             <table className="w-full min-w-[30rem] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">When</th>
                   <th className="px-3 py-2">What</th>
-                  <th className="px-3 py-2 text-right">Amount</th>
+                  <th className="px-3 py-2 text-end">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -353,7 +353,7 @@ function MoneySection() {
                       {WALLET_KIND_LABELS[r.kind] ?? r.kind}
                       {r.counterpartyEmail && <span className="text-slate-500"> · {r.counterpartyEmail}</span>}
                     </td>
-                    <td className={`px-3 py-2 text-right font-medium ${r.amount < 0 ? "text-danger-600" : "text-success-700"}`}>
+                    <td className={`px-3 py-2 text-end font-medium ${r.amount < 0 ? "text-danger-600" : "text-success-700"}`}>
                       {r.amount > 0 ? "+" : ""}
                       {r.amount.toFixed(2)}
                     </td>

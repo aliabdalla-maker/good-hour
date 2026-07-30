@@ -83,7 +83,7 @@ export default function AuctionDetailPage() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }
@@ -143,11 +143,11 @@ export default function AuctionDetailPage() {
           ) : (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-3 py-2">Bidder</th>
-                    <th className="px-3 py-2 text-right">Per hour</th>
-                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-3 py-2 text-end">Per hour</th>
+                    <th className="px-3 py-2 text-end">Total</th>
                     <th className="px-3 py-2">Status</th>
                   </tr>
                 </thead>
@@ -156,12 +156,12 @@ export default function AuctionDetailPage() {
                     <tr key={b.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
                       <td className="px-3 py-2">
                         {b.bidderId === user?.id ? "You" : b.bidderHandle}
-                        {b.isAgentPlaced && <AiBadge label="agent" className="ml-2" />}
+                        {b.isAgentPlaced && <AiBadge label="agent" className="ms-2" />}
                       </td>
-                      <td className="px-3 py-2 text-right font-medium">
+                      <td className="px-3 py-2 text-end font-medium">
                         {a.currency} {b.amountPerHour.toFixed(2)}
                       </td>
-                      <td className="px-3 py-2 text-right text-slate-600">
+                      <td className="px-3 py-2 text-end text-slate-600">
                         {a.currency} {b.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-3 py-2">

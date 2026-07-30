@@ -75,7 +75,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-031 | Motion design for UX polish ("flash animation") | Should | Entrances and state changes are animated; every `animate-*` class used is declared in the theme; `prefers-reduced-motion` is honoured globally | Met | `test:packages/web/lib/designAudit.test.ts` |
 | FR-032 | Full ERP/HR/Finance back office | Won't | — | Not started | Deferred at plan time; a read-only ERP surface stands in |
 | FR-033 | B2G procurement workflows | Won't | — | Not started | Deferred at plan time |
-| FR-034 | Multi-currency and multi-language | Won't | — | Not started | Deferred at plan time; GBP only |
+| FR-034 | Multi-language interface across the 40 most-spoken languages | Should | 40 locales with correct BCP-47 tags, endonyms and text direction; `Accept-Language` honoured with q-weights; RTL layouts mirror; a locale never claims a translation it does not have | Partially met | `test:packages/shared/src/locales.test.ts` `test:packages/web/lib/designAudit.test.ts` — 15 locales translated (all unreviewed), 25 fall back to English per key. **Multi-currency is NOT done: GBP only** |
 
 ## Non-functional requirements
 
@@ -121,10 +121,10 @@ law does not care that they were never in the brief.
 
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
-| Functional | 35 | 28 | 2 | 2 | 3 |
+| Functional | 35 | 28 | 3 | 2 | 2 |
 | Non-functional | 12 | 12 | 0 | 0 | 0 |
 | Compliance | 6 | 5 | 0 | 0 | 1 |
-| **All** | **53** | **45** | **2** | **2** | **4** |
+| **All** | **53** | **45** | **3** | **2** | **3** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

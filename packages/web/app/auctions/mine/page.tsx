@@ -29,7 +29,7 @@ function MyAuctionsInner() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }
@@ -72,11 +72,11 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
       <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
           <table className="w-full min-w-[36rem] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">Auction</th>
                 <th className="px-3 py-2">Direction</th>
-                <th className="px-3 py-2 text-right">Leading</th>
+                <th className="px-3 py-2 text-end">Leading</th>
                 <th className="px-3 py-2">Closes</th>
                 <th className="px-3 py-2">Status</th>
               </tr>
@@ -91,9 +91,9 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
                     <span className="block text-xs text-slate-500">{a.hours}h · {a.category}</span>
                   </td>
                   <td className="px-3 py-2 text-slate-600">{AUCTION_KIND_LABELS[a.kind]}</td>
-                  <td className="px-3 py-2 text-right font-medium">
+                  <td className="px-3 py-2 text-end font-medium">
                     {a.leadingPerHour === null ? "—" : `${a.currency} ${a.leadingPerHour.toFixed(2)}/hr`}
-                    {a.viewerIsLeading && <span className="ml-1 text-xs text-success-700">✓</span>}
+                    {a.viewerIsLeading && <span className="ms-1 text-xs text-success-700">✓</span>}
                   </td>
                   <td className="px-3 py-2 text-slate-600">{timeLeft(a.closesAt)}</td>
                   <td className="px-3 py-2">

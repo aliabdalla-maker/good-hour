@@ -75,7 +75,7 @@ function NewAuctionInner() {
               <button
                 key={k}
                 onClick={() => setKind(k)}
-                className={`rounded-lg border p-3 text-left text-sm transition ${
+                className={`rounded-lg border p-3 text-start text-sm transition ${
                   kind === k
                     ? "border-brand-600 bg-brand-50 text-brand-900"
                     : "border-slate-200 text-slate-600 hover:border-slate-300"

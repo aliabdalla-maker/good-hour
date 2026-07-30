@@ -42,7 +42,7 @@ function OrdersInner() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading orders…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading orders…</span>
       </div>
     );
   }
@@ -111,13 +111,13 @@ function OrderTable({
       <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
           <table className="w-full min-w-[38rem] text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">When</th>
                 <th className="px-3 py-2">Listing</th>
                 <th className="px-3 py-2">{mode === "buyer" ? "Seller" : "Buyer"}</th>
-                <th className="px-3 py-2 text-right">Qty</th>
-                <th className="px-3 py-2 text-right">{mode === "buyer" ? "You paid" : "You received"}</th>
+                <th className="px-3 py-2 text-end">Qty</th>
+                <th className="px-3 py-2 text-end">{mode === "buyer" ? "You paid" : "You received"}</th>
                 <th className="px-3 py-2">Status</th>
               </tr>
             </thead>
@@ -131,8 +131,8 @@ function OrderTable({
                     </Link>
                   </td>
                   <td className="px-3 py-2 text-slate-500">{o.counterpartyEmail}</td>
-                  <td className="px-3 py-2 text-right">{o.quantity}</td>
-                  <td className="px-3 py-2 text-right font-medium">
+                  <td className="px-3 py-2 text-end">{o.quantity}</td>
+                  <td className="px-3 py-2 text-end font-medium">
                     {o.currency}{" "}
                     {(mode === "buyer" ? o.buyerTotal : o.sellerProceeds).toFixed(2)}
                   </td>

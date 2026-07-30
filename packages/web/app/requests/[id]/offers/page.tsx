@@ -99,12 +99,12 @@ function BookingRequestOffersPageInner() {
               <p className="font-medium">
                 {offer.offeredRate}/hr · total {offer.offeredTotal}
                 {offer.status === "RECOMMENDED" && (
-                  <span className="ml-2 rounded bg-success-100 px-2 py-0.5 text-xs text-success-800">
+                  <span className="ms-2 rounded bg-success-100 px-2 py-0.5 text-xs text-success-800">
                     AI-recommended
                   </span>
                 )}
                 {offer.isAgentSubmitted && (
-                  <span className="ml-2 rounded bg-info-100 px-2 py-0.5 text-xs text-info-800">
+                  <span className="ms-2 rounded bg-info-100 px-2 py-0.5 text-xs text-info-800">
                     Auto-submitted by supplier agent
                   </span>
                 )}

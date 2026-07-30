@@ -6,6 +6,8 @@ export * from "./redemption";
 export * from "./transferPolicy";
 export * from "./terms";
 export * from "./slo";
+export * from "./locales";
+export * from "./messages";
 export * from "./schemas/auth";
 export * from "./schemas/listings";
 export * from "./schemas/search";

@@ -20,7 +20,7 @@ function CancelButton({ bookingId }: { bookingId: string }) {
     onError: (e) => setErr(e instanceof ApiError ? e.message : "Could not cancel"),
   });
   return (
-    <span className="ml-3">
+    <span className="ms-3">
       <button
         onClick={() => {
           if (window.confirm("Cancel this booking? If it was paid, you'll be refunded to your card.")) {
@@ -33,7 +33,7 @@ function CancelButton({ bookingId }: { bookingId: string }) {
       >
         {cancel.isPending ? "Cancelling…" : "Cancel booking"}
       </button>
-      {err && <span className="ml-2 text-xs text-danger-600">{err}</span>}
+      {err && <span className="ms-2 text-xs text-danger-600">{err}</span>}
     </span>
   );
 }
@@ -70,7 +70,7 @@ function TravellerDashboardPageInner() {
                   {booking.isAgentAccepted && " · auto-accepted by your agent"}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <p className="font-semibold">
                   {booking.currency} {booking.totalAmount.toFixed(2)}
                 </p>

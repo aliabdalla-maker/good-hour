@@ -53,12 +53,12 @@ function CrmInner() {
         {/* Contact table */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">Customer</th>
                 <th className="px-3 py-2">Stage</th>
-                <th className="px-3 py-2 text-right">Bookings</th>
-                <th className="px-3 py-2 text-right">Spent</th>
+                <th className="px-3 py-2 text-end">Bookings</th>
+                <th className="px-3 py-2 text-end">Spent</th>
               </tr>
             </thead>
             <tbody>
@@ -75,8 +75,8 @@ function CrmInner() {
                   <td className="px-3 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STAGE_TONE[c.stage]}`}>{c.stage}</span>
                   </td>
-                  <td className="px-3 py-2 text-right">{c.bookingsCount}</td>
-                  <td className="px-3 py-2 text-right font-medium">£{c.totalSpent.toFixed(0)}</td>
+                  <td className="px-3 py-2 text-end">{c.bookingsCount}</td>
+                  <td className="px-3 py-2 text-end font-medium">£{c.totalSpent.toFixed(0)}</td>
                 </tr>
               ))}
               {contacts.length === 0 && (
@@ -187,7 +187,7 @@ function ContactDetail({ userId }: { userId: string }) {
           {data.notes.map((n) => (
             <div key={n.id} className="rounded-lg bg-slate-50 px-2 py-1.5 text-sm text-slate-700">
               {n.body}
-              <span className="ml-1 text-xs text-slate-500">· {new Date(n.createdAt).toLocaleDateString()}</span>
+              <span className="ms-1 text-xs text-slate-500">· {new Date(n.createdAt).toLocaleDateString()}</span>
             </div>
           ))}
           {data.notes.length === 0 && <p className="text-xs text-slate-500">No notes yet.</p>}
@@ -197,10 +197,10 @@ function ContactDetail({ userId }: { userId: string }) {
       {/* Timeline */}
       <div>
         <p className="mb-1 text-xs font-medium text-slate-500">Activity</p>
-        <ol className="space-y-2 border-l border-slate-200 pl-3">
+        <ol className="space-y-2 border-s border-slate-200 ps-3">
           {data.timeline.map((t, i) => (
             <li key={i} className="relative text-sm">
-              <span className="absolute -left-[17px] top-1.5 h-2 w-2 rounded-full bg-brand-400" />
+              <span className="absolute -start-[17px] top-1.5 h-2 w-2 rounded-full bg-brand-400" />
               <p className="text-slate-700">{t.label}</p>
               {t.detail && <p className="text-xs text-slate-500">{t.detail}</p>}
               <p className="text-xs text-slate-300">{new Date(t.at).toLocaleString()}</p>

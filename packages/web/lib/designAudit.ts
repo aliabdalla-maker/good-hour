@@ -145,3 +145,45 @@ export function renderTokenTable(palette: Palette, background = "#ffffff"): stri
     ...rows,
   ].join("\n");
 }
+
+/**
+ * Finds physical direction utilities that break a right-to-left layout.
+ *
+ * Arabic, Persian and Urdu are three of the forty locales the platform lists —
+ * roughly 680 million speakers between them. `ml-2` stays on the left when the page
+ * mirrors, so a right-to-left layout built from physical utilities comes out subtly
+ * wrong everywhere at once: gaps on the wrong side, badges off the wrong edge,
+ * numbers aligned away from their column.
+ *
+ * Tailwind's logical equivalents (`ms`/`me`, `ps`/`pe`, `start`/`end`,
+ * `text-start`/`text-end`, `border-s`/`border-e`) flip with `dir`, so using them is
+ * the entire fix. This check is what stops the physical ones creeping back — 82 of
+ * them had already accumulated before any RTL locale existed.
+ */
+const PHYSICAL_DIRECTION = [
+  [/\bml-(?=[0-9[])/g, "ms-"],
+  [/\bmr-(?=[0-9[])/g, "me-"],
+  [/\bpl-(?=[0-9[])/g, "ps-"],
+  [/\bpr-(?=[0-9[])/g, "pe-"],
+  [/\bleft-(?=[0-9[])/g, "start-"],
+  [/\bright-(?=[0-9[])/g, "end-"],
+  [/\btext-left\b/g, "text-start"],
+  [/\btext-right\b/g, "text-end"],
+  [/\bborder-l\b/g, "border-s"],
+  [/\bborder-r\b/g, "border-e"],
+  [/\brounded-l\b/g, "rounded-s"],
+  [/\brounded-r\b/g, "rounded-e"],
+] as const;
+
+export function findPhysicalDirectionClasses(file: string, source: string): ClassFinding[] {
+  const findings: ClassFinding[] = [];
+  for (const [pattern, logical] of PHYSICAL_DIRECTION) {
+    for (const m of source.matchAll(pattern)) {
+      findings.push({
+        file,
+        detail: `"${m[0]}" is a physical direction utility — use "${logical}" so it mirrors in RTL`,
+      });
+    }
+  }
+  return findings;
+}

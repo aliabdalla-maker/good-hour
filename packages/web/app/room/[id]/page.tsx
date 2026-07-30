@@ -138,7 +138,7 @@ function RoomDetail() {
         <ListingImage src={room.imageUrl} alt={room.name} seed={room.name} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
         {room.imageIsAiGenerated && (
-          <span className="absolute right-3 top-3 rounded-md bg-ai-600/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+          <span className="absolute end-3 top-3 rounded-md bg-ai-600/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
             ✨ AI-generated photo — may not depict the actual space
           </span>
         )}

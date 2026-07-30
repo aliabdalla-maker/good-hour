@@ -431,12 +431,14 @@ export const REQUIREMENTS: RequirementRow[] = [
   {
     "id": "FR-034",
     "family": "FR",
-    "requirement": "Multi-currency and multi-language",
-    "priority": "Won't",
-    "criterion": "—",
-    "verdict": "Not started",
-    "evidenceKinds": [],
-    "evidence": "Deferred at plan time; GBP only"
+    "requirement": "Multi-language interface across the 40 most-spoken languages",
+    "priority": "Should",
+    "criterion": "40 locales with correct BCP-47 tags, endonyms and text direction; `Accept-Language` honoured with q-weights; RTL layouts mirror; a locale never claims a translation it does not have",
+    "verdict": "Partially met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/shared/src/locales.test.ts test:packages/web/lib/designAudit.test.ts — 15 locales translated (all unreviewed), 25 fall back to English per key. **Multi-currency is NOT done: GBP only"
   },
   {
     "id": "NFR-001",

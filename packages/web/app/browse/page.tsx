@@ -58,8 +58,8 @@ export default function BrowsePage() {
             backgroundSize: "200% 200%",
           }}
         >
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-10 h-48 w-48 animate-float rounded-full bg-white/10 blur-2xl" style={{ animationDelay: "2s" }} />
+          <div className="pointer-events-none absolute -end-16 -top-16 h-56 w-56 animate-float rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-20 start-10 h-48 w-48 animate-float rounded-full bg-white/10 blur-2xl" style={{ animationDelay: "2s" }} />
           <div className="relative max-w-2xl">
             <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
               Rooms · Cars · Travel — by the hour
@@ -165,11 +165,11 @@ export default function BrowsePage() {
                           className="transition-transform duration-500 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" />
-                        <span className="absolute bottom-2 left-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                        <span className="absolute bottom-2 start-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                           {room.currency} {room.baseHourlyRate.toFixed(2)}{meta.unit}
                         </span>
                         {room.imageIsAiGenerated && (
-                          <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                          <span className="absolute end-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                             ✨ AI-generated photo
                           </span>
                         )}

@@ -60,7 +60,7 @@ function ErpGate() {
   if (isLoading || !user) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }
@@ -79,7 +79,7 @@ function ErpInner() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }
@@ -367,17 +367,17 @@ function ErpInner() {
           <h2 className="font-display mb-3 text-lg font-semibold">Booking pipeline</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2 text-right">Count</th>
+                  <th className="px-3 py-2 text-end">Count</th>
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(bookingPipeline).map(([status, count]) => (
                   <tr key={status} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
                     <td className="px-3 py-2">{PIPELINE_LABELS[status] ?? status}</td>
-                    <td className="px-3 py-2 text-right font-medium">
+                    <td className="px-3 py-2 text-end font-medium">
                       <AnimatedNumber value={count} />
                     </td>
                   </tr>
@@ -399,12 +399,12 @@ function ErpInner() {
           <h2 className="font-display mb-3 text-lg font-semibold">Agent ops</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2">Agent</th>
-                  <th className="px-3 py-2 text-right">Decisions</th>
-                  <th className="px-3 py-2 text-right">Accepted</th>
-                  <th className="px-3 py-2 text-right">Avg latency</th>
+                  <th className="px-3 py-2 text-end">Decisions</th>
+                  <th className="px-3 py-2 text-end">Accepted</th>
+                  <th className="px-3 py-2 text-end">Avg latency</th>
                 </tr>
               </thead>
               <tbody>
@@ -413,11 +413,11 @@ function ErpInner() {
                     <td className="px-3 py-2">
                       <AiBadge label={a.agentType} className="bg-ai-50" />
                     </td>
-                    <td className="px-3 py-2 text-right"><AnimatedNumber value={a.totalDecisions} /></td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-2 text-end"><AnimatedNumber value={a.totalDecisions} /></td>
+                    <td className="px-3 py-2 text-end">
                       {a.accepted + a.rejected > 0 ? `${a.accepted}/${a.accepted + a.rejected}` : "—"}
                     </td>
-                    <td className="px-3 py-2 text-right">{a.avgLatencyMs}ms</td>
+                    <td className="px-3 py-2 text-end">{a.avgLatencyMs}ms</td>
                   </tr>
                 ))}
                 {agentOps.length === 0 && (
@@ -438,13 +438,13 @@ function ErpInner() {
         <h2 className="font-display mb-3 text-lg font-semibold">Supplier payout ledger</h2>
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 text-start text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-3 py-2">Supplier</th>
                 <th className="px-3 py-2">Verification</th>
-                <th className="px-3 py-2 text-right">Listings</th>
-                <th className="px-3 py-2 text-right">Confirmed bookings</th>
-                <th className="px-3 py-2 text-right">Total payout</th>
+                <th className="px-3 py-2 text-end">Listings</th>
+                <th className="px-3 py-2 text-end">Confirmed bookings</th>
+                <th className="px-3 py-2 text-end">Total payout</th>
               </tr>
             </thead>
             <tbody>
@@ -452,9 +452,9 @@ function ErpInner() {
                 <tr key={s.supplierId} className="border-t border-slate-100 transition-colors hover:bg-slate-50">
                   <td className="px-3 py-2 font-medium text-slate-800">{s.email}</td>
                   <td className="px-3 py-2 text-slate-500">{s.verificationStatus.toLowerCase()}</td>
-                  <td className="px-3 py-2 text-right"><AnimatedNumber value={s.propertyCount} /></td>
-                  <td className="px-3 py-2 text-right"><AnimatedNumber value={s.confirmedBookings} /></td>
-                  <td className="px-3 py-2 text-right font-medium">{fmt(s.totalPayout)}</td>
+                  <td className="px-3 py-2 text-end"><AnimatedNumber value={s.propertyCount} /></td>
+                  <td className="px-3 py-2 text-end"><AnimatedNumber value={s.confirmedBookings} /></td>
+                  <td className="px-3 py-2 text-end font-medium">{fmt(s.totalPayout)}</td>
                 </tr>
               ))}
               {supplierLedger.length === 0 && (

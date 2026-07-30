@@ -8,6 +8,7 @@ import {
   PALETTE_FAMILIES,
   auditPalette,
   findHoverEqualsBase,
+  findPhysicalDirectionClasses,
   findRawDefaultFamilies,
   findUndersizedType,
   parsePalette,
@@ -181,4 +182,27 @@ test("FR-031: entrances are animated and reduced-motion is honoured globally", (
   const undeclared = [...used].filter((name) => !declared.has(name));
   assert.deepEqual(undeclared, [], `animate-* classes with no theme entry: ${undeclared.join(", ")}`);
   assert.ok(used.size >= 3, `only ${used.size} animations in use — entrances are not animated`);
+});
+
+test("findPhysicalDirectionClasses flags physical utilities and spares logical ones", () => {
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="ml-2"`).length, 1);
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="text-right"`).length, 1);
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="right-3 top-3"`).length, 1);
+  // Logical equivalents pass.
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="ms-2 text-end end-3"`).length, 0);
+  // And the near-misses that a sloppier pattern would flag.
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="rounded-lg leading-6"`).length, 0);
+  assert.equal(findPhysicalDirectionClasses("f.tsx", `className="min-h-6 max-w-lg"`).length, 0);
+});
+
+test("no physical direction utilities remain, so RTL layouts mirror correctly", () => {
+  // Arabic, Persian and Urdu are in the locale registry. Without this, their layouts
+  // are wrong in dozens of small places at once rather than obviously broken in one.
+  const findings = sourceFiles().flatMap(({ file, source }) =>
+    findPhysicalDirectionClasses(file, source)
+  );
+  assert.deepEqual(
+    findings.slice(0, 12).map((f) => `${f.file}: ${f.detail}`),
+    []
+  );
 });

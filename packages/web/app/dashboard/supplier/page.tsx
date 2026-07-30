@@ -128,7 +128,7 @@ function EarningsSection() {
                   <p className="font-medium">{b.itemName}</p>
                   <p className="text-xs text-slate-500">{new Date(b.startsAt).toLocaleString()}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="font-semibold text-slate-800">{money(b.payout)}</p>
                   <span className="text-xs uppercase tracking-wide text-slate-500">{b.status}</span>
                 </div>

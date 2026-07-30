@@ -68,7 +68,7 @@ export default function MarketListingPage() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function MarketListingPage() {
         <div className="animate-fade-in-up overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
           <div className="relative h-64">
             <ListingImage src={listing.imageUrl} alt={listing.title} seed={listing.title} />
-            <span className="absolute right-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-slate-700 backdrop-blur">
+            <span className="absolute end-3 top-3 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-slate-700 backdrop-blur">
               {listing.kind === "PRODUCT" ? "📦 Product" : "🧑‍💼 Service"}
             </span>
           </div>

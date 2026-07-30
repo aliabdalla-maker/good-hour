@@ -52,7 +52,7 @@ function ReceiptPageInner() {
             <p className="text-lg font-semibold">Good Hours</p>
             <p className="text-xs text-slate-500">goodhour.shop</p>
           </div>
-          <div className="text-right text-xs text-slate-500">
+          <div className="text-end text-xs text-slate-500">
             <p>Receipt #{r.bookingId.slice(-8).toUpperCase()}</p>
             <p>{new Date(r.issuedAt).toLocaleDateString()}</p>
             <p className="mt-1 inline-block rounded bg-slate-100 px-2 py-0.5 uppercase tracking-wide">{r.status}</p>

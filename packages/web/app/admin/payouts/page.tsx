@@ -78,7 +78,7 @@ function PayoutQueue() {
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-24 text-slate-500">
-        <Spinner /> <span className="ml-2 text-sm">Loading the queue…</span>
+        <Spinner /> <span className="ms-2 text-sm">Loading the queue…</span>
       </div>
     );
   }
@@ -111,7 +111,7 @@ function PayoutQueue() {
             <p className="text-xs uppercase tracking-wide text-slate-500">Owed to sellers</p>
             <p className="text-2xl font-semibold">
               {data![0]!.currency} {total.toFixed(2)}
-              <span className="ml-2 text-sm font-normal text-slate-500">
+              <span className="ms-2 text-sm font-normal text-slate-500">
                 across {data!.length} request{data!.length === 1 ? "" : "s"}
               </span>
             </p>

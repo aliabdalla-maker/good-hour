@@ -110,11 +110,11 @@ export default function SearchPage() {
                     className="transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-transparent" />
-                  <span className="absolute bottom-2 left-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                  <span className="absolute bottom-2 start-2 rounded-md bg-black/40 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                     {room.city}
                   </span>
                   {room.imageIsAiGenerated && (
-                    <span className="absolute right-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                    <span className="absolute end-2 top-2 rounded-md bg-ai-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
                       ✨ AI-generated photo
                     </span>
                   )}
