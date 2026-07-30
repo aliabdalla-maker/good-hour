@@ -56,7 +56,7 @@ function TravellerDashboardPageInner() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">My bookings</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">My bookings</h1>
       <div className="flex flex-col gap-3">
         {bookings?.map((booking) => (
           <div key={booking.id} className="rounded border border-slate-200 bg-white p-4">

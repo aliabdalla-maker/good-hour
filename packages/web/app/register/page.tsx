@@ -31,7 +31,7 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-sm">
-      <h1 className="mb-6 text-2xl font-semibold">Create an account</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">Create an account</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">
           Email

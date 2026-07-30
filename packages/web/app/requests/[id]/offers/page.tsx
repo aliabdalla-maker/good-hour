@@ -83,7 +83,7 @@ function BookingRequestOffersPageInner() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Request in {bookingRequest.locationQuery}</h1>
+      <h1 className="font-display text-2xl font-semibold">Request in {bookingRequest.locationQuery}</h1>
       <p className="text-slate-500">
         {new Date(bookingRequest.desiredStart).toLocaleString()} - {new Date(bookingRequest.desiredEnd).toLocaleString()} ·{" "}
         Status: {bookingRequest.status}
@@ -91,7 +91,7 @@ function BookingRequestOffersPageInner() {
 
       {error && <p className="mt-2 text-sm text-danger-600">{error}</p>}
 
-      <h2 className="mb-2 mt-6 font-medium">Offers</h2>
+      <h2 className="font-display mb-2 mt-6 font-medium">Offers</h2>
       <div className="flex flex-col gap-3">
         {offers?.map((offer) => (
           <div key={offer.id} className="flex items-center justify-between rounded border border-slate-200 bg-white p-4">
@@ -133,7 +133,7 @@ function BookingRequestOffersPageInner() {
 
       {user?.role === "SUPPLIER" && bookingRequest.status === "OPEN" && myProperties && (
         <div className="mt-8 rounded border border-slate-200 bg-white p-4">
-          <h2 className="mb-3 font-medium">Submit an offer from one of your rooms</h2>
+          <h2 className="font-display mb-3 font-medium">Submit an offer from one of your rooms</h2>
           <div className="flex flex-col gap-2">
             {myProperties.flatMap((property) =>
               property.rooms.map((room) => (

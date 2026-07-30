@@ -57,13 +57,13 @@ function SupplierDashboardPageInner() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Supplier dashboard</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">Supplier dashboard</h1>
 
       <EarningsSection />
       <VerificationCard />
 
       <form onSubmit={handleCreateProperty} className="mb-8 grid grid-cols-1 gap-3 rounded border border-slate-200 bg-white p-4 sm:grid-cols-3">
-        <h2 className="col-span-full font-medium">Add a property</h2>
+        <h2 className="font-display col-span-full font-medium">Add a property</h2>
         <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required className="rounded border border-slate-300 px-2 py-1" />
         <input placeholder="Address" value={addressLine} onChange={(e) => setAddressLine(e.target.value)} required className="rounded border border-slate-300 px-2 py-1" />
         <input placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} required className="rounded border border-slate-300 px-2 py-1" />
@@ -77,7 +77,7 @@ function SupplierDashboardPageInner() {
 
       {error && <p className="mb-4 text-sm text-danger-600">{error}</p>}
 
-      <h2 className="mb-3 font-medium">Your properties</h2>
+      <h2 className="font-display mb-3 font-medium">Your properties</h2>
       <div className="flex flex-col gap-4">
         {properties?.map((property) => (
           <PropertyCard key={property.id} property={property} onRoomAdded={() => queryClient.invalidateQueries({ queryKey: ["my-properties"] })} />
@@ -120,7 +120,7 @@ function EarningsSection() {
 
       {data.bookings.length > 0 && (
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
-          <h2 className="mb-1 font-medium">Recent bookings</h2>
+          <h2 className="font-display mb-1 font-medium">Recent bookings</h2>
           <div className="flex flex-col divide-y divide-slate-100">
             {data.bookings.slice(0, 8).map((b) => (
               <div key={b.id} className="flex items-center justify-between py-2 text-sm">
@@ -173,7 +173,7 @@ function VerificationCard() {
   return (
     <div className="mb-8 rounded border border-slate-200 bg-white p-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">Host verification</h2>
+        <h2 className="font-display font-medium">Host verification</h2>
         <Badge tone={tone}>{status?.status ?? "…"}</Badge>
       </div>
       {status?.status === "VERIFIED" && (

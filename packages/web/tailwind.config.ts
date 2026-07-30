@@ -65,6 +65,28 @@ export default {
         },
       },
       fontFamily: {
+        /**
+         * Display face for headings and the wordmark.
+         *
+         * The last remaining design weakness worth naming: everything was set in one
+         * system sans, so a palette generated in OKLCH and enforced by tests still
+         * read as well-executed default Tailwind. For a product asking strangers to
+         * trust it with money, looking indistinguishable from a template is a
+         * commercial problem, not a taste one.
+         *
+         * A system SERIF stack rather than a webfont, deliberately: it needs no
+         * network request, cannot flash unstyled text, adds nothing to the bundle, and
+         * cannot fail a build the way a font CDN can. It buys most of the identity for
+         * none of the risk. A licensed display face is the upgrade path.
+         */
+        display: [
+          "ui-serif",
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "Times",
+          "serif",
+        ],
         sans: [
           "ui-sans-serif",
           "system-ui",

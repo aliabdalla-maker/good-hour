@@ -37,7 +37,7 @@ function ReceiptPageInner() {
   return (
     <div className="mx-auto max-w-lg">
       <div className="mb-4 flex items-center justify-between print:hidden">
-        <h1 className="text-2xl font-semibold">Receipt</h1>
+        <h1 className="font-display text-2xl font-semibold">Receipt</h1>
         <button
           onClick={() => window.print()}
           className="rounded bg-slate-900 px-4 py-2 text-sm text-white"

@@ -58,14 +58,14 @@ function NotificationsPageInner() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Notifications</h1>
+        <h1 className="font-display text-2xl font-semibold">Notifications</h1>
         <button onClick={markAllRead} className="text-sm text-slate-500 hover:text-slate-900">
           Mark all read
         </button>
       </div>
 
       <section className="mb-6 rounded border border-slate-200 bg-white p-4">
-        <h2 className="mb-2 font-medium">Communication preferences</h2>
+        <h2 className="font-display mb-2 font-medium">Communication preferences</h2>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"

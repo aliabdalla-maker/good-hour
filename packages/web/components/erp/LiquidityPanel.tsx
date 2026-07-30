@@ -85,7 +85,7 @@ export function LiquidityPanel({ liquidity }: { liquidity: ErpLiquidity }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className={`inline-block h-2 w-2 rounded-full ${tone.dot}`} aria-hidden="true" />
-            <h2 className="font-semibold text-slate-900">Liquidity</h2>
+            <h2 className="font-display font-semibold text-slate-900">Liquidity</h2>
             <span className="rounded-md bg-white/70 px-2 py-0.5 text-xs font-medium text-slate-600">
               FR-030 · Must
             </span>

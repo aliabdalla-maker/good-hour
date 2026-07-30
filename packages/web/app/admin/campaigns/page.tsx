@@ -51,7 +51,7 @@ function CampaignsPageInner() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-1 text-2xl font-semibold">Marketing campaigns</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">Marketing campaigns</h1>
       <p className="mb-6 text-sm text-slate-500">
         Announce platform services to travellers and suppliers. Emails only go to users who have opted in;
         everyone still sees it in their in-app feed. (Admin only.)

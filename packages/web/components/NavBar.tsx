@@ -91,13 +91,14 @@ export function NavBar() {
     ...(user?.email === ERP_ADMIN_EMAIL
       ? [
           { href: "/admin/erp", label: "ERP" },
+          { href: "/admin/payouts", label: "Payouts" },
           { href: "/admin/readiness", label: "Readiness" },
         ]
       : []),
   ];
 
   const Wordmark = (
-    <Link href="/browse" className="flex items-center gap-2 text-lg font-semibold text-slate-900" onClick={() => setOpen(false)}>
+    <Link href="/browse" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight text-slate-900" onClick={() => setOpen(false)}>
       <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm text-white">◷</span>
       Good Hours
     </Link>

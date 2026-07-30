@@ -41,7 +41,7 @@ function MyAuctionsInner() {
       <Link href="/auctions" className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800">
         ← Hourly auctions
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold">My auctions</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">My auctions</h1>
 
       {nothing && (
         <EmptyState
@@ -66,7 +66,7 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
   if (rows.length === 0) return null;
   return (
     <section className="mb-8 animate-fade-in-up">
-      <h2 className="mb-3 text-lg font-semibold">
+      <h2 className="font-display mb-3 text-lg font-semibold">
         {title} ({rows.length})
       </h2>
       <div className="overflow-x-auto">

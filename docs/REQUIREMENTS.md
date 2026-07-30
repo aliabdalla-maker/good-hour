@@ -71,6 +71,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | FR-028 | Multi-channel notifications: in-app, email, SMS | Should | Each channel delivers, or records that it only logged — a row must never claim a delivery that did not happen | Met | `test:packages/api/src/test/terms.itest.ts` |
 | FR-029 | B2B accounts and corporate rates | Should | The corporate rate follows the account, not the request: a business account gets it unasked and a consumer cannot claim it | Met | `test:packages/api/src/test/terms.itest.ts` — closed a client-supplied `isCorporateRate` |
 | **FR-030** | **Supply liquidity: real sellers with real inventory** | **Must** | **At least N sellers have listed inventory, and one real order has completed** | **Not met** | **`prod:` 0 marketplace listings, 0 auction bids, 0 orders** |
+| FR-035 | Seller payouts: money can leave the platform | Must | A seller withdraws wallet balance; the money is reserved at request time, cannot be double-spent or double-refunded, and the operator can mark it sent or failed | Met | `test:packages/api/src/test/payouts.itest.ts` — MANUAL method only; Stripe Connect is a named enum value with no code path |
 | FR-031 | Motion design for UX polish ("flash animation") | Should | Entrances and state changes are animated; every `animate-*` class used is declared in the theme; `prefers-reduced-motion` is honoured globally | Met | `test:packages/web/lib/designAudit.test.ts` |
 | FR-032 | Full ERP/HR/Finance back office | Won't | — | Not started | Deferred at plan time; a read-only ERP surface stands in |
 | FR-033 | B2G procurement workflows | Won't | — | Not started | Deferred at plan time |
@@ -102,7 +103,7 @@ law does not care that they were never in the brief.
 
 | ID | Requirement | Priority | Acceptance criterion | Verdict | Evidence |
 | --- | --- | --- | --- | --- | --- |
-| CR-001 | E-money / safeguarding assessment | Must | A written determination of whether custodial wallet balances plus transferable credits constitute stored value or e-money, with safeguarding if so | Not started | Wallet holds balances and credits transfer between users; no assessment exists |
+| CR-001 | E-money / safeguarding assessment | Must | A written determination of whether custodial wallet balances plus transferable credits constitute stored value or e-money, with safeguarding if so | Not started | No determination exists and no code can produce one. `WALLET_FLOAT_ENABLED=false` now switches the float off so bookings can go live on direct card while it is outstanding |
 | CR-002 | KYC / AML on user-to-user value transfer | Must | Transfers above a threshold require a VERIFIED sender; rolling 24h hour and count caps are enforced off the ledger | Met | `test:packages/api/src/test/compliance.itest.ts` — thresholds are engineering defaults, not a legal determination |
 | CR-003 | Consumer rights on auctions and cancellations | Must | Auction finality is stated in versioned terms, and every bid records acceptance of the version it was made under | Met | `test:packages/api/src/test/terms.itest.ts` |
 | CR-004 | Autonomous agent mandate and liability | Must | Consent recorded per mandate against a version; terms state the user is bound; a participant can raise a dispute answered from the decision log | Met | `test:packages/api/src/test/terms.itest.ts` |
@@ -120,10 +121,10 @@ law does not care that they were never in the brief.
 
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
-| Functional | 34 | 27 | 2 | 2 | 3 |
+| Functional | 35 | 28 | 2 | 2 | 3 |
 | Non-functional | 12 | 12 | 0 | 0 | 0 |
 | Compliance | 6 | 5 | 0 | 0 | 1 |
-| **All** | **52** | **44** | **2** | **2** | **4** |
+| **All** | **53** | **45** | **2** | **2** | **4** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

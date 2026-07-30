@@ -59,7 +59,7 @@ function NewBookingRequestPageInner() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="mb-2 text-2xl font-semibold">Ask suppliers to compete for your booking</h1>
+      <h1 className="font-display mb-2 text-2xl font-semibold">Ask suppliers to compete for your booking</h1>
       <p className="mb-6 text-sm text-slate-500">
         Post what you need; suppliers (and their auto-offer agents) submit competing offers, and our negotiation
         agent recommends the best match.

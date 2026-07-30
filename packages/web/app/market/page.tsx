@@ -44,7 +44,7 @@ export default function MarketPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Products &amp; services</h1>
+          <h1 className="font-display text-2xl font-semibold">Products &amp; services</h1>
           <p className="mt-1 text-sm text-slate-500">
             Buy goods, or hire professional time by the hour, day or project. Pay from your wallet or by card.
           </p>
@@ -203,7 +203,7 @@ export default function MarketPage() {
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-medium leading-tight">{l.title}</h2>
+                    <h2 className="font-display font-medium leading-tight">{l.title}</h2>
                     {l.sellerVerified && <Badge tone="success">✓</Badge>}
                   </div>
                   <p className="mt-1 text-xs capitalize text-slate-500">{l.category}</p>

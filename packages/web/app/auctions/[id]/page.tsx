@@ -124,7 +124,7 @@ export default function AuctionDetailPage() {
             </Badge>
             <span className="text-sm font-medium text-slate-700">{timeLeft(a.closesAt)}</span>
           </div>
-          <h1 className="text-2xl font-semibold">{a.title}</h1>
+          <h1 className="font-display text-2xl font-semibold">{a.title}</h1>
           <p className="mt-1 text-sm capitalize text-slate-500">
             {a.category} · {a.hours} hours · opened by {a.createdByHandle}
           </p>
@@ -137,7 +137,7 @@ export default function AuctionDetailPage() {
         </Card>
 
         <section className="mt-6">
-          <h2 className="mb-3 text-lg font-semibold">Bid history</h2>
+          <h2 className="font-display mb-3 text-lg font-semibold">Bid history</h2>
           {data.bids.length === 0 ? (
             <p className="text-sm text-slate-500">No bids yet.</p>
           ) : (

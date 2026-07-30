@@ -91,6 +91,15 @@ export async function startCreditPurchase(
   userId: string,
   input: PurchaseCreditsInput
 ): Promise<CreditPurchaseQuote> {
+  // Same containment as wallet top-ups: buying credits creates a redeemable float.
+  if (!featureFlags.walletFloatEnabled) {
+    throw new AppError(
+      403,
+      "Buying time credits is currently unavailable — book and pay by card instead",
+      "WALLET_FLOAT_DISABLED"
+    );
+  }
+
   const unitValue = await marketUnitValue(input.category);
   const fee = computeTradeFee(round2(unitValue * input.hours));
 

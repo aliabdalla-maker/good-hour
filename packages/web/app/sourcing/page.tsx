@@ -141,7 +141,7 @@ function SourcingPageInner() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-1 text-2xl font-semibold">Import & source listings</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">Import & source listings</h1>
       <p className="mb-6 text-sm text-slate-500">
         Bring in listings from your own website or a partner feed. Everything imported lands as a{" "}
         <strong>draft</strong> that you review and publish — nothing goes live automatically.
@@ -149,7 +149,7 @@ function SourcingPageInner() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <section className="rounded border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 font-medium">Import from a URL</h2>
+          <h2 className="font-display mb-2 font-medium">Import from a URL</h2>
           <p className="mb-2 text-xs text-slate-500">Paste a link to your own listing page. We&apos;ll parse what we can.</p>
           <div className="flex gap-2">
             <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…" className="flex-1 rounded border border-slate-300 px-2 py-1 text-sm" />
@@ -158,14 +158,14 @@ function SourcingPageInner() {
         </section>
 
         <section className="rounded border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 font-medium">Bulk import from a feed</h2>
+          <h2 className="font-display mb-2 font-medium">Bulk import from a feed</h2>
           <p className="mb-2 text-xs text-slate-500">Paste a JSON array of listings (partner feed / CSV export).</p>
           <textarea value={feed} onChange={(e) => setFeed(e.target.value)} rows={4} className="w-full rounded border border-slate-300 px-2 py-1 font-mono text-xs" />
           <button onClick={importFeed} className="mt-2 rounded bg-slate-900 px-3 py-1 text-sm text-white">Import feed</button>
         </section>
 
         <section className="rounded border border-slate-200 bg-white p-4 sm:col-span-2">
-          <h2 className="mb-2 font-medium">Import from Smoobu</h2>
+          <h2 className="font-display mb-2 font-medium">Import from Smoobu</h2>
           <p className="mb-2 text-xs text-slate-500">
             Pulls in every property from the connected Smoobu account. Rates are per-stay in Smoobu, not hourly —
             review and set the real hourly rate before publishing.
@@ -179,7 +179,7 @@ function SourcingPageInner() {
       {note && <p className="mt-3 text-sm text-success-600">{note}</p>}
       {error && <p className="mt-3 text-sm text-danger-600">{error}</p>}
 
-      <h2 className="mb-2 mt-8 text-lg font-medium">Draft listings ({drafts?.length ?? 0})</h2>
+      <h2 className="font-display mb-2 mt-8 text-lg font-medium">Draft listings ({drafts?.length ?? 0})</h2>
       <div className="flex flex-col gap-3">
         {drafts?.map((d) => (
           <div key={d.id} className="rounded border border-slate-200 bg-white p-4">

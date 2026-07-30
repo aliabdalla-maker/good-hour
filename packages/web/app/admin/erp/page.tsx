@@ -105,7 +105,7 @@ function ErpInner() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold">ERP</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">ERP</h1>
       <p className="mb-6 text-sm text-slate-500">
         Owner-only financial and operations overview — not visible to any other account.
       </p>
@@ -153,7 +153,7 @@ function ErpInner() {
         style={{ animationDelay: "180ms" }}
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Time-credit economy</h2>
+          <h2 className="font-display text-lg font-semibold">Time-credit economy</h2>
           <span className="rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700">
             Outstanding hours are a liability, not revenue
           </span>
@@ -186,7 +186,7 @@ function ErpInner() {
         style={{ animationDelay: "190ms" }}
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold">Hourly auctions</h2>
+          <h2 className="font-display text-lg font-semibold">Hourly auctions</h2>
           <Link href="/auctions" className="text-xs font-medium text-brand-600 hover:underline">
             Open auctions &rarr;
           </Link>
@@ -236,7 +236,7 @@ function ErpInner() {
           style={{ animationDelay: "200ms" }}
         >
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Products &amp; services</h2>
+            <h2 className="font-display text-lg font-semibold">Products &amp; services</h2>
             <Link href="/market" className="text-xs font-medium text-brand-600 hover:underline">
               Open marketplace →
             </Link>
@@ -280,7 +280,7 @@ function ErpInner() {
           style={{ animationDelay: "260ms" }}
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">Money wallets</h2>
+            <h2 className="font-display text-lg font-semibold">Money wallets</h2>
             <span className="rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700">
               Held balances are a liability
             </span>
@@ -306,7 +306,7 @@ function ErpInner() {
       <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">CRM contacts</h2>
+            <h2 className="font-display text-lg font-semibold">CRM contacts</h2>
             <Link href="/admin/crm" className="text-xs font-medium text-brand-600 hover:underline">
               Open CRM →
             </Link>
@@ -325,7 +325,7 @@ function ErpInner() {
 
         <section className="animate-fade-in-up rounded-2xl border border-slate-200 bg-white p-4 shadow-card transition-shadow hover:shadow-card-hover" style={{ animationDelay: "60ms" }}>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Bidding pipeline</h2>
+            <h2 className="font-display text-lg font-semibold">Bidding pipeline</h2>
             <Link href="/requests/new" className="text-xs font-medium text-brand-600 hover:underline">
               New request →
             </Link>
@@ -364,7 +364,7 @@ function ErpInner() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Booking pipeline */}
         <section className="animate-fade-in-up">
-          <h2 className="mb-3 text-lg font-semibold">Booking pipeline</h2>
+          <h2 className="font-display mb-3 text-lg font-semibold">Booking pipeline</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -396,7 +396,7 @@ function ErpInner() {
 
         {/* Agent ops */}
         <section className="animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-          <h2 className="mb-3 text-lg font-semibold">Agent ops</h2>
+          <h2 className="font-display mb-3 text-lg font-semibold">Agent ops</h2>
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -435,7 +435,7 @@ function ErpInner() {
 
       {/* Supplier payout ledger */}
       <section className="mt-8 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
-        <h2 className="mb-3 text-lg font-semibold">Supplier payout ledger</h2>
+        <h2 className="font-display mb-3 text-lg font-semibold">Supplier payout ledger</h2>
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition-shadow hover:shadow-card-hover">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">

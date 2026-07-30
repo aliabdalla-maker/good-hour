@@ -112,7 +112,7 @@ function Readiness() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold">Readiness</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">Readiness</h1>
       <p className="mb-6 text-sm text-slate-500">
         Every requirement stated for this platform, with a testable acceptance criterion and how it
         is actually known. Generated from{" "}

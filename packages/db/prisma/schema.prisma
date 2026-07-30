@@ -188,6 +188,7 @@ model User {
   ordersAsSeller  MarketplaceOrder[]    @relation("MarketplaceOrdersAsSeller")
   auctionsCreated MarketplaceAuction[]  @relation("AuctionsCreated")
   auctionBids     AuctionBid[]          @relation("AuctionBids")
+  payouts         Payout[]
 
   @@map("users")
 }
@@ -688,6 +689,10 @@ model WalletLedgerEntry {
   topUpId            String?
   topUp              WalletTopUp? @relation(fields: [topUpId], references: [id])
   relatedOrderId     String?
+  /// Set on the PAYOUT debit and on its reversal, so a payout's money movement is
+  /// reconcilable from either direction.
+  payoutId           String?
+  payout             Payout?      @relation(fields: [payoutId], references: [id])
   counterpartyUserId String?
   /// Groups the buyer debit, seller credit and fee rows of one order.
   correlationId      String?
@@ -939,4 +944,63 @@ model AuctionBid {
   @@index([auctionId, amountPerHour])
   @@index([bidderId, createdAt])
   @@map("auction_bids")
+}
+
+enum PayoutStatus {
+  /// Requested by the seller; funds already debited and reserved.
+  REQUESTED
+  /// Operator has sent the money out of band.
+  PAID
+  /// Could not be sent; the debit is reversed and the balance restored.
+  FAILED
+  /// Withdrawn by the seller before it was paid; debit reversed.
+  CANCELLED
+}
+
+enum PayoutMethod {
+  /// Operator sends the money by bank transfer and marks it paid.
+  /// The only method implemented today -- see docs/OPERATIONS.md.
+  MANUAL
+  /// Reserved for Stripe Connect transfers. NOT implemented; a payout is never
+  /// created with this method by any code path.
+  STRIPE_CONNECT
+}
+
+/// A seller's request to withdraw wallet balance.
+///
+/// Exists because sellers could accrue SALE_PROCEEDS with no way to take the money
+/// out: PAYOUT was in the ledger enum but no code path ever wrote one. A marketplace
+/// that can take money and not return it is not finished, and it cannot honestly
+/// recruit a seller.
+///
+/// The wallet is debited at REQUEST time, not at payment time. Otherwise a seller
+/// could request a payout and then spend the same balance before the operator sent
+/// it -- the platform would be out of pocket with a correct-looking ledger.
+model Payout {
+  id       String       @id @default(cuid())
+  userId   String
+  user     User         @relation(fields: [userId], references: [id])
+  amount   Decimal      @db.Decimal(12, 2)
+  currency String       @default("GBP")
+  status   PayoutStatus @default(REQUESTED)
+  method   PayoutMethod @default(MANUAL)
+
+  /// Free-text destination the seller supplied (e.g. sort code / account name).
+  /// Deliberately not validated or parsed: the operator reads it, and storing it as
+  /// structured bank data would make this table a far more attractive target.
+  destinationNote String?
+  /// Set by the operator when marking it paid or failed.
+  operatorNote String?
+  /// Reserved for a Stripe Connect transfer id. Always null today.
+  stripeTransferId String? @unique
+
+  requestedAt DateTime  @default(now())
+  processedAt DateTime?
+  processedBy String?
+
+  ledgerEntries WalletLedgerEntry[]
+
+  @@index([status, requestedAt])
+  @@index([userId, requestedAt])
+  @@map("payouts")
 }

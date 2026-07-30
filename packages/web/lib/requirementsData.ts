@@ -385,6 +385,18 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidence": "prod: 0 marketplace listings, 0 auction bids, 0 orders"
   },
   {
+    "id": "FR-035",
+    "family": "FR",
+    "requirement": "Seller payouts: money can leave the platform",
+    "priority": "Must",
+    "criterion": "A seller withdraws wallet balance; the money is reserved at request time, cannot be double-spent or double-refunded, and the operator can mark it sent or failed",
+    "verdict": "Met",
+    "evidenceKinds": [
+      "test"
+    ],
+    "evidence": "test:packages/api/src/test/payouts.itest.ts — MANUAL method only; Stripe Connect is a named enum value with no code path"
+  },
+  {
     "id": "FR-031",
     "family": "FR",
     "requirement": "Motion design for UX polish (\"flash animation\")",
@@ -583,7 +595,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "criterion": "A written determination of whether custodial wallet balances plus transferable credits constitute stored value or e-money, with safeguarding if so",
     "verdict": "Not started",
     "evidenceKinds": [],
-    "evidence": "Wallet holds balances and credits transfer between users; no assessment exists"
+    "evidence": "No determination exists and no code can produce one. WALLET_FLOAT_ENABLED=false now switches the float off so bookings can go live on direct card while it is outstanding"
   },
   {
     "id": "CR-002",

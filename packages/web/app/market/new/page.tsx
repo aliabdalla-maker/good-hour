@@ -60,7 +60,7 @@ function NewListingInner() {
         <Link href="/market" className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800">
           ← Products &amp; services
         </Link>
-        <h1 className="mb-1 text-2xl font-semibold">Sell a product or service</h1>
+        <h1 className="font-display mb-1 text-2xl font-semibold">Sell a product or service</h1>
         <p className="mb-6 text-sm text-slate-500">
           List a physical or digital product, or sell your professional time by the hour, day or project.
         </p>

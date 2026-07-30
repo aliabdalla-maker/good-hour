@@ -44,7 +44,7 @@ export default function SearchPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Book instantly by city &amp; time</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">Book instantly by city &amp; time</h1>
       <form onSubmit={handleSubmit} className="mb-8 grid grid-cols-1 gap-4 rounded border border-slate-200 bg-white p-4 sm:grid-cols-5">
         <label className="flex flex-col gap-1 text-sm">
           City
@@ -120,7 +120,7 @@ export default function SearchPage() {
                   )}
                 </div>
                 <div className="p-4">
-                  <h2 className="text-lg font-medium">{room.roomName}</h2>
+                  <h2 className="font-display text-lg font-medium">{room.roomName}</h2>
                   <p className="text-sm text-slate-500">{room.propertyName}</p>
                   <p className="mt-2 text-sm text-slate-600">
                     Capacity: {room.capacity} · {room.hours}h

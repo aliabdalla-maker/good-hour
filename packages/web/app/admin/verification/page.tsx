@@ -29,7 +29,7 @@ function AdminVerificationPageInner() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-semibold">Host verification queue</h1>
+      <h1 className="font-display mb-2 text-2xl font-semibold">Host verification queue</h1>
       <p className="mb-6 text-sm text-slate-500">Approve hosts to give their listings a Verified badge.</p>
       {isPending && <p className="text-slate-500">Loading…</p>}
       <div className="flex flex-col gap-3">

@@ -109,7 +109,7 @@ export default function MarketListingPage() {
           </div>
           <div className="p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <h1 className="text-2xl font-semibold">{listing.title}</h1>
+              <h1 className="font-display text-2xl font-semibold">{listing.title}</h1>
               {listing.sellerVerified && <Badge tone="success">✓ Verified seller</Badge>}
             </div>
             <p className="mt-1 text-sm capitalize text-slate-500">{listing.category}</p>

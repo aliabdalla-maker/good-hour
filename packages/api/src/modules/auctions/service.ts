@@ -22,6 +22,7 @@ import { auctionCloseQueue } from "../../queue/queues";
 import { applyWalletWrites, getMoneyBalance } from "../wallet";
 import { decideCounterBid } from "./agent";
 import { recordBidTermsAcceptance } from "./compliance";
+import { recordAgentOutcome } from "../agent-log";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -436,6 +437,34 @@ export async function closeAuction(auctionId: string): Promise<void> {
     type: "auction.closed",
     payload: { auctionId, winningBidId: winner.id },
   });
+
+  // Close the agent feedback loop.
+  //
+  // 167 agent decisions had been logged and almost none had a recorded outcome, so
+  // every accuracy figure on the ERP page rested on a handful of rows. The outcome is
+  // derivable here and nowhere else: an agent-placed bid that won is a decision the
+  // market accepted, and one that lost is a decision it rejected. Recording it turns
+  // "the agents decide" into "the agents decide well, or they don't".
+  //
+  // Best-effort: a failure to annotate history must never fail closing an auction.
+  try {
+    const decisions = await prisma.agentDecisionLog.findMany({
+      where: { agentType: "AUCTION", subjectId: auctionId, outcomeAccepted: null },
+      select: { id: true, parsedDecision: true },
+    });
+    for (const d of decisions) {
+      const chosen = (d.parsedDecision as { amountPerHour?: number } | null)?.amountPerHour;
+      // The agent's decision was accepted if the winning bid is the one it placed.
+      const accepted =
+        winner.isAgentPlaced && chosen !== undefined && Number(winner.amountPerHour) === chosen;
+      await recordAgentOutcome(d.id, accepted);
+    }
+  } catch (error) {
+    console.warn(
+      `[auction] could not record agent outcomes for ${auctionId}:`,
+      error instanceof Error ? error.message : error
+    );
+  }
 
   // Full autonomy is opt-in per bid. Without it the winner must confirm, so no
   // money moves on an agent's judgement alone unless that was chosen.

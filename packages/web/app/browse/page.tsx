@@ -64,7 +64,7 @@ export default function BrowsePage() {
             <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
               Rooms · Cars · Travel — by the hour
             </span>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
               Book the good hours. Skip the rest.
             </h1>
             <p className="mt-2 max-w-lg text-white/85">
@@ -76,14 +76,14 @@ export default function BrowsePage() {
                 href="/search"
                 className="group rounded-xl bg-white/95 p-4 text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
               >
-                <h2 className="font-semibold">⚡ Book instantly</h2>
+                <h2 className="font-display font-semibold">⚡ Book instantly</h2>
                 <p className="mt-1 text-sm text-slate-500">Search by city &amp; time, pay now, get a guaranteed slot.</p>
               </Link>
               <Link
                 href="/requests/new"
                 className="group rounded-xl bg-white/10 p-4 text-white ring-1 ring-white/25 backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/15"
               >
-                <h2 className="flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-xs">AI reverse auction</span></h2>
+                <h2 className="font-display flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-xs">AI reverse auction</span></h2>
                 <p className="mt-1 text-sm text-white/80">Post what you need — hosts &amp; their agents bid for you.</p>
               </Link>
             </div>
@@ -143,7 +143,7 @@ export default function BrowsePage() {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500">{property.city}, {property.country}</p>
-                  <h2 className="text-lg font-semibold">{property.name}</h2>
+                  <h2 className="font-display text-lg font-semibold">{property.name}</h2>
                   <p className="text-sm text-slate-500">{property.addressLine}</p>
                 </div>
                 <div className="flex items-center gap-2">

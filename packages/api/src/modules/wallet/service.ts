@@ -62,6 +62,17 @@ export async function getMoneyWallet(userId: string): Promise<MoneyWallet> {
  * transaction, and to buying time credits (which is buying an asset).
  */
 export async function startTopUp(userId: string, input: TopUpWalletInput): Promise<WalletTopUpQuote> {
+  // CR-001 containment. With the float switched off the platform still takes card
+  // payments straight through to a booking; what it stops doing is holding a
+  // spendable balance, which is the part that makes the e-money question hard.
+  if (!featureFlags.walletFloatEnabled) {
+    throw new AppError(
+      403,
+      "Wallet top-ups are currently unavailable — pay for bookings by card instead",
+      "WALLET_FLOAT_DISABLED"
+    );
+  }
+
   const topUp = await prisma.walletTopUp.create({
     data: { userId, amount: input.amount, currency: "GBP" },
   });

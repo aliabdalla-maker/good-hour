@@ -31,7 +31,7 @@ function CrmInner() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold">CRM</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">CRM</h1>
       <p className="mb-6 text-sm text-slate-500">Every customer — travellers and hosts — with lifecycle, activity and notes.</p>
 
       {/* Stage summary */}

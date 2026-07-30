@@ -72,7 +72,7 @@ function OrdersInner() {
       <Link href="/market" className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800">
         ← Products &amp; services
       </Link>
-      <h1 className="mb-6 text-2xl font-semibold">My orders</h1>
+      <h1 className="font-display mb-6 text-2xl font-semibold">My orders</h1>
 
       {data.length === 0 && (
         <EmptyState
@@ -105,7 +105,7 @@ function OrderTable({
   if (rows.length === 0) return null;
   return (
     <section className="mb-8 animate-fade-in-up">
-      <h2 className="mb-3 text-lg font-semibold">
+      <h2 className="font-display mb-3 text-lg font-semibold">
         {title} ({rows.length})
       </h2>
       <div className="overflow-x-auto">

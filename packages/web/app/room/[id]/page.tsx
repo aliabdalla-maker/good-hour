@@ -148,7 +148,7 @@ function RoomDetail() {
               {room.property.city}, {room.property.country}
             </p>
           )}
-          <h1 className="text-2xl font-semibold drop-shadow sm:text-3xl">{room.name}</h1>
+          <h1 className="font-display text-2xl font-semibold drop-shadow sm:text-3xl">{room.name}</h1>
         </div>
       </div>
 
@@ -201,7 +201,7 @@ function RoomDetail() {
         </div>
 
         <Card className="h-fit p-5">
-          <h2 className="mb-4 text-lg font-semibold">Book this room</h2>
+          <h2 className="font-display mb-4 text-lg font-semibold">Book this room</h2>
           {prefilledStart && prefilledEnd && (
             <p className="mb-3 rounded-lg bg-ai-50 p-2 text-xs text-ai-800">
               ✦ Times pre-filled from your assistant chat — review and confirm below.
@@ -255,7 +255,7 @@ function RoomDetail() {
 
       {/* Reviews */}
       <section className="mt-10">
-        <h2 className="mb-4 text-lg font-semibold">
+        <h2 className="font-display mb-4 text-lg font-semibold">
           Reviews{room.reviewCount > 0 ? ` (${room.reviewCount})` : ""}
         </h2>
         {reviews && reviews.length > 0 ? (

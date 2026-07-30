@@ -277,6 +277,9 @@ export async function teardown(f: Fixture): Promise<void> {
     await prisma.marketplaceOrder.deleteMany({ where: { buyerId: { in: f.userIds } } });
     await prisma.walletLedgerEntry.deleteMany({ where: { userId: { in: f.userIds } } });
     await prisma.walletTopUp.deleteMany({ where: { userId: { in: f.userIds } } });
+    // Payouts are referenced BY wallet entries and reference the user, so they go
+    // after the entries and before the user.
+    await prisma.payout.deleteMany({ where: { userId: { in: f.userIds } } });
     await prisma.creditLedgerEntry.deleteMany({ where: { userId: { in: f.userIds } } });
     await prisma.user.deleteMany({ where: { id: { in: f.userIds } } });
   }

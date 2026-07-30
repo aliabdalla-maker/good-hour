@@ -335,3 +335,48 @@ order, a payment, a listing", the loop is not a check. Read state, compare
 versions, or exercise a path where success is provably unreachable.
 
 See `docs/VERIFICATION.md` for the other rules this class of failure produced.
+
+## Paying a seller (manual payouts)
+
+Payouts are made by hand. There is no Stripe Connect integration — `STRIPE_CONNECT`
+is a named enum value with no code path behind it, deliberately, because an
+integration that cannot be exercised should not be claimed.
+
+**The money has already left the seller's spendable balance** when the request
+appears. The queue at `/admin/payouts` is therefore a list of what the platform owes
+right now, not a list of proposals.
+
+1. Open `/admin/payouts` (owner-operator account only). Oldest first is the fair
+   order to pay.
+2. Make the bank transfer for the amount shown, to the destination the seller gave.
+   If no destination was given, contact them — the screen says so rather than letting
+   you send money nowhere.
+3. **Mark as sent.** This records the transfer; it does not make one. It is
+   idempotent, so a double-click cannot pay twice.
+4. If the transfer bounces, use **Couldn't send** and give a reason. The reason is
+   required because the seller sees it, and their money returns to their balance
+   either way — an unexplained reversal is worse than the failure.
+
+### Reconciliation
+
+Both halves of a payout carry `payoutId` on the wallet ledger, so a debit and its
+reversal pair up without parsing note text:
+
+```sql
+SELECT kind, amount, note, "createdAt" FROM wallet_ledger_entries WHERE "payoutId" = '<id>' ORDER BY "createdAt";
+```
+
+Outstanding liability — money reserved but not yet sent — is on the ERP page and in
+`getPayoutLiability()`.
+
+## Switching off the wallet float
+
+`WALLET_FLOAT_ENABLED=false` blocks wallet top-ups and time-credit purchases while
+leaving direct card payment for bookings working. It exists so that going live does
+not have to wait on the e-money determination in `docs/COMPLIANCE.md` (CR-001): the
+float and the transferable credits are what make that question hard.
+
+It defaults to **enabled**, because flipping it by default would silently remove
+working features from a live site. Set it explicitly in Render when you decide to.
+Existing balances are unaffected — they remain spendable and withdrawable; only new
+money entering the float is blocked.

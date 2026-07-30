@@ -42,7 +42,7 @@ export default function AuctionsPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Hourly auctions</h1>
+          <h1 className="font-display text-2xl font-semibold">Hourly auctions</h1>
           <p className="mt-1 text-sm text-slate-500">
             Bid on products and services by the hour. Set a ceiling and your AI agent bids for you.
           </p>
@@ -131,7 +131,7 @@ export default function AuctionsPage() {
                   </Badge>
                   <span className="shrink-0 text-xs font-medium text-slate-600">{timeLeft(a.closesAt)}</span>
                 </div>
-                <h2 className="font-medium leading-tight">{a.title}</h2>
+                <h2 className="font-display font-medium leading-tight">{a.title}</h2>
                 <p className="mt-1 text-xs capitalize text-slate-500">
                   {a.category} · {a.hours}h
                 </p>

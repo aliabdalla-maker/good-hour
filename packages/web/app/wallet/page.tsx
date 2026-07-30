@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreditWallet, ExchangeQuote, ListingCategory, MoneyWallet } from "@gihtcx/shared";
 import { LISTING_CATEGORIES, MIN_TOPUP_AMOUNT , BUYER_FEE_LABEL } from "@gihtcx/shared";
 import { api, ApiError } from "../../lib/apiClient";
+import { WithdrawPanel } from "../../components/wallet/WithdrawPanel";
 import { StripePaymentForm } from "../../components/StripePaymentForm";
 import { RequireAuth } from "../../components/RequireAuth";
 import { Card } from "../../components/ui/Card";
@@ -77,14 +78,14 @@ function WalletInner() {
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-semibold">Wallet</h1>
+      <h1 className="font-display mb-1 text-2xl font-semibold">Wallet</h1>
       <p className="mb-6 text-sm text-slate-500">
         Money and hours in one place. Every hour you buy is yours to keep, spend, gift or exchange —
         not tied to a single booking.
       </p>
 
       <MoneySection />
-      <h2 className="mb-3 mt-10 text-lg font-semibold">Time credits</h2>
+      <h2 className="font-display mb-3 mt-10 text-lg font-semibold">Time credits</h2>
 
       {/* Headline balances */}
       <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -113,7 +114,7 @@ function WalletInner() {
 
       {/* Per-category balances */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold">Your hours</h2>
+        <h2 className="font-display mb-3 text-lg font-semibold">Your hours</h2>
         {data.balances.length === 0 ? (
           <EmptyState
             icon="⏳"
@@ -150,7 +151,7 @@ function WalletInner() {
 
       {/* Ledger */}
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">History</h2>
+        <h2 className="font-display mb-3 text-lg font-semibold">History</h2>
         <div className="overflow-x-auto">
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
             <table className="w-full min-w-[34rem] text-sm">
@@ -244,7 +245,7 @@ function MoneySection() {
 
   return (
     <section>
-      <h2 className="mb-3 text-lg font-semibold">Money</h2>
+      <h2 className="font-display mb-3 text-lg font-semibold">Money</h2>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div
           className="animate-fade-in-up rounded-2xl p-4 text-white shadow-card lg:col-span-2"
@@ -363,6 +364,11 @@ function MoneySection() {
           </div>
         </div>
       )}
+
+      {/* Withdrawals. Sellers could previously accrue proceeds with no way out. */}
+      <div className="mt-4">
+        <WithdrawPanel balance={data?.balance ?? 0} currency={currency} />
+      </div>
     </section>
   );
 }

@@ -64,7 +64,7 @@ function NewAuctionInner() {
         <Link href="/auctions" className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800">
           ← Hourly auctions
         </Link>
-        <h1 className="mb-1 text-2xl font-semibold">Start an hourly auction</h1>
+        <h1 className="font-display mb-1 text-2xl font-semibold">Start an hourly auction</h1>
         <p className="mb-6 text-sm text-slate-500">
           Auction hours of a product or service — either let buyers bid the price up, or let sellers bid it down.
         </p>

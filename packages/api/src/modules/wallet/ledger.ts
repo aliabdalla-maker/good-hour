@@ -29,6 +29,8 @@ export interface WalletWrite {
   currency?: string;
   topUpId?: string;
   relatedOrderId?: string;
+  /** Set on a payout debit and on its reversal, so the pair is reconcilable. */
+  payoutId?: string;
   counterpartyUserId?: string;
   correlationId?: string;
   note?: string;
@@ -42,6 +44,7 @@ function toData(w: WalletWrite) {
     currency: w.currency ?? "GBP",
     topUpId: w.topUpId,
     relatedOrderId: w.relatedOrderId,
+    payoutId: w.payoutId,
     counterpartyUserId: w.counterpartyUserId,
     correlationId: w.correlationId,
     note: w.note,

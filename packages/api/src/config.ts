@@ -61,6 +61,20 @@ function loadConfig() {
 export const config = loadConfig();
 
 export const featureFlags = {
+  /**
+   * Whether the platform holds a spendable float — wallet top-ups and time-credit
+   * purchases — as opposed to passing card payments straight through to a booking.
+   *
+   * This is the switch that decouples going live from CR-001. The float and the
+   * transferable credits are what make the e-money question hard; direct card ->
+   * booking is much closer to payment pass-through. Setting
+   * WALLET_FLOAT_ENABLED=false lets you take real bookings while that determination
+   * is still outstanding.
+   *
+   * Defaults to ENABLED, deliberately: flipping it by default would silently remove
+   * working features from a live site. Set it explicitly when you decide to.
+   */
+  walletFloatEnabled: process.env.WALLET_FLOAT_ENABLED !== "false",
   aiPricingEnabled: Boolean(config.OPENAI_API_KEY),
   aiNegotiationEnabled: Boolean(config.OPENAI_API_KEY),
   paymentsEnabled: Boolean(config.STRIPE_SECRET_KEY),
