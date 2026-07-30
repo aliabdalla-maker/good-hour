@@ -140,3 +140,32 @@ told to try again because someone else transacted at the same moment. P2034 is
 precisely the error Postgres raises to mean "retry me", so `applyWalletWrites`
 now retries up to three times with jittered backoff. Idempotency is
 index-enforced, so a retry can never double-apply.
+
+## The CI gate has been dead since 2026-07-29
+
+Worth recording, because it changes how every "gate green" claim in this repo's
+recent history should be read.
+
+GitHub Actions has refused to start **every** job since 2026-07-29 01:29 with:
+
+> The job was not started because recent account payments have failed or your
+> spending limit needs to be increased.
+
+69 runs succeeded before that point; nothing has run since. Every commit after it
+was verified **locally only** — `npm run lint`, `turbo typecheck`, `npm test`,
+`npm run test:integration` and `turbo build`, all on a developer machine. Those runs
+were real and were reported as such, but the repository's own gate did not
+independently confirm any of them, and a local run cannot catch "works on my machine"
+by construction.
+
+The `uptime` workflow was added *after* the block began, so it has **never executed
+once**. NFR-005 was downgraded from Met to Partially met on that basis: the readiness
+endpoint is live and tested, the alerting half is unproven.
+
+It also fires on a `*/10` cron, which means roughly 144 failed runs per day and a
+matching volume of notification email. Disabling the schedule until billing is
+restored stops the noise without losing the workflow.
+
+**Resolution is a billing action on the account owner's part** — GitHub Settings →
+Billing & plans. No code change fixes it, and no amount of local green substitutes
+for it.

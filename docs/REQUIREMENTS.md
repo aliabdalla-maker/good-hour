@@ -85,7 +85,7 @@ only by `code:` is the exact conflation this register exists to prevent, and
 | NFR-002 | Agent calls are bounded, and no model output can spend beyond mandate or need | Must | Every agent call has a timeout and a deterministic fallback; no model output can bid past the mandate, nor pay more than the minimum needed to lead | Met | `test:packages/shared/src/proxyContest.test.ts` |
 | NFR-003 | Money correctness: no negative balances, no double-apply | Must | Ledger writes run at Serializable with the assertion after the insert; idempotency is enforced by unique index, not by a check; a serialisation conflict is retried rather than shown to the user | Met | `test:packages/api/src/test/concurrency.itest.ts` |
 | NFR-004 | No privilege escalation, IDOR or PII leak | Must | Self-registration cannot mint an ADMIN; booking reads are ownership-checked; seller emails are masked | Met | `code:packages/shared/src/schemas/auth.ts` `manual:` |
-| NFR-005 | Availability target with alerting | Must | A stated SLO; a deep readiness check covering dependencies; an external probe that opens an issue on repeated failure and closes it on recovery | Met | `code:.github/workflows/uptime.yml` `test:packages/api/src/test/slo.itest.ts` `prod:` /health/ready live |
+| NFR-005 | Availability target with alerting | Must | A stated SLO; a deep readiness check covering dependencies; an external probe that opens an issue on repeated failure and closes it on recovery | Partially met | SLO stated and `/health/ready` live and tested (`test:packages/api/src/test/slo.itest.ts`, `prod:` returns db+redis timings). **The probe has never executed**: GitHub Actions has refused every job since 2026-07-29 01:29 on a billing block, so the alerting half of this criterion is unproven |
 | NFR-006 | Latency budgets for pages and API | Should | Stated p95 budgets per operation class, asserted against a real database on every integration run | Met | `test:packages/api/src/test/slo.itest.ts` — point 150ms, list 600ms, write 900ms |
 | NFR-007 | Correctness under concurrency | Must | Simultaneous orders and spends cannot oversell or double-spend, proven against a real Postgres | Met | `test:packages/api/src/test/concurrency.itest.ts` — 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up |
 | NFR-008 | Observability: structured logs and error tracking | Should | Every log line carries a request id that can span services, and credentials are redacted before they reach any aggregator | Met | `code:packages/api/src/app.ts` `manual:` verified — no aggregator is provisioned yet |
@@ -122,9 +122,9 @@ law does not care that they were never in the brief.
 | Family | Total | Met | Partially met | Not met | Not started |
 | --- | --- | --- | --- | --- | --- |
 | Functional | 35 | 28 | 3 | 2 | 2 |
-| Non-functional | 12 | 12 | 0 | 0 | 0 |
+| Non-functional | 12 | 11 | 1 | 0 | 0 |
 | Compliance | 6 | 5 | 0 | 0 | 1 |
-| **All** | **53** | **45** | **3** | **2** | **3** |
+| **All** | **53** | **44** | **4** | **2** | **3** |
 
 **The one that matters most is FR-030**, and it is `Not met`. Every other row
 describes capability. That row describes whether anyone is using it.

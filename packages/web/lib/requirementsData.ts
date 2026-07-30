@@ -495,13 +495,12 @@ export const REQUIREMENTS: RequirementRow[] = [
     "requirement": "Availability target with alerting",
     "priority": "Must",
     "criterion": "A stated SLO; a deep readiness check covering dependencies; an external probe that opens an issue on repeated failure and closes it on recovery",
-    "verdict": "Met",
+    "verdict": "Partially met",
     "evidenceKinds": [
       "test",
-      "prod",
-      "code"
+      "prod"
     ],
-    "evidence": "code:.github/workflows/uptime.yml test:packages/api/src/test/slo.itest.ts prod: /health/ready live"
+    "evidence": "SLO stated and /health/ready live and tested (test:packages/api/src/test/slo.itest.ts, prod: returns db+redis timings). **The probe has never executed**: GitHub Actions has refused every job since 2026-07-29 01:29 on a billing block, so the alerting half of this criterion is unproven"
   },
   {
     "id": "NFR-006",
