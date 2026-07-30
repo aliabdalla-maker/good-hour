@@ -9,7 +9,7 @@ import type {
   MarketplaceSearchQuery,
   MarketplaceSearchResult,
 } from "@gihtcx/shared";
-import { computeTradeFee } from "@gihtcx/shared";
+import { computeTradeFee, inferDomain } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { AppError } from "../../plugins/errorHandler";
 import { domainEvents } from "../../events/bus";
@@ -32,9 +32,16 @@ function sellerHandleFrom(email: string): string {
   return `${local.slice(0, 3)}…${local.slice(-2)}`;
 }
 
+/**
+ * `openAuctionListingIds` is passed in rather than queried here so a list of N
+ * listings costs one auction query instead of N. Defaulting to an empty set means a
+ * caller that forgets it renders "no open auction" — understating a capability, which
+ * is the safe direction to be wrong in.
+ */
 function toPublic(
   l: NonNullable<ListingRow>,
-  seller: { email: string; verificationStatus: string }
+  seller: { email: string; verificationStatus: string },
+  openAuctionListingIds: ReadonlySet<string> = new Set()
 ): MarketplaceListingPublic {
   return {
     id: l.id,
@@ -51,8 +58,20 @@ function toPublic(
     imageUrl: l.imageUrl,
     stock: l.stock,
     status: l.status,
+    hasOpenAuction: openAuctionListingIds.has(l.id),
+    domain: inferDomain(l.category),
     createdAt: l.createdAt.toISOString(),
   };
+}
+
+/** One query for a whole page of listings, rather than one per listing. */
+async function openAuctionListingIds(listingIds: string[]): Promise<Set<string>> {
+  if (listingIds.length === 0) return new Set();
+  const rows = await prisma.marketplaceAuction.findMany({
+    where: { listingId: { in: listingIds }, status: "OPEN" },
+    select: { listingId: true },
+  });
+  return new Set(rows.map((r) => r.listingId).filter((id): id is string => Boolean(id)));
 }
 
 export async function createListing(sellerId: string, input: CreateMarketplaceListingInput) {
@@ -127,8 +146,10 @@ export async function searchListings(query: MarketplaceSearchQuery): Promise<Mar
     }),
   ]);
 
+  const auctioned = await openAuctionListingIds(rows.map((r) => r.id));
+
   return {
-    listings: rows.map((r) => toPublic(r, r.seller)),
+    listings: rows.map((r) => toPublic(r, r.seller, auctioned)),
     total,
     categories: allActive.map((c) => c.category).sort(),
   };
@@ -140,7 +161,7 @@ export async function getListing(id: string): Promise<MarketplaceListingPublic> 
     include: { seller: { select: { email: true, verificationStatus: true } } },
   });
   if (!listing) throw new AppError(404, "Listing not found", "NOT_FOUND");
-  return toPublic(listing, listing.seller);
+  return toPublic(listing, listing.seller, await openAuctionListingIds([listing.id]));
 }
 
 export async function listMyListings(sellerId: string): Promise<MarketplaceListingPublic[]> {
@@ -149,7 +170,8 @@ export async function listMyListings(sellerId: string): Promise<MarketplaceListi
     orderBy: { createdAt: "desc" },
     include: { seller: { select: { email: true, verificationStatus: true } } },
   });
-  return rows.map((r) => toPublic(r, r.seller));
+  const auctioned = await openAuctionListingIds(rows.map((r) => r.id));
+  return rows.map((r) => toPublic(r, r.seller, auctioned));
 }
 
 /** Fee preview so the buyer sees the 1% before committing, not after. */

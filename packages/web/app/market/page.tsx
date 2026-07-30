@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { MarketplaceKind, MarketplaceSearchResult } from "@gihtcx/shared";
+import {
+  FacetFilter,
+  TradingModelBadges,
+  applyFacetFilter,
+  facetsForListings,
+  modelsForListing,
+  type FacetFilterState,
+} from "../../components/market/TradingModels";
 import { PRICING_UNIT_LABELS } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
 import { InteractiveCard } from "../../components/ui/Card";
@@ -28,6 +36,7 @@ export default function MarketPage() {
   const [kind, setKind] = useState<KindFilter>("ALL");
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc">("newest");
+  const [facetFilter, setFacetFilter] = useState<FacetFilterState>({ domains: [], models: [] });
 
   const { data, isPending, error, refetch } = useQuery<MarketplaceSearchResult>({
     queryKey: ["market-search", submittedQ, kind, category, sort],
@@ -39,6 +48,17 @@ export default function MarketPage() {
       return api.get<MarketplaceSearchResult>(`/market/search?${params.toString()}`);
     },
   });
+
+  // Facets over the whole returned catalogue; the visible list is that set narrowed by
+  // the chips. Filtering client-side keeps the counts honest — a server-side filter
+  // would return only matches and every other chip would read zero.
+  const listings = data?.listings ?? [];
+  const facets = useMemo(
+    () => facetsForListings(listings, applyFacetFilter(listings, facetFilter).length),
+    [listings, facetFilter]
+  );
+  const visible = useMemo(() => applyFacetFilter(listings, facetFilter), [listings, facetFilter]);
+  const modelForCard = modelsForListing;
 
   return (
     <div>
@@ -178,9 +198,13 @@ export default function MarketPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+        {/* Faceted filter, ported from ACE. Counts are of the whole catalogue. */}
+        <FacetFilter facets={facets} value={facetFilter} onChange={setFacetFilter} />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!isPending &&
-          data?.listings.map((l, idx) => (
+          visible.map((l, idx) => (
             <Link key={l.id} href={`/market/${l.id}`}>
               <InteractiveCard
                 className="group h-full animate-fade-in-up overflow-hidden"
@@ -207,6 +231,9 @@ export default function MarketPage() {
                     {l.sellerVerified && <Badge tone="success">✓</Badge>}
                   </div>
                   <p className="mt-1 text-xs capitalize text-slate-500">{l.category}</p>
+                  {/* How this listing can actually be traded. The mechanics all
+                      existed; nothing on a card had ever said so. */}
+                  <TradingModelBadges models={modelForCard(l)} className="mt-2" />
                   <p className="mt-2 line-clamp-2 text-sm text-slate-600">{l.description}</p>
                   {l.stock !== null && (
                     <p className="mt-2 text-xs text-slate-500">
@@ -217,6 +244,7 @@ export default function MarketPage() {
               </InteractiveCard>
             </Link>
           ))}
+        </div>
       </div>
 
       {data && data.total > data.listings.length && (

@@ -66,6 +66,18 @@ export const marketplaceListingPublicSchema = z.object({
   imageUrl: z.string().nullable(),
   stock: z.number().int().nullable(),
   status: z.enum(MARKETPLACE_LISTING_STATUSES),
+  /**
+   * Whether an OPEN auction currently references this listing.
+   *
+   * Server-side because the client cannot know it, and it is what makes the trading-
+   * model badges mean something: without it every marketplace card would advertise
+   * "fixed price" alone, which is exactly the information gap the badges exist to
+   * close. Derived per request, never stored — a stored flag would keep advertising an
+   * auction after it closed.
+   */
+  hasOpenAuction: z.boolean(),
+  /** Presentation-layer domain inferred from `category`; null when nothing matches. */
+  domain: z.string().nullable(),
   createdAt: z.string(),
 });
 export type MarketplaceListingPublic = z.infer<typeof marketplaceListingPublicSchema>;

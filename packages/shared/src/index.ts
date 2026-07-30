@@ -8,6 +8,7 @@ export * from "./terms";
 export * from "./slo";
 export * from "./locales";
 export * from "./messages";
+export * from "./taxonomy";
 export * from "./schemas/auth";
 export * from "./schemas/listings";
 export * from "./schemas/search";
