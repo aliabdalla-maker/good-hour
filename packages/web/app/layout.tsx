@@ -6,9 +6,31 @@ import { SiteFooter } from "../components/SiteFooter";
 import { AssistantWidget } from "../components/AssistantWidget";
 import { TranslationNotice } from "../components/LanguagePicker";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.goodhour.shop";
+const SITE_DESCRIPTION =
+  "Book rooms, cars and travel services by the hour from verified hosts. Pay instantly, or let AI agents compete for your booking in a reverse auction.";
+
 export const metadata: Metadata = {
-  title: "Good Hours — Hourly Hotel Room Booking",
-  description: "Agentic AI hourly hotel room marketplace",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Good Hours — Book rooms, cars & travel by the hour",
+    template: "%s · Good Hours",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: "Good Hours",
+  openGraph: {
+    type: "website",
+    siteName: "Good Hours",
+    url: SITE_URL,
+    title: "Good Hours — Book rooms, cars & travel by the hour",
+    description: SITE_DESCRIPTION,
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary",
+    title: "Good Hours — Book rooms, cars & travel by the hour",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
