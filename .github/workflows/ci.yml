@@ -38,6 +38,9 @@ jobs:
     env:
       DATABASE_URL: postgresql://gihtcx:gihtcx@localhost:5432/gihtcx_test?schema=public
       REDIS_URL: redis://localhost:6379
+      # Test-only signing key for the throwaway CI database. The API refuses to
+      # boot without JWT_SECRET (min 16 chars); production uses its own secret.
+      JWT_SECRET: ci-only-test-signing-key-not-for-production
 
     steps:
       - uses: actions/checkout@v4
