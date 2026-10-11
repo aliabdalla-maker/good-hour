@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import type { PropertyWithRooms, ListingCategory } from "@gihtcx/shared";
-import { BUYER_FEE_RATE, SELLER_FEE_RATE } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
 import { humanizeTag } from "../../lib/humanize";
 import { Card, InteractiveCard } from "../../components/ui/Card";
@@ -83,26 +82,24 @@ export default function BrowsePage() {
                 href="/requests/new"
                 className="group rounded-xl bg-white/10 p-4 text-white ring-1 ring-white/25 backdrop-blur transition-all hover:-translate-y-0.5 hover:bg-white/15"
               >
-                <h2 className="font-display flex items-center gap-2 font-semibold">✦ Request a match <span className="rounded-full bg-ai-600 px-2 py-0.5 text-xs">AI reverse auction</span></h2>
+                <span className="inline-block rounded-full bg-ai-600 px-2 py-0.5 text-xs font-medium">AI reverse auction</span>
+                <h2 className="font-display mt-1.5 font-semibold">✦ Request a match</h2>
                 <p className="mt-1 text-sm text-white/80">Post what you need — hosts &amp; their agents bid for you.</p>
               </Link>
             </div>
           </div>
         </div>
-        <p className="mt-3 text-xs text-slate-500">
-          A {(BUYER_FEE_RATE * 100).toFixed(0)}% platform fee is charged to the traveller and a {(SELLER_FEE_RATE * 100).toFixed(0)}% fee to the host on every booking.
-        </p>
       </section>
 
       {/* Category filter */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="-mx-6 mb-6 flex gap-2 overflow-x-auto px-6 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {FILTERS.map((f) => {
           const active = filter === f.key;
           return (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                 active
                   ? "border-brand-600 bg-brand-600 text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
