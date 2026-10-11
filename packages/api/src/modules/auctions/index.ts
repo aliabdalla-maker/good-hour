@@ -6,3 +6,4 @@ export default async function auctionsModule(app: FastifyInstance) {
 }
 
 export { placeBid, closeAuction, settleAuction, getAuctionStats } from "./service";
+export { findMatchingHosts, draftAuction, listingCategoryFor } from "./matchmaker";
