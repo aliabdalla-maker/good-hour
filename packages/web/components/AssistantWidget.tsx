@@ -10,7 +10,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string; actions?: Assi
 const GREETING: ChatMessage = {
   role: "assistant",
   content:
-    "Hi! I'm your Good Hours concierge ✦ — I can help you find rooms, cars or travel by the hour, or list your own. What are you after?",
+    "Hi! I'm your Good Hours concierge ✦. I can help you find rooms, cars or travel by the hour, or list your own. What are you after?",
 };
 
 export function AssistantWidget() {
@@ -46,7 +46,7 @@ export function AssistantWidget() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry — I couldn't reach the assistant just now. Please try again." },
+        { role: "assistant", content: "Sorry, I couldn't reach the assistant just now. Please try again." },
       ]);
     } finally {
       setLoading(false);
