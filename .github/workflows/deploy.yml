@@ -1,0 +1,67 @@
+name: Deploy
+
+# Deploys goodhour.shop to your own server (e.g. an Oracle Cloud Always Free VM)
+# over SSH and runs docker-compose.prod.yml there (web, api, worker, Postgres,
+# Redis, Caddy with automatic HTTPS).
+#
+# Required repository secrets (Settings > Secrets and variables > Actions):
+#   DEPLOY_HOST     server public IP or hostname
+#   DEPLOY_USER     SSH user (e.g. ubuntu)
+#   DEPLOY_SSH_KEY  private key whose public key is in ~/.ssh/authorized_keys on the server
+# Optional:
+#   DEPLOY_PATH     checkout location on the server (default: ~/good-hour)
+#
+# One-time on the server: install Docker, then create <DEPLOY_PATH>/.env from
+# .env.production.example (secrets never live in this repo).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check deploy secrets
+        id: check
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          if [ -z "$HOST" ]; then
+            echo "DEPLOY_HOST is not set - skipping deploy (add the secrets to enable)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy over SSH
+        if: steps.check.outputs.skip != 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 45m
+          script: |
+            set -e
+            APP_DIR="${{ secrets.DEPLOY_PATH }}"
+            APP_DIR="${APP_DIR:-$HOME/good-hour}"
+            REPO="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "$REPO" "$APP_DIR"
+            fi
+            cd "$APP_DIR"
+            git remote set-url origin "$REPO"
+            git fetch --depth 1 origin "${{ github.sha }}"
+            git checkout --force "${{ github.sha }}"
+            git remote set-url origin "https://github.com/${{ github.repository }}.git"
+            if [ ! -f .env ]; then
+              echo "Missing $APP_DIR/.env - copy .env.production.example to .env and fill it in." >&2
+              exit 1
+            fi
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+            docker image prune -f
+            docker compose -f docker-compose.prod.yml ps
