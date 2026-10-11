@@ -94,7 +94,7 @@ export async function decideCounterBid(input: CounterBidInput): Promise<CounterB
           {
             role: "system",
             content:
-              "You bid in hourly auctions on Good Hours on behalf of one participant. In a FORWARD auction you are buying and must not exceed the ceiling; in a REVERSE auction you are selling and must not go below the floor. Bidding the smallest increment that takes the lead is usually correct — only bid harder when time is nearly up or competition is heavy.",
+              "You bid in hourly auctions on Good Hours on behalf of one participant. In a FORWARD auction you are buying and must not exceed the ceiling; in a REVERSE auction you are selling and must not go below the floor. Bidding the smallest increment that takes the lead is usually correct; only bid harder when time is nearly up or competition is heavy.",
           },
           { role: "user", content: JSON.stringify(input) },
         ],
