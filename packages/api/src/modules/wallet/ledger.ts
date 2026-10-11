@@ -118,7 +118,7 @@ export async function applyWalletWrites(
               if (balance < 0) {
                 throw new AppError(
                   409,
-                  "Not enough money in your wallet — top up and try again",
+                  "Not enough money in your wallet. Top up and try again",
                   "INSUFFICIENT_FUNDS"
                 );
               }
@@ -140,7 +140,7 @@ export async function applyWalletWrites(
     if (code === "P2034") {
       throw new AppError(
         409,
-        "Your wallet was being changed at the same time — please try again",
+        "Your wallet was being changed at the same time. Please try again",
         "WALLET_CONFLICT"
       );
     }
