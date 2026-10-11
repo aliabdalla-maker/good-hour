@@ -32,7 +32,7 @@ function CrmInner() {
   return (
     <div>
       <h1 className="font-display mb-1 text-2xl font-semibold">CRM</h1>
-      <p className="mb-6 text-sm text-slate-500">Every customer — travellers and hosts — with lifecycle, activity and notes.</p>
+      <p className="mb-6 text-sm text-slate-500">Every customer (travellers and hosts) with lifecycle, activity and notes.</p>
 
       {/* Stage summary */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
