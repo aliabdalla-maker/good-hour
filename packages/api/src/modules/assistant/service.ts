@@ -4,7 +4,7 @@ import type { AssistantChatInput, AssistantReply, AssistantAction } from "@gihtc
 // Interpolated into SYSTEM_PROMPT so the concierge can never quote a stale rate.
 import { BUYER_FEE_LABEL, SELLER_FEE_LABEL } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
-import { getOpenAIClient, OPENAI_MODEL } from "../../lib/openaiClient";
+import { getOpenAIClient, OPENAI_MODEL, recordAiError, recordAiSuccess } from "../../lib/openaiClient";
 
 const SYSTEM_PROMPT = `You are the Good Hours assistant, a friendly, concise concierge for an hourly marketplace.
 Write in plain punctuation: use commas, colons or full stops, never the long em dash character.
@@ -225,6 +225,7 @@ export async function chatWithAssistant(
         temperature: 0.3,
         max_tokens: 500,
       });
+      recordAiSuccess();
       const msg = res.choices[0]?.message;
       if (!msg) break;
       messages.push(msg);
@@ -259,6 +260,7 @@ export async function chatWithAssistant(
     // Never fail silently -- this was previously swallowed with no trace,
     // making an exhausted/invalid OpenAI key indistinguishable from normal
     // fallback behaviour. Log where it actually happened.
+    recordAiError(error);
     console.error("[assistant] OpenAI call failed, falling back:", error instanceof Error ? error.message : error);
     return fallbackReply(input, userId);
   }
