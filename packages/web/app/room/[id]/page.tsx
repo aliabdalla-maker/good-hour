@@ -139,7 +139,7 @@ function RoomDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
         {room.imageIsAiGenerated && (
           <span className="absolute end-3 top-3 rounded-md bg-ai-600/90 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
-            ✨ AI-generated photo — may not depict the actual space
+            ✨ AI-generated photo, may not depict the actual space
           </span>
         )}
         <div className="absolute bottom-0 p-5 text-white sm:p-6">
@@ -204,7 +204,7 @@ function RoomDetail() {
           <h2 className="font-display mb-4 text-lg font-semibold">Book this room</h2>
           {prefilledStart && prefilledEnd && (
             <p className="mb-3 rounded-lg bg-ai-50 p-2 text-xs text-ai-800">
-              ✦ Times pre-filled from your assistant chat — review and confirm below.
+              ✦ Times pre-filled from your assistant chat. Review and confirm below.
             </p>
           )}
           <form onSubmit={handleBook} className="flex flex-col gap-4">
@@ -239,7 +239,7 @@ function RoomDetail() {
                 </label>
                 {redeemCreditHours > 0 && (
                   <p className="mt-1 animate-fade-in text-xs text-brand-600">
-                    {redeemCreditHours.toFixed(2)}h covered by credits — only the remainder is charged.
+                    {redeemCreditHours.toFixed(2)}h covered by credits; only the remainder is charged.
                   </p>
                 )}
               </div>
@@ -269,13 +269,13 @@ function RoomDetail() {
                   </span>
                 </div>
                 {r.comment && <p className="mt-2 text-sm text-slate-600">“{r.comment}”</p>}
-                <p className="mt-2 text-xs text-slate-500">— {r.authorName}, verified guest</p>
+                <p className="mt-2 text-xs text-slate-500">{r.authorName}, verified guest</p>
               </Card>
             ))}
           </div>
         ) : (
           <p className="text-sm text-slate-500">
-            No reviews yet — be the first after you book and complete a stay.
+            No reviews yet. Be the first after you book and complete a stay.
           </p>
         )}
       </section>
