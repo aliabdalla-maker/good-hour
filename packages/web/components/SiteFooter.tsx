@@ -63,7 +63,7 @@ export function SiteFooter() {
             <a href="https://www.softwareequality.com" className="inline-flex min-h-6 items-center hover:text-slate-600" target="_blank" rel="noopener noreferrer">
               Equality Software Ltd
             </a>{" "}
-            (Company No. 15006381), registered in England — London, United Kingdom.
+            (Company No. 15006381), registered in England (London, United Kingdom).
           </p>
         </div>
       </div>
