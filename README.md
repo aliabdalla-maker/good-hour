@@ -8,12 +8,17 @@ fees, and a durable event backbone. See `docs/ARCHITECTURE.md` and
 
 ## 🚀 Deploy live (goodhour.shop)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aliabdalla-maker/good-hour)
+Production runs on an **Oracle Cloud Always Free VM** (143.47.255.104) using
+`docker-compose.prod.yml` (web, api, worker, Postgres, Redis, Caddy with automatic
+HTTPS for `www.goodhour.shop` and `api.goodhour.shop`). Render is no longer used.
 
-One click provisions the whole stack (web + api + worker + Postgres + Redis) from
-`render.yaml`. Then add the custom domain and point GoDaddy DNS — full walkthrough
-in **[docs/DEPLOY.md](docs/DEPLOY.md)**. Prefer a server you control? A VPS + Caddy
-path (auto-HTTPS) is documented there too.
+- **Deploys:** push to `main`. The server pulls `main` every 2 minutes
+  (`~/autodeploy.sh`, read-only GitHub deploy key) and rebuilds. Log: `~/autodeploy.log`.
+- **Secrets:** live only in `~/good-hour/.env` on the server — set them with
+  `ssh -t ubuntu@143.47.255.104 ./set-keys.sh`. Never commit them.
+- **DNS (GoDaddy):** `www` and `api` → A 143.47.255.104; `goodhour.shop` forwards to www.
+
+More detail in **[docs/DEPLOY.md](docs/DEPLOY.md)** (VPS + Caddy section).
 
 ## Prerequisites
 
