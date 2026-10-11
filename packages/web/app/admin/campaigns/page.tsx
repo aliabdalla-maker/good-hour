@@ -7,13 +7,13 @@ import { api, ApiError } from "../../../lib/apiClient";
 const TEMPLATES = [
   {
     label: "Announce instant booking",
-    subject: "Book a room by the hour — instantly",
+    subject: "Book a room by the hour, instantly",
     body: "Need a space for a few hours? Good Hours lets you search by city and time and book instantly, with transparent hourly pricing.",
   },
   {
     label: "Announce reverse auction",
     subject: "Let suppliers bid for your booking",
-    body: "Post what you need on Good Hours and let suppliers — and their AI agents — compete with their best offers. You pick the winner.",
+    body: "Post what you need on Good Hours and let suppliers (and their AI agents) compete with their best offers. You pick the winner.",
   },
 ];
 
