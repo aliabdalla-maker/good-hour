@@ -20,7 +20,7 @@ export default function MyAuctionsPage() {
 }
 
 function MyAuctionsInner() {
-  const { data, isPending } = useQuery<{ created: AuctionPublic[]; bidding: AuctionPublic[] }>({
+  const { data, isPending, error, refetch } = useQuery<{ created: AuctionPublic[]; bidding: AuctionPublic[] }>({
     queryKey: ["my-auctions"],
     queryFn: () => api.get<{ created: AuctionPublic[]; bidding: AuctionPublic[] }>("/auctions/mine"),
     refetchInterval: 15_000,
@@ -31,6 +31,21 @@ function MyAuctionsInner() {
       <div className="flex items-center justify-center py-24 text-slate-500">
         <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <EmptyState
+        icon="⚠️"
+        title="Couldn't load your auctions"
+        description={error instanceof Error ? error.message : "Please try again in a moment."}
+        action={
+          <button onClick={() => refetch()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+            Try again
+          </button>
+        }
+      />
     );
   }
 
@@ -47,11 +62,16 @@ function MyAuctionsInner() {
         <EmptyState
           icon="⏱️"
           title="Nothing yet"
-          description="Auctions you open, and ones you've bid on, appear here."
+          description="Auctions you open, and ones you've bid on, appear here. Describe what you need in one sentence and the AI drafts and prices the auction for you."
           action={
-            <Link href="/auctions/new" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
-              Start an auction
-            </Link>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/auctions/new" className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+                ✦ Start an auction with AI
+              </Link>
+              <Link href="/auctions" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Browse open auctions
+              </Link>
+            </div>
           }
         />
       )}
@@ -61,6 +81,14 @@ function MyAuctionsInner() {
     </div>
   );
 }
+
+const STATUS_TONE: Record<string, "success" | "warning" | "danger" | "neutral" | "brand"> = {
+  OPEN: "brand",
+  CLOSED: "warning",
+  SETTLED: "success",
+  UNMET: "neutral",
+  CANCELLED: "danger",
+};
 
 function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
   if (rows.length === 0) return null;
@@ -97,7 +125,7 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
                   </td>
                   <td className="px-3 py-2 text-slate-600">{timeLeft(a.closesAt)}</td>
                   <td className="px-3 py-2">
-                    <Badge tone={a.status === "SETTLED" ? "success" : a.status === "OPEN" ? "neutral" : "neutral"}>
+                    <Badge tone={STATUS_TONE[a.status] ?? "neutral"}>
                       {a.status.toLowerCase()}
                     </Badge>
                   </td>
