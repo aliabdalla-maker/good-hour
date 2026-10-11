@@ -6,6 +6,7 @@ import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 import { config, featureFlags } from "./config";
+import { getAiStatus } from "./lib/openaiClient";
 import { redisConnection } from "./queue/connection";
 import { registerErrorHandler } from "./plugins/errorHandler";
 import authGuardPlugin from "./plugins/authGuard";
@@ -149,6 +150,7 @@ export function buildApp() {
         configured: featureFlags.aiNegotiationEnabled,
         provider: config.OPENAI_BASE_URL ? new URL(config.OPENAI_BASE_URL).host : "api.openai.com",
         model: config.OPENAI_MODEL,
+        ...getAiStatus(),
       },
     });
   });

@@ -59,6 +59,15 @@ export async function createDirectBooking(travellerId: string, input: CreateBook
     select: { isBusinessAccount: true },
   });
   const room = await getRoomById(input.roomId);
+  // Sample listings (packages/db/prisma/samples.ts) are for show only.
+  const property = await prisma.property.findUnique({ where: { id: room.propertyId }, select: { status: true } });
+  if (property?.status === "SAMPLE") {
+    throw new AppError(
+      409,
+      "This is a sample listing to show how Good Hours works, so it can't be booked. Real listings from verified hosts are coming soon.",
+      "SAMPLE_LISTING"
+    );
+  }
   const startsAt = new Date(input.startsAt);
   const endsAt = new Date(input.endsAt);
   const hours = hoursBetween(startsAt, endsAt);
