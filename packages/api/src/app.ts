@@ -5,7 +5,7 @@ import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
-import { config } from "./config";
+import { config, featureFlags } from "./config";
 import { redisConnection } from "./queue/connection";
 import { registerErrorHandler } from "./plugins/errorHandler";
 import authGuardPlugin from "./plugins/authGuard";
@@ -142,6 +142,14 @@ export function buildApp() {
       status: ok ? "ready" : "degraded",
       commit: process.env.RENDER_GIT_COMMIT ?? process.env.GIT_COMMIT ?? "unknown",
       checks,
+      // Whether AI features are switched on (a key is configured) and which
+      // provider they call. Never includes the key. If this says configured but
+      // the assistant still gives canned replies, the API log has the reason.
+      ai: {
+        configured: featureFlags.aiNegotiationEnabled,
+        provider: config.OPENAI_BASE_URL ? new URL(config.OPENAI_BASE_URL).host : "api.openai.com",
+        model: config.OPENAI_MODEL,
+      },
     });
   });
 
