@@ -21,3 +21,42 @@ export function getOpenAIClient(): OpenAI {
 }
 
 export const OPENAI_MODEL = config.OPENAI_MODEL;
+
+/**
+ * Last AI-provider failure, kept in memory so /health/ready can say WHY the
+ * assistant fell back without anyone needing server log access. Only the
+ * error category, HTTP status and a short provider message are kept; the
+ * message is scrubbed of anything that looks like a key.
+ */
+export interface AiErrorSummary {
+  at: string;
+  kind: "invalid_key" | "no_credit" | "rate_limited" | "model_not_found" | "bad_request" | "network" | "other";
+  status: number | null;
+  message: string;
+}
+
+let lastAiError: AiErrorSummary | null = null;
+let lastAiSuccessAt: string | null = null;
+
+export function recordAiError(error: unknown): void {
+  const status = typeof (error as { status?: unknown })?.status === "number" ? (error as { status: number }).status : null;
+  const raw = error instanceof Error ? error.message : String(error);
+  const message = raw.replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***").replace(/Bearer\s+\S+/gi, "Bearer ***").slice(0, 160);
+  const kind: AiErrorSummary["kind"] =
+    status === 401 || status === 403 ? "invalid_key"
+    : status === 402 ? "no_credit"
+    : status === 429 ? "rate_limited"
+    : status === 404 ? "model_not_found"
+    : status === 400 || status === 422 ? "bad_request"
+    : status === null && /fetch failed|ECONN|ETIMEDOUT|ENOTFOUND|network/i.test(raw) ? "network"
+    : "other";
+  lastAiError = { at: new Date().toISOString(), kind, status, message };
+}
+
+export function recordAiSuccess(): void {
+  lastAiSuccessAt = new Date().toISOString();
+}
+
+export function getAiStatus() {
+  return { lastError: lastAiError, lastSuccessAt: lastAiSuccessAt };
+}
