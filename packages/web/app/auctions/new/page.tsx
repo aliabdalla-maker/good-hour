@@ -5,6 +5,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import type { AuctionKind, AuctionPublic } from "@gihtcx/shared";
+
+interface AuctionDraft {
+  kind: AuctionKind;
+  title: string;
+  description: string;
+  category: string;
+  hours: number;
+  reservePerHour: number;
+  durationMinutes: number;
+  comparables: { count: number; medianPerHour: number | null };
+  aiPowered: boolean;
+}
 import { AUCTION_KINDS, MIN_AUCTION_MINUTES, computeTradeFee } from "@gihtcx/shared";
 import { api, ApiError } from "../../../lib/apiClient";
 import { RequireAuth } from "../../../components/RequireAuth";
@@ -36,6 +48,31 @@ function NewAuctionInner() {
   const [reservePerHour, setReserve] = useState(60);
   const [minutes, setMinutes] = useState(1440);
   const [error, setError] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [draftNote, setDraftNote] = useState<string | null>(null);
+
+  const draft = useMutation({
+    mutationFn: () => api.post<AuctionDraft>("/auctions/draft", { prompt }),
+    onMutate: () => {
+      setError(null);
+      setDraftNote(null);
+    },
+    onSuccess: (d) => {
+      setKind(d.kind);
+      setTitle(d.title);
+      setDescription(d.description);
+      setCategory(d.category);
+      setHours(d.hours);
+      setReserve(d.reservePerHour);
+      if (DURATIONS.some((x) => x.minutes === d.durationMinutes)) setMinutes(d.durationMinutes);
+      const priced =
+        d.comparables.medianPerHour !== null
+          ? `Priced from ${d.comparables.count} comparable listing${d.comparables.count === 1 ? "" : "s"} (median GBP ${d.comparables.medianPerHour.toFixed(2)}/hr).`
+          : "No comparable listings yet, so the price is a typical starting point.";
+      setDraftNote(`${d.aiPowered ? "Drafted by AI." : "Drafted from your description."} ${priced} Check everything, then open it.`);
+    },
+    onError: (e) => setError(e instanceof ApiError ? e.message : "Couldn't draft that auction"),
+  });
 
   const create = useMutation({
     mutationFn: () =>
@@ -68,6 +105,31 @@ function NewAuctionInner() {
         <p className="mb-6 text-sm text-slate-500">
           Auction hours of a product or service: either let buyers bid the price up, or let sellers bid it down.
         </p>
+
+        <Card className="animate-fade-in-up mb-4 border-ai-200 bg-ai-50/40 p-5">
+          <label className="block text-sm font-medium text-slate-800">
+            ✦ Describe it and let AI draft the auction
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={2}
+              maxLength={500}
+              placeholder="e.g. I need a day room near King's Cross for 4 hours on Friday, up to £30 an hour"
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 font-normal"
+            />
+          </label>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => draft.mutate()}
+              disabled={prompt.trim().length < 5 || draft.isPending}
+              className="rounded-lg bg-ai-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-ai-700 disabled:opacity-50"
+            >
+              {draft.isPending ? "Drafting…" : "Draft with AI"}
+            </button>
+            <span className="text-xs text-slate-500">The AI fills in the form below. Nothing opens until you press Open auction.</span>
+          </div>
+          {draftNote && <p className="mt-2 text-xs text-ai-700">{draftNote}</p>}
+        </Card>
 
         <Card className="animate-fade-in-up p-5">
           <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -217,6 +279,7 @@ function NewAuctionInner() {
             <li>• Two agents bidding against each other settle it between themselves.</li>
             <li>• At close, the best bid that clears your reserve wins. Otherwise nothing happens.</li>
             <li>• Payment is from the buyer&apos;s wallet, automatic only if they opted in.</li>
+            <li>• Buying? Our matchmaker agent invites hosts whose listings fit your budget to bid.</li>
           </ul>
         </Card>
       </div>

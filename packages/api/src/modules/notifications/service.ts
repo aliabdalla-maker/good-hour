@@ -12,6 +12,7 @@ import { featureFlags } from "../../config";
 import { domainEvents } from "../../events/bus";
 import { unsubscribeUrl, verifyUnsubToken } from "../../lib/unsubscribe";
 import { sendEmail, sendSms } from "./channels";
+import { findMatchingHosts } from "../auctions";
 
 interface NotifyInput {
   userId: string;
@@ -300,5 +301,77 @@ export function registerNotificationListeners() {
       body: `We received ${booking.currency} ${Number(booking.totalAmount).toFixed(2)} for booking ${bookingId}. Thank you!`,
       data: { bookingId },
     });
+  });
+
+  // ── Hourly auctions ─────────────────────────────────────────────────────────
+  // Matchmaker agent: when a buyer opens an auction, invite hosts whose active
+  // listings fit the category and budget. In-app only, so nobody is emailed
+  // about leads they didn't ask for.
+  domainEvents.onEvent("auction.opened", async ({ auctionId }) => {
+    const { auction, hosts } = await findMatchingHosts(auctionId);
+    if (!auction) return;
+    for (const hostId of hosts) {
+      await notify({
+        userId: hostId,
+        type: "auction.invite",
+        subject: "A traveller wants what you offer",
+        body: `"${auction.title}": ${Number(auction.hours)}h, budget up to ${auction.currency} ${Number(auction.reservePerHour).toFixed(2)}/hr. Bid before it closes.`,
+        channels: ["IN_APP"],
+        data: { auctionId, path: `/auctions/${auctionId}` },
+      });
+    }
+  });
+
+  domainEvents.onEvent("auction.bid", async ({ auctionId, bidId, bidderId, amountPerHour, isAgentPlaced }) => {
+    const auction = await prisma.marketplaceAuction.findUnique({ where: { id: auctionId } });
+    if (!auction) return;
+    const money = `${auction.currency} ${amountPerHour.toFixed(2)}/hr`;
+    await notify({
+      userId: auction.createdById,
+      type: "auction.bid.received",
+      subject: `New bid on "${auction.title}"`,
+      body: `${isAgentPlaced ? "An AI agent" : "A bidder"} bid ${money}.`,
+      channels: ["IN_APP"],
+      data: { auctionId, path: `/auctions/${auctionId}` },
+    });
+    // Tell whoever was leading before this bid that they've been beaten.
+    const previous = await prisma.auctionBid.findFirst({
+      where: { auctionId, id: { not: bidId }, bidderId: { not: bidderId }, status: "OUTBID" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (previous) {
+      await notify({
+        userId: previous.bidderId,
+        type: "auction.outbid",
+        subject: `You've been outbid on "${auction.title}"`,
+        body: `The leading bid is now ${money}.${previous.maxPerHour ? "" : " Set a limit and let your AI agent bid for you."}`,
+        channels: ["IN_APP"],
+        data: { auctionId, path: `/auctions/${auctionId}` },
+      });
+    }
+  });
+
+  domainEvents.onEvent("auction.closed", async ({ auctionId, winningBidId }) => {
+    const auction = await prisma.marketplaceAuction.findUnique({ where: { id: auctionId } });
+    if (!auction) return;
+    const winner = winningBidId ? await prisma.auctionBid.findUnique({ where: { id: winningBidId } }) : null;
+    await notify({
+      userId: auction.createdById,
+      type: "auction.closed",
+      subject: winner ? `Your auction "${auction.title}" has a winner` : `Your auction "${auction.title}" closed`,
+      body: winner
+        ? `Winning bid: ${auction.currency} ${Number(winner.amountPerHour).toFixed(2)}/hr.`
+        : "No bid met your reserve this time. You can start a new auction any time.",
+      data: { auctionId, path: `/auctions/${auctionId}` },
+    });
+    if (winner) {
+      await notify({
+        userId: winner.bidderId,
+        type: "auction.won",
+        subject: `You won "${auction.title}"`,
+        body: `Your bid of ${auction.currency} ${Number(winner.amountPerHour).toFixed(2)}/hr won.${winner.autoSettle ? " Payment was handled automatically." : ""}`,
+        data: { auctionId, path: `/auctions/${auctionId}` },
+      });
+    }
   });
 }

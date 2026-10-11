@@ -40,15 +40,25 @@ let lastAiSuccessAt: string | null = null;
 
 export function recordAiError(error: unknown): void {
   const status = typeof (error as { status?: unknown })?.status === "number" ? (error as { status: number }).status : null;
-  const raw = error instanceof Error ? error.message : String(error);
-  const message = raw.replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***").replace(/Bearer\s+\S+/gi, "Bearer ***").slice(0, 160);
+  // The OpenAI SDK reports every transport failure as "Connection error." and
+  // keeps the real reason (DNS, TLS, refused, bad header) on error.cause.
+  const causes: string[] = [];
+  let c: unknown = (error as { cause?: unknown })?.cause;
+  for (let i = 0; c && i < 3; i++) {
+    const e = c as { code?: unknown; message?: unknown; cause?: unknown };
+    causes.push([e.code, e.message].filter((x) => typeof x === "string" && x).join(" "));
+    c = e.cause;
+  }
+  const base = error instanceof Error ? error.message : String(error);
+  const raw = [base, ...causes.filter(Boolean)].join(" | ");
+  const message = raw.replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***").replace(/Bearer\s+\S+/gi, "Bearer ***").slice(0, 300);
   const kind: AiErrorSummary["kind"] =
     status === 401 || status === 403 ? "invalid_key"
     : status === 402 ? "no_credit"
     : status === 429 ? "rate_limited"
     : status === 404 ? "model_not_found"
     : status === 400 || status === 422 ? "bad_request"
-    : status === null && /fetch failed|ECONN|ETIMEDOUT|ENOTFOUND|network/i.test(raw) ? "network"
+    : status === null && /connection error|fetch failed|ECONN|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|CERT|network/i.test(raw) ? "network"
     : "other";
   lastAiError = { at: new Date().toISOString(), kind, status, message };
 }

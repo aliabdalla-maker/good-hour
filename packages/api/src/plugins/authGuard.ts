@@ -11,6 +11,8 @@ declare module "fastify" {
   }
   interface FastifyInstance {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    /** Like authenticate, but anonymous requests (or bad cookies) pass through without a user. */
+    optionalAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (
       roles: SessionPayload["role"][]
     ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
@@ -30,6 +32,16 @@ async function authGuardPlugin(app: FastifyInstance) {
       request.currentUser = await verifySession(token);
     } catch {
       throw new AppError(401, "Invalid or expired session", "UNAUTHENTICATED");
+    }
+  });
+
+  app.decorate("optionalAuth", async (request: FastifyRequest) => {
+    const token = request.cookies[config.COOKIE_NAME];
+    if (!token) return;
+    try {
+      request.currentUser = await verifySession(token);
+    } catch {
+      // Expired or invalid cookie on a public route: treat as anonymous.
     }
   });
 

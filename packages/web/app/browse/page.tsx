@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import type { PropertyWithRooms, ListingCategory } from "@gihtcx/shared";
 import { api } from "../../lib/apiClient";
@@ -37,8 +38,26 @@ function rateRange(property: PropertyWithRooms) {
     : `${currency} ${min.toFixed(2)}–${max.toFixed(2)}${unit}`;
 }
 
+type Filter = "ALL" | ListingCategory;
+
+// ?category=ROOM|CAR|TRAVEL_SERVICE preselects a filter, so links such as the
+// footer's "rooms, cars & travel" land on the right listings.
+function categoryFromUrl(value: string | null): Filter {
+  return FILTERS.some((f) => f.key === value) ? (value as Filter) : "ALL";
+}
+
 export default function BrowsePage() {
-  const [filter, setFilter] = useState<"ALL" | ListingCategory>("ALL");
+  return (
+    <Suspense fallback={<SkeletonGrid />}>
+      <BrowseContent />
+    </Suspense>
+  );
+}
+
+function BrowseContent() {
+  const urlFilter = categoryFromUrl(useSearchParams().get("category"));
+  const [filter, setFilter] = useState<Filter>(urlFilter);
+  useEffect(() => setFilter(urlFilter), [urlFilter]);
   const { data: properties, isPending, error, refetch } = useQuery<PropertyWithRooms[]>({
     queryKey: ["catalog"],
     queryFn: () => api.get<PropertyWithRooms[]>("/listings/catalog"),
@@ -61,7 +80,12 @@ export default function BrowsePage() {
           <div className="pointer-events-none absolute -bottom-20 start-10 h-48 w-48 animate-float rounded-full bg-white/10 blur-2xl" style={{ animationDelay: "2s" }} />
           <div className="relative max-w-2xl">
             <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
-              Rooms · Cars · Travel by the hour
+              <Link href="/browse?category=ROOM" onClick={() => setFilter("ROOM")} className="hover:underline">Rooms</Link>
+              {" · "}
+              <Link href="/browse?category=CAR" onClick={() => setFilter("CAR")} className="hover:underline">Cars</Link>
+              {" · "}
+              <Link href="/browse?category=TRAVEL_SERVICE" onClick={() => setFilter("TRAVEL_SERVICE")} className="hover:underline">Travel</Link>
+              {" by the hour"}
             </span>
             <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
               Book the good hours. Skip the rest.

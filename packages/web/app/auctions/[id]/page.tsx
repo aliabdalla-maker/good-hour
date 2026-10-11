@@ -28,7 +28,7 @@ export default function AuctionDetailPage() {
   const [autoSettle, setAutoSettle] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data, isPending } = useQuery<AuctionDetail>({
+  const { data, isPending, error: loadError, refetch } = useQuery<AuctionDetail>({
     queryKey: ["auction", id],
     queryFn: () => api.get<AuctionDetail>(`/auctions/${id}`),
     // Someone else's agent can outbid you between renders.
@@ -85,6 +85,20 @@ export default function AuctionDetailPage() {
       <div className="flex items-center justify-center py-24 text-slate-500">
         <Spinner /> <span className="ms-2 text-sm">Loading…</span>
       </div>
+    );
+  }
+  if (loadError && !(loadError instanceof ApiError && loadError.status === 404)) {
+    return (
+      <EmptyState
+        icon="⚠️"
+        title="Couldn't load this auction"
+        description={loadError instanceof Error ? loadError.message : "Please try again in a moment."}
+        action={
+          <button onClick={() => refetch()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+            Try again
+          </button>
+        }
+      />
     );
   }
   if (!data || !a) {

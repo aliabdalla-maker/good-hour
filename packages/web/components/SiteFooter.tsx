@@ -16,7 +16,12 @@ export function SiteFooter() {
             Good Hours
           </div>
           <p className="mt-2 max-w-xs text-sm text-slate-500">
-            Book rooms, cars &amp; travel by the hour from verified hosts.
+            Book{" "}
+            <Link href="/browse?category=ROOM" className="text-brand-600 hover:text-brand-700 hover:underline">rooms</Link>,{" "}
+            <Link href="/browse?category=CAR" className="text-brand-600 hover:text-brand-700 hover:underline">cars</Link> &amp;{" "}
+            <Link href="/browse?category=TRAVEL_SERVICE" className="text-brand-600 hover:text-brand-700 hover:underline">travel</Link>{" "}
+            <Link href="/search" className="text-brand-600 hover:text-brand-700 hover:underline">by the hour</Link> from{" "}
+            <Link href="/register" className="text-brand-600 hover:text-brand-700 hover:underline">verified hosts</Link>.
           </p>
         </div>
 
