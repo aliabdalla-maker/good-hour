@@ -89,7 +89,7 @@ export default function RegisterPage() {
             onChange={(e) => setMarketingOptIn(e.target.checked)}
             className="mt-0.5"
           />
-          <span>Send me occasional offers and news by email (optional — unsubscribe any time).</span>
+          <span>Send me occasional offers and news by email (optional, unsubscribe any time).</span>
         </label>
         {error && <p className="text-sm text-danger-600">{error}</p>}
         <button
