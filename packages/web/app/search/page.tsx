@@ -147,7 +147,7 @@ export default function SearchPage() {
       {results && results.length === 0 && !isFetching && !error && (
         <EmptyState
           title={`Nothing available in ${submittedQuery.city || "that city"} for those times`}
-          description="Try widening the time range or another city — or post a request and let hosts bid for your booking."
+          description="Try widening the time range or another city, or post a request and let hosts bid for your booking."
           action={
             <Link
               href="/requests/new"
