@@ -72,7 +72,7 @@ export function AssistantWidget() {
         className="fixed bottom-5 end-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-2xl text-white shadow-card-hover transition-transform hover:scale-105 animate-scale-in"
         style={{ backgroundImage: "linear-gradient(135deg,#00665e,#004c46 55%,#632bc0)" }}
       >
-        ✦
+        <span aria-hidden="true">💬</span>
       </button>
     );
   }
