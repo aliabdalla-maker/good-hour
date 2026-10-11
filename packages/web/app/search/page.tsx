@@ -146,8 +146,16 @@ export default function SearchPage() {
 
       {results && results.length === 0 && !isFetching && !error && (
         <EmptyState
-          title="Nothing available for those times"
-          description="Try widening the time range, or search a different city."
+          title={`Nothing available in ${submittedQuery.city || "that city"} for those times`}
+          description="Try widening the time range or another city — or post a request and let hosts bid for your booking."
+          action={
+            <Link
+              href="/requests/new"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700"
+            >
+              Request a match
+            </Link>
+          }
         />
       )}
     </div>
