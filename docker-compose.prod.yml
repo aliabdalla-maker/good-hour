@@ -89,6 +89,10 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    labels:
+      # Bump this value to force Caddy to be recreated on the next auto-deploy
+      # (e.g. to retry HTTPS certificate issuance after a DNS change).
+      com.goodhour.caddy-revision: "2"
     ports:
       - "80:80"
       - "443:443"
