@@ -11,6 +11,7 @@
     "deploy": "prisma migrate deploy",
     "drift": "prisma migrate diff --from-schema-datasource prisma/schema.prisma --to-schema-datamodel prisma/schema.prisma --exit-code",
     "seed": "dotenv -e ../../.env -- tsx prisma/seed.ts",
+    "samples": "tsx prisma/samples.ts",
     "studio": "dotenv -e ../../.env -- prisma studio",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'no lint configured'"
