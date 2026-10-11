@@ -33,25 +33,25 @@ export default function PrivacyPage() {
 
       <Section id="use" title="3. How we use it, and our legal basis">
         <List>
-          <li><strong>To provide the service</strong> (accounts, bookings, payments, messaging, receipts) &mdash; performance of our contract with you.</li>
-          <li><strong>To keep the platform safe</strong> (fraud prevention, host verification, rate limiting, security logs) &mdash; our legitimate interests and legal obligations.</li>
-          <li><strong>To power AI features</strong> (assistant replies, suggested prices, automated bidding you choose to use) &mdash; performance of contract and our legitimate interest in improving the service.</li>
-          <li><strong>To send service messages</strong> (booking confirmations, receipts, account notices) &mdash; performance of contract.</li>
-          <li><strong>To send marketing emails</strong> &mdash; only with your consent, which you can withdraw at any time using the unsubscribe link or by emailing us.</li>
-          <li><strong>To keep financial records</strong> &mdash; legal obligation (UK tax and accounting law).</li>
+          <li><strong>To provide the service</strong> (accounts, bookings, payments, messaging, receipts): performance of our contract with you.</li>
+          <li><strong>To keep the platform safe</strong> (fraud prevention, host verification, rate limiting, security logs): our legitimate interests and legal obligations.</li>
+          <li><strong>To power AI features</strong> (assistant replies, suggested prices, automated bidding you choose to use): performance of contract and our legitimate interest in improving the service.</li>
+          <li><strong>To send service messages</strong> (booking confirmations, receipts, account notices): performance of contract.</li>
+          <li><strong>To send marketing emails</strong>: only with your consent, which you can withdraw at any time using the unsubscribe link or by emailing us.</li>
+          <li><strong>To keep financial records</strong>: legal obligation (UK tax and accounting law).</li>
         </List>
       </Section>
 
       <Section id="sharing" title="4. Who we share it with">
         <p>We do not sell your personal data. We share it only with providers who help us run Good Hours, under contracts that protect it:</p>
         <List>
-          <li><strong>Stripe</strong> &mdash; payment processing.</li>
-          <li><strong>Oracle Cloud (UK, London region)</strong> &mdash; hosting of our servers and database.</li>
-          <li><strong>OpenRouter and the AI model providers it routes to</strong> (such as OpenAI), and <strong>Google (Gemini)</strong> for AI-generated listing images &mdash; to produce AI assistant replies, pricing suggestions and images. Do not enter sensitive personal information into the assistant.</li>
-          <li><strong>Email and SMS providers</strong> (such as Resend and Twilio) &mdash; to deliver service messages.</li>
-          <li><strong>Smoobu</strong> &mdash; only for hosts who connect their channel-manager account.</li>
-          <li><strong>The other party to your booking</strong> &mdash; hosts see the details needed to fulfil a booking; travellers see listing and host details.</li>
-          <li><strong>Authorities</strong> &mdash; where the law requires it.</li>
+          <li><strong>Stripe</strong>: payment processing.</li>
+          <li><strong>Oracle Cloud (UK, London region)</strong>: hosting of our servers and database.</li>
+          <li><strong>OpenRouter and the AI model providers it routes to</strong> (such as OpenAI), and <strong>Google (Gemini)</strong> for AI-generated listing images: to produce AI assistant replies, pricing suggestions and images. Do not enter sensitive personal information into the assistant.</li>
+          <li><strong>Email and SMS providers</strong> (such as Resend and Twilio): to deliver service messages.</li>
+          <li><strong>Smoobu</strong>: only for hosts who connect their channel-manager account.</li>
+          <li><strong>The other party to your booking</strong>: hosts see the details needed to fulfil a booking; travellers see listing and host details.</li>
+          <li><strong>Authorities</strong>: where the law requires it.</li>
         </List>
       </Section>
 
