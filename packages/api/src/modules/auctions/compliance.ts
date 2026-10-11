@@ -103,7 +103,7 @@ export async function raiseAuctionDispute(userId: string, input: RaiseDisputeInp
   if (auction.status === "OPEN") {
     throw new AppError(
       409,
-      "This auction is still open — disputes can be raised once it closes",
+      "This auction is still open; disputes can be raised once it closes",
       "AUCTION_OPEN"
     );
   }
@@ -113,7 +113,7 @@ export async function raiseAuctionDispute(userId: string, input: RaiseDisputeInp
   });
 
   const body = [
-    `DISPUTE (${input.reason}) on auction ${auction.id} — "${auction.title}"`,
+    `DISPUTE (${input.reason}) on auction ${auction.id}: "${auction.title}"`,
     `Raised by ${userId}. Auction status at filing: ${auction.status}.`,
     `Bids by this user: ${bidCount}. Agent decisions recorded for this auction: ${agentDecisions}.`,
     "",
