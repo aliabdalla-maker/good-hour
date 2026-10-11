@@ -92,7 +92,7 @@ services:
     labels:
       # Bump this value to force Caddy to be recreated on the next auto-deploy
       # (e.g. to retry HTTPS certificate issuance after a DNS change).
-      com.goodhour.caddy-revision: "2"
+      com.goodhour.caddy-revision: "3"
     ports:
       - "80:80"
       - "443:443"
