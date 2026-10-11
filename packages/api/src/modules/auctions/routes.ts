@@ -20,6 +20,7 @@ import {
   settleAuction,
 } from "./service";
 import { raiseAuctionDispute, termsAcceptance } from "./compliance";
+import { auctionDraftRequestSchema, auctionDraftSchema, draftAuction } from "./matchmaker";
 
 export default async function auctionRoutes(app: FastifyInstance) {
   const server = app.withTypeProvider<ZodTypeProvider>();
@@ -27,7 +28,7 @@ export default async function auctionRoutes(app: FastifyInstance) {
   // Browsing auctions needs no account — the live price is the shop window.
   server.get(
     "/",
-    { schema: { querystring: auctionSearchQuerySchema, response: { 200: z.array(auctionPublicSchema) } } },
+    { preHandler: [app.optionalAuth], schema: { querystring: auctionSearchQuerySchema, response: { 200: z.array(auctionPublicSchema) } } },
     async (request, reply) =>
       reply.send(await searchAuctions(request.query, request.currentUser?.sub ?? null))
   );
@@ -51,9 +52,24 @@ export default async function auctionRoutes(app: FastifyInstance) {
 
   server.get(
     "/:id",
-    { schema: { params: z.object({ id: z.string() }), response: { 200: auctionDetailSchema } } },
+    {
+      preHandler: [app.optionalAuth],
+      schema: { params: z.object({ id: z.string() }), response: { 200: auctionDetailSchema } },
+    },
     async (request, reply) =>
       reply.send(await getAuctionDetail(request.params.id, request.currentUser?.sub ?? null))
+  );
+
+  // AI auction drafter: one sentence in, a complete auction (priced from
+  // comparable listings) out. The user still reviews and opens it themselves.
+  server.post(
+    "/draft",
+    {
+      preHandler: [app.authenticate],
+      config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+      schema: { body: auctionDraftRequestSchema, response: { 200: auctionDraftSchema } },
+    },
+    async (request, reply) => reply.send(await draftAuction(request.body))
   );
 
   server.post(
