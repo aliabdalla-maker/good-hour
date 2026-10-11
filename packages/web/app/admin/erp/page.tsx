@@ -107,7 +107,7 @@ function ErpInner() {
     <div>
       <h1 className="font-display mb-1 text-2xl font-semibold">ERP</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Owner-only financial and operations overview — not visible to any other account.
+        Owner-only financial and operations overview, not visible to any other account.
       </p>
 
       {/* Liquidity first — FR-030.
@@ -296,7 +296,7 @@ function ErpInner() {
             </div>
           </div>
           <p className="mt-3 text-xs text-slate-500">
-            Top-ups carry no platform fee — funding an account isn&apos;t a trade. Commission is taken on
+            Top-ups carry no platform fee: funding an account isn&apos;t a trade. Commission is taken on
             the marketplace transaction and on time-credit purchases.
           </p>
         </section>
@@ -415,7 +415,7 @@ function ErpInner() {
                     </td>
                     <td className="px-3 py-2 text-end"><AnimatedNumber value={a.totalDecisions} /></td>
                     <td className="px-3 py-2 text-end">
-                      {a.accepted + a.rejected > 0 ? `${a.accepted}/${a.accepted + a.rejected}` : "—"}
+                      {a.accepted + a.rejected > 0 ? `${a.accepted}/${a.accepted + a.rejected}` : "-"}
                     </td>
                     <td className="px-3 py-2 text-end">{a.avgLatencyMs}ms</td>
                   </tr>
