@@ -31,9 +31,10 @@ jobs:
         id: check
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          if [ -z "$HOST" ]; then
-            echo "DEPLOY_HOST is not set - skipping deploy (add the secrets to enable)."
+          if [ -z "$HOST" ] || [ -z "$KEY" ]; then
+            echo "DEPLOY_HOST or DEPLOY_SSH_KEY is not set - skipping (the server auto-deploys itself by pulling main every 2 minutes)."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
