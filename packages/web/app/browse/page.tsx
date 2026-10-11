@@ -61,13 +61,13 @@ export default function BrowsePage() {
           <div className="pointer-events-none absolute -bottom-20 start-10 h-48 w-48 animate-float rounded-full bg-white/10 blur-2xl" style={{ animationDelay: "2s" }} />
           <div className="relative max-w-2xl">
             <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">
-              Rooms · Cars · Travel — by the hour
+              Rooms · Cars · Travel by the hour
             </span>
             <h1 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
               Book the good hours. Skip the rest.
             </h1>
             <p className="mt-2 max-w-lg text-white/85">
-              Hourly stays, cars and experiences from verified hosts — pay instantly, or let AI agents
+              Hourly stays, cars and experiences from verified hosts. Pay instantly, or let AI agents
               compete for your booking.
             </p>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -84,7 +84,7 @@ export default function BrowsePage() {
               >
                 <span className="inline-block rounded-full bg-ai-600 px-2 py-0.5 text-xs font-medium">AI reverse auction</span>
                 <h2 className="font-display mt-1.5 font-semibold">✦ Request a match</h2>
-                <p className="mt-1 text-sm text-white/80">Post what you need — hosts &amp; their agents bid for you.</p>
+                <p className="mt-1 text-sm text-white/80">Post what you need and hosts &amp; their agents bid for you.</p>
               </Link>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function BrowsePage() {
           );
         })}
         {visible && visible.length === 0 && (
-          <EmptyState title="Nothing in this category yet" description="Try another category — hosts are adding listings." />
+          <EmptyState title="Nothing in this category yet" description="Try another category. Hosts are adding listings." />
         )}
       </div>
     </div>
