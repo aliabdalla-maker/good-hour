@@ -26,6 +26,7 @@ export function SiteFooter() {
             <li><Link href="/browse" className="inline-flex min-h-6 items-center hover:text-slate-900">Browse listings</Link></li>
             <li><Link href="/search" className="inline-flex min-h-6 items-center hover:text-slate-900">Book instantly</Link></li>
             <li><Link href="/requests/new" className="inline-flex min-h-6 items-center hover:text-slate-900">Request a match</Link></li>
+            <li><Link href="/guides" className="inline-flex min-h-6 items-center hover:text-slate-900">City guides</Link></li>
           </ul>
         </div>
 
