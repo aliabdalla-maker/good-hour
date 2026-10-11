@@ -6,10 +6,10 @@ import { BUYER_FEE_LABEL, SELLER_FEE_LABEL } from "@gihtcx/shared";
 import { featureFlags } from "../../config";
 import { getOpenAIClient, OPENAI_MODEL } from "../../lib/openaiClient";
 
-const SYSTEM_PROMPT = `You are the Good Hours assistant — a friendly, concise concierge for an hourly marketplace.
+const SYSTEM_PROMPT = `You are the Good Hours assistant, a friendly, concise concierge for an hourly marketplace.
+Write in plain punctuation: use commas, colons or full stops, never the long em dash character.
 Good Hours lets travellers book ROOMS, CARS and TRAVEL SERVICES by the hour from verified hosts.
-Two booking modes: (1) "Book instantly" — search by city & time and pay now; (2) "Request a match" —
-post what you need and suppliers + their AI agents bid for you (reverse auction). A ${BUYER_FEE_LABEL} platform fee is
+Two booking modes: (1) "Book instantly": search by city & time and pay now; (2) "Request a match": post what you need and suppliers + their AI agents bid for you (reverse auction). A ${BUYER_FEE_LABEL} platform fee is
 charged to the traveller and ${SELLER_FEE_LABEL} to the host. Hosts get a "Verified" badge after admin approval; travellers
 can review confirmed bookings.
 
@@ -18,12 +18,12 @@ Guidelines:
 - When recommending a specific listing or a section of the app, call the "navigate" tool so the user gets a button.
 - Valid navigate paths: /browse, /search, /requests/new, /dashboard/traveller, /dashboard/supplier,
   /notifications, /login, /register, and /room/<id> for a specific listing (use ids from search_listings).
-- Never invent listings, prices or ids — only use what search_listings or get_my_bookings return.
+- Never invent listings, prices or ids; only use what search_listings or get_my_bookings return.
 - If the user has picked a specific listing (from search_listings) and a specific start/end time, call
-  "propose_booking" instead of "navigate" — it pre-fills the booking form so they just have to confirm and
+  "propose_booking" instead of "navigate"; it pre-fills the booking form so they just have to confirm and
   pay. Always use a roomId that came from search_listings, and a start/end time the user actually gave you.
 - You can look up and discuss the signed-in user's own bookings (get_my_bookings), but you can never
-  take a payment or complete a booking yourself — "propose_booking" only pre-fills a form the user must
+  take a payment or complete a booking yourself; "propose_booking" only pre-fills a form the user must
   still explicitly confirm. You are never the one that moves money.`;
 
 const BASE_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
@@ -63,7 +63,7 @@ const BASE_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
       name: "propose_booking",
       description:
         "Pre-fill the booking form for a specific room and time so the user only has to review and confirm. " +
-        "Does NOT create a booking or charge anything — the user still clicks 'Book & continue to payment' themselves.",
+        "Does NOT create a booking or charge anything; the user still clicks 'Book & continue to payment' themselves.",
       parameters: {
         type: "object",
         properties: {
@@ -163,7 +163,7 @@ async function proposeBooking(args: { roomId?: unknown; startsAt?: unknown; ends
     endsAt: end.toISOString(),
     label: `Review booking: ${room.name}`,
   });
-  return { ok: true, note: "Proposed to the user — they still need to confirm and pay on the booking page." };
+  return { ok: true, note: "Proposed to the user; they still need to confirm and pay on the booking page." };
 }
 
 async function runTool(
@@ -193,6 +193,11 @@ async function runTool(
   return { error: "unknown tool" };
 }
 
+/** Keep replies free of em dashes even if the model ignores the style rule. */
+function plainPunctuation(text: string): string {
+  return text.replace(/\s+\u2014\s+/g, ", ").replace(/\u2014/g, "-");
+}
+
 /** Agentic loop: the model can call tools (search / navigate / get_my_bookings) before replying. */
 export async function chatWithAssistant(
   input: AssistantChatInput,
@@ -205,7 +210,7 @@ export async function chatWithAssistant(
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: "system", content: SYSTEM_PROMPT },
       ...(input.pageContext ? [{ role: "system" as const, content: `The user is currently on: ${input.pageContext}` }] : []),
-      ...(userId ? [{ role: "system" as const, content: "The user is signed in — get_my_bookings is available." }] : []),
+      ...(userId ? [{ role: "system" as const, content: "The user is signed in; get_my_bookings is available." }] : []),
       ...input.messages,
     ];
     const actions: AssistantAction[] = [];
@@ -225,7 +230,7 @@ export async function chatWithAssistant(
       messages.push(msg);
 
       if (!msg.tool_calls?.length) {
-        return { reply: msg.content ?? "How can I help?", actions, aiPowered: true };
+        return { reply: plainPunctuation(msg.content ?? "How can I help?"), actions, aiPowered: true };
       }
       for (const tc of msg.tool_calls) {
         let parsed: Record<string, unknown> = {};
@@ -246,7 +251,7 @@ export async function chatWithAssistant(
       max_tokens: 400,
     });
     return {
-      reply: finalRes.choices[0]?.message?.content ?? "Here's what I found — let me know what else you need.",
+      reply: plainPunctuation(finalRes.choices[0]?.message?.content ?? "Here's what I found. Let me know what else you need."),
       actions,
       aiPowered: true,
     };
@@ -268,11 +273,11 @@ async function fallbackReply(input: AssistantChatInput, userId: string | null): 
   if (userId && /(my booking|my order|booking status|have i booked)/.test(last)) {
     const { bookings } = await getMyBookings(userId);
     if (bookings.length === 0) {
-      reply = "You don't have any bookings yet — want to find something to book?";
+      reply = "You don't have any bookings yet. Want to find something to book?";
       actions.push({ type: "navigate", path: "/browse", label: "Browse listings" });
     } else {
       const b = bookings[0];
-      reply = `Your most recent booking: ${b.itemName} — ${b.status} — ${b.currency} ${b.totalAmount.toFixed(2)}. You have ${bookings.length} booking(s) on file.`;
+      reply = `Your most recent booking: ${b.itemName}, ${b.status}, ${b.currency} ${b.totalAmount.toFixed(2)}. You have ${bookings.length} booking(s) on file.`;
       actions.push({ type: "navigate", path: "/dashboard/traveller", label: "View all my bookings" });
     }
   } else if (/(car|drive|vehicle|rental)/.test(last)) {
