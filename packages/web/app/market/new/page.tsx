@@ -112,7 +112,7 @@ function NewListingInner() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={5}
-              placeholder="What exactly is included? Be specific — buyers commit based on this."
+              placeholder="What exactly is included? Be specific: buyers commit based on this."
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
             />
             <span className="mt-1 block text-xs text-slate-500">{description.length} / 4000 (min 10)</span>
@@ -187,7 +187,7 @@ function NewListingInner() {
             </div>
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            The buyer pays GBP {quote.buyerTotal.toFixed(2)} — {BUYER_FEE_LABEL} each side. Proceeds land in your wallet
+            The buyer pays GBP {quote.buyerTotal.toFixed(2)} ({BUYER_FEE_LABEL} fee each side). Proceeds land in your wallet
             when the order is paid.
           </p>
         </Card>
