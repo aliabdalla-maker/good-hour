@@ -87,7 +87,7 @@ export async function getOrCreatePaymentIntent(bookingId: string) {
     if (intent.status === "canceled" || intent.status === "succeeded") {
       throw new AppError(
         409,
-        "That payment can no longer be completed — please start a new booking",
+        "That payment can no longer be completed. Please start a new booking",
         "INTENT_UNUSABLE"
       );
     }
