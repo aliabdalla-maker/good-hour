@@ -4,7 +4,7 @@ import { startOutboxRelay, stopOutboxRelay } from "../../api/src/events/relay";
 import { startPricingRefreshWorker } from "./jobs/pricingRefresh.processor";
 import { startOfferEvaluationWorker } from "./jobs/offerEvaluation.processor";
 import { startBookingExpiryWorker } from "./jobs/bookingExpiry.processor";
-import { startAuctionCloseWorker } from "./jobs/auctionClose.processor";
+import { startAuctionCloseWorker, startAuctionSweep } from "./jobs/auctionClose.processor";
 
 // Domain-event handlers live here (not the api): register them, then start the
 // outbox relay that durably drains published events to those handlers.
@@ -15,6 +15,7 @@ const pricingWorker = startPricingRefreshWorker();
 const offerWorker = startOfferEvaluationWorker();
 const bookingExpiryWorker = startBookingExpiryWorker();
 const auctionCloseWorker = startAuctionCloseWorker();
+const auctionSweep = startAuctionSweep();
 
 const workers = [pricingWorker, offerWorker, bookingExpiryWorker, auctionCloseWorker];
 for (const worker of workers) {
@@ -26,6 +27,7 @@ console.log("[worker] pricing-refresh, offer-evaluation, booking-expiry and auct
 
 async function shutdown() {
   stopOutboxRelay();
+  clearInterval(auctionSweep);
   await Promise.all(workers.map((w) => w.close()));
   process.exit(0);
 }
