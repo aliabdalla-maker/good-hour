@@ -36,7 +36,9 @@ services:
       context: .
       dockerfile: packages/api/Dockerfile
     image: goodhours-api
-    command: ["npm", "run", "db:deploy"]
+    # Apply migrations, then ensure the clearly-labelled sample listings
+    # (packages/db/prisma/samples.ts; set SAMPLE_LISTINGS=off in .env to hide them).
+    command: ["sh", "-c", "npm run db:deploy && npm run samples --workspace=packages/db"]
     env_file: [.env]
     depends_on:
       postgres:
