@@ -45,7 +45,7 @@ jobs:
         id: probe
         run: |
           set +e
-          URL="${{ vars.HEALTH_URL || 'https://goodhour-api.onrender.com/health/ready' }}"
+          URL="${{ vars.HEALTH_URL || 'https://api.goodhour.shop/health/ready' }}"
           echo "probing $URL"
           BODY=$(curl -sS --max-time 30 -w '\n%{http_code}' "$URL")
           CODE=$(echo "$BODY" | tail -n1)
