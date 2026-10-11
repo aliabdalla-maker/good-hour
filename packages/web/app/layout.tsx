@@ -13,7 +13,7 @@ const SITE_DESCRIPTION =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Good Hours — Book rooms, cars & travel by the hour",
+    default: "Good Hours: Book rooms, cars & travel by the hour",
     template: "%s · Good Hours",
   },
   description: SITE_DESCRIPTION,
@@ -22,13 +22,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Good Hours",
     url: SITE_URL,
-    title: "Good Hours — Book rooms, cars & travel by the hour",
+    title: "Good Hours: Book rooms, cars & travel by the hour",
     description: SITE_DESCRIPTION,
     locale: "en_GB",
   },
   twitter: {
     card: "summary",
-    title: "Good Hours — Book rooms, cars & travel by the hour",
+    title: "Good Hours: Book rooms, cars & travel by the hour",
     description: SITE_DESCRIPTION,
   },
 };
