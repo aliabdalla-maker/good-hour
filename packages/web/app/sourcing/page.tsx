@@ -95,7 +95,7 @@ function SourcingPageInner() {
     try {
       await api.post("/sourcing/import-url", { url });
       setUrl("");
-      setNote("Imported as a draft below — review and publish when ready.");
+      setNote("Imported as a draft below. Review and publish when ready.");
       refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Import failed");
@@ -124,7 +124,7 @@ function SourcingPageInner() {
       setNote(
         res.created > 0
           ? `Imported ${res.created} new draft(s) from Smoobu.`
-          : "No new Smoobu properties to import — everything's already been pulled in."
+          : "No new Smoobu properties to import. Everything's already been pulled in."
       );
       refresh();
     } catch (err) {
@@ -144,7 +144,7 @@ function SourcingPageInner() {
       <h1 className="font-display mb-1 text-2xl font-semibold">Import & source listings</h1>
       <p className="mb-6 text-sm text-slate-500">
         Bring in listings from your own website or a partner feed. Everything imported lands as a{" "}
-        <strong>draft</strong> that you review and publish — nothing goes live automatically.
+        <strong>draft</strong> that you review and publish; nothing goes live automatically.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -167,7 +167,7 @@ function SourcingPageInner() {
         <section className="rounded border border-slate-200 bg-white p-4 sm:col-span-2">
           <h2 className="font-display mb-2 font-medium">Import from Smoobu</h2>
           <p className="mb-2 text-xs text-slate-500">
-            Pulls in every property from the connected Smoobu account. Rates are per-stay in Smoobu, not hourly —
+            Pulls in every property from the connected Smoobu account. Rates are per-stay in Smoobu, not hourly, so
             review and set the real hourly rate before publishing.
           </p>
           <button onClick={importSmoobu} disabled={smoobuBusy} className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50">
