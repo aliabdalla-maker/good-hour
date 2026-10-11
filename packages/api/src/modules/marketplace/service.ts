@@ -275,7 +275,7 @@ export async function placeOrder(buyerId: string, input: CreateMarketplaceOrderI
       // can top up and retry against the same quoted price.
       throw new AppError(
         409,
-        `Your wallet has ${listing.currency} ${balance.toFixed(2)} but this costs ${listing.currency} ${fee.buyerTotal.toFixed(2)} — top up to continue`,
+        `Your wallet has ${listing.currency} ${balance.toFixed(2)} but this costs ${listing.currency} ${fee.buyerTotal.toFixed(2)}. Top up to continue`,
         "INSUFFICIENT_FUNDS"
       );
     }

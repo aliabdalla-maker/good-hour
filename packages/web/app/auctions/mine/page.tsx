@@ -92,7 +92,7 @@ function Section({ title, rows }: { title: string; rows: AuctionPublic[] }) {
                   </td>
                   <td className="px-3 py-2 text-slate-600">{AUCTION_KIND_LABELS[a.kind]}</td>
                   <td className="px-3 py-2 text-end font-medium">
-                    {a.leadingPerHour === null ? "—" : `${a.currency} ${a.leadingPerHour.toFixed(2)}/hr`}
+                    {a.leadingPerHour === null ? "-" : `${a.currency} ${a.leadingPerHour.toFixed(2)}/hr`}
                     {a.viewerIsLeading && <span className="ms-1 text-xs text-success-700">✓</span>}
                   </td>
                   <td className="px-3 py-2 text-slate-600">{timeLeft(a.closesAt)}</td>

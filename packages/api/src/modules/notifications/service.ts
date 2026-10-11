@@ -47,7 +47,7 @@ export async function notify(input: NotifyInput) {
         // Marketing email legally requires a working unsubscribe mechanism.
         const emailBody =
           category === "MARKETING"
-            ? `${input.body}\n\n—\nYou received this because you opted into Good Hours updates.\nUnsubscribe: ${unsubscribeUrl(user.id)}`
+            ? `${input.body}\n\n--\nYou received this because you opted into Good Hours updates.\nUnsubscribe: ${unsubscribeUrl(user.id)}`
             : input.body;
         const r = await sendEmail(user.email, input.subject, emailBody);
         // FR-028. The channel reports `delivered: "logged"` when no provider is
@@ -221,7 +221,7 @@ export function registerNotificationListeners() {
     await notify({
       userId: travellerId,
       type: "booking.created",
-      subject: "Booking received — payment pending",
+      subject: "Booking received, payment pending",
       body: `Your booking ${bookingId} is reserved and awaiting payment.`,
       data: { bookingId },
     });
@@ -284,7 +284,7 @@ export function registerNotificationListeners() {
       type: "request.expired",
       subject: "Your request expired without a booking",
       body: hadOffers
-        ? "Your request window closed before you accepted an offer. The offers are no longer held — post a new request if you still need this."
+        ? "Your request window closed before you accepted an offer. The offers are no longer held. Post a new request if you still need this."
         : "Your request window closed with no offers from hosts. Try widening your location or budget and post again.",
       data: { bookingRequestId },
     });

@@ -66,7 +66,7 @@ function NewAuctionInner() {
         </Link>
         <h1 className="font-display mb-1 text-2xl font-semibold">Start an hourly auction</h1>
         <p className="mb-6 text-sm text-slate-500">
-          Auction hours of a product or service — either let buyers bid the price up, or let sellers bid it down.
+          Auction hours of a product or service: either let buyers bid the price up, or let sellers bid it down.
         </p>
 
         <Card className="animate-fade-in-up p-5">
@@ -216,7 +216,7 @@ function NewAuctionInner() {
             <li>• Agents re-bid the smallest step needed to lead, never past their limit.</li>
             <li>• Two agents bidding against each other settle it between themselves.</li>
             <li>• At close, the best bid that clears your reserve wins. Otherwise nothing happens.</li>
-            <li>• Payment is from the buyer&apos;s wallet — automatic only if they opted in.</li>
+            <li>• Payment is from the buyer&apos;s wallet, automatic only if they opted in.</li>
           </ul>
         </Card>
       </div>

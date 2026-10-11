@@ -131,8 +131,8 @@ export default function AuctionDetailPage() {
           <p className="mt-4 whitespace-pre-wrap text-sm text-slate-700">{a.description}</p>
           <p className="mt-4 text-xs text-slate-500">
             {a.kind === "FORWARD"
-              ? `Reserve: ${a.currency} ${a.reservePerHour.toFixed(2)}/hr — bids below this can't win.`
-              : `Budget ceiling: ${a.currency} ${a.reservePerHour.toFixed(2)}/hr — bids above this can't win.`}
+              ? `Reserve: ${a.currency} ${a.reservePerHour.toFixed(2)}/hr. Bids below this can't win.`
+              : `Budget ceiling: ${a.currency} ${a.reservePerHour.toFixed(2)}/hr. Bids above this can't win.`}
           </p>
         </Card>
 
@@ -218,7 +218,7 @@ export default function AuctionDetailPage() {
           </div>
         )}
 
-        {isMine && <p className="mt-4 text-xs text-warning-700">This is your auction — you can&apos;t bid on it.</p>}
+        {isMine && <p className="mt-4 text-xs text-warning-700">This is your auction, so you can&apos;t bid on it.</p>}
 
         {isOpen && !isMine && (
           <div className="mt-4">
@@ -310,7 +310,7 @@ export default function AuctionDetailPage() {
 
         {a.status === "SETTLED" && (
           <p className="mt-4 rounded-xl border border-success-200 bg-success-50 p-3 text-sm font-medium text-success-800">
-            Settled — money has moved.
+            Settled: money has moved.
           </p>
         )}
         {a.status === "UNMET" && (

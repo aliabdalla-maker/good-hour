@@ -38,7 +38,7 @@ function PayButton({ onSucceeded, label }: { onSucceeded: () => void; label: str
     } catch (e) {
       setError(
         e instanceof Error
-          ? `${e.message} — please reload the page and try again.`
+          ? `${e.message}. Please reload the page and try again.`
           : "Something went wrong starting the payment. Please reload and try again."
       );
     } finally {

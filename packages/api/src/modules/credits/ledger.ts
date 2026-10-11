@@ -162,7 +162,7 @@ export async function applyLedgerWrites(writes: LedgerWrite[]): Promise<void> {
     if (code === "P2034") {
       throw new AppError(
         409,
-        "That wallet was being changed at the same time — please try again",
+        "That wallet was being changed at the same time. Please try again",
         "CREDIT_CONFLICT"
       );
     }

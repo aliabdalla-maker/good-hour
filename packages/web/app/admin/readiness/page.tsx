@@ -55,7 +55,7 @@ const EVIDENCE_STYLE: Record<EvidenceKind, { label: string; chip: string; title:
   manual: {
     label: "checked once",
     chip: "bg-warning-50 text-warning-800 border-warning-200",
-    title: "A human verified it once — nothing guards it",
+    title: "A human verified it once; nothing guards it",
   },
   code: {
     label: "written only",
@@ -116,7 +116,7 @@ function Readiness() {
       <p className="mb-6 text-sm text-slate-500">
         Every requirement stated for this platform, with a testable acceptance criterion and how it
         is actually known. Generated from{" "}
-        <code className="rounded bg-slate-100 px-1 py-0.5">docs/REQUIREMENTS.md</code> — a stale copy
+        <code className="rounded bg-slate-100 px-1 py-0.5">docs/REQUIREMENTS.md</code>; a stale copy
         fails the test suite.
       </p>
 
@@ -144,7 +144,7 @@ function Readiness() {
             {outstandingMusts.length} Must-have requirements are not met
           </p>
           <p className="mt-1 text-xs text-danger-700">
-            A Must that is not met is not a backlog item — it is a statement that the platform does
+            A Must that is not met is not a backlog item; it is a statement that the platform does
             not yet do something it is required to do.
           </p>
         </Card>
@@ -156,7 +156,7 @@ function Readiness() {
             {manualOnly.length} requirements are &ldquo;Met&rdquo; on a single human check
           </p>
           <p className="mt-1 text-xs text-warning-800">
-            Nothing guards these — a regression in any of them would ship silently. Converting them
+            Nothing guards these: a regression in any of them would ship silently. Converting them
             to automated tests is the cheapest way to make this page mean more:{" "}
             {manualOnly.map((r) => r.id).join(", ")}
           </p>

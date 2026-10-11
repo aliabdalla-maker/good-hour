@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { api, ApiError } from "../../lib/apiClient";
@@ -13,13 +14,15 @@ export default function RegisterPage() {
   const [role, setRole] = useState<"TRAVELLER" | "SUPPLIER">("TRAVELLER");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      const user = await api.post("/auth/register", { email, password, role });
+      const user = await api.post("/auth/register", { email, password, role, marketingOptIn });
       queryClient.setQueryData(["me"], user);
       router.push(role === "SUPPLIER" ? "/dashboard/supplier" : "/search");
     } catch (err) {
@@ -64,6 +67,29 @@ export default function RegisterPage() {
             <option value="TRAVELLER">Traveller (booking rooms, cars &amp; travel)</option>
             <option value="SUPPLIER">Supplier (listing rooms, cars &amp; travel)</option>
           </select>
+        </label>
+        <label className="flex items-start gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            required
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            I am 18 or over and agree to the{" "}
+            <Link href="/terms" className="text-brand-600 underline" target="_blank">Terms of Service</Link> and{" "}
+            <Link href="/privacy" className="text-brand-600 underline" target="_blank">Privacy Policy</Link>.
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={marketingOptIn}
+            onChange={(e) => setMarketingOptIn(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>Send me occasional offers and news by email (optional, unsubscribe any time).</span>
         </label>
         {error && <p className="text-sm text-danger-600">{error}</p>}
         <button

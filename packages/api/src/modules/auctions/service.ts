@@ -102,7 +102,7 @@ function toPublicAuction(
   bidCount: number,
   leading: { amountPerHour: unknown; totalAmount: unknown; bidderId: string } | null,
   viewerId: string | null,
-  createdByHandle = "—"
+  createdByHandle = "-"
 ): AuctionPublic {
   const leadingPerHour = leading ? Number(leading.amountPerHour) : null;
   return {
@@ -514,7 +514,7 @@ export async function settleAuction(
   if (balance < fee.buyerTotal) {
     throw new AppError(
       409,
-      `Settling needs ${auction.currency} ${fee.buyerTotal.toFixed(2)} but the wallet holds ${auction.currency} ${balance.toFixed(2)} — top up to continue`,
+      `Settling needs ${auction.currency} ${fee.buyerTotal.toFixed(2)} but the wallet holds ${auction.currency} ${balance.toFixed(2)}. Top up to continue`,
       "INSUFFICIENT_FUNDS"
     );
   }

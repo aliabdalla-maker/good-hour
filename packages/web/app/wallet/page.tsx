@@ -80,8 +80,7 @@ function WalletInner() {
     <div>
       <h1 className="font-display mb-1 text-2xl font-semibold">Wallet</h1>
       <p className="mb-6 text-sm text-slate-500">
-        Money and hours in one place. Every hour you buy is yours to keep, spend, gift or exchange —
-        not tied to a single booking.
+        Money and hours in one place. Every hour you buy is yours to keep, spend, gift or exchange, not tied to a single booking.
       </p>
 
       <MoneySection />
@@ -253,7 +252,7 @@ function MoneySection() {
         >
           <p className="text-xs uppercase tracking-wide text-white/80">Wallet balance</p>
           <p className="mt-1 text-3xl font-semibold">
-            {currency} {isPending ? "—" : <AnimatedNumber value={data?.balance ?? 0} decimals={2} />}
+            {currency} {isPending ? "…" : <AnimatedNumber value={data?.balance ?? 0} decimals={2} />}
           </p>
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-white/80">
             <span>
@@ -277,7 +276,7 @@ function MoneySection() {
                 label={`Top up ${currency} ${amount.toFixed(2)}`}
                 onSucceeded={() => {
                   setClientSecret(null);
-                  setNotice("Payment received — your balance updates once the confirmation lands.");
+                  setNotice("Payment received. Your balance updates once the confirmation lands.");
                   // The webhook credits the ledger, so refetch shortly after.
                   setTimeout(() => qc.invalidateQueries({ queryKey: ["money-wallet"] }), 1500);
                 }}
@@ -318,7 +317,7 @@ function MoneySection() {
                 ))}
               </div>
               <p className="mb-3 text-xs text-slate-500">
-                No fee to add money — funding your own account isn&apos;t a trade.
+                No fee to add money: funding your own account isn&apos;t a trade.
               </p>
               <button
                 onClick={() => start.mutate()}
@@ -401,7 +400,7 @@ function BuyHours({ onDone }: { onDone: () => void }) {
       // credits, say so plainly rather than implying the hours have landed.
       setOk(
         q.simulated
-          ? `Reserved ${hours}h for ${q.currency} ${q.total.toFixed(2)} (test mode — no card charged).`
+          ? `Reserved ${hours}h for ${q.currency} ${q.total.toFixed(2)} (test mode, no card charged).`
           : `Payment of ${q.currency} ${q.total.toFixed(2)} created. Complete the card payment to receive your hours.`
       );
       onDone();
@@ -512,7 +511,7 @@ function GiftHours({ wallet, onDone }: { wallet: CreditWallet; onDone: () => voi
           className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1.5"
         />
       </label>
-      <p className="mb-3 text-xs text-slate-500">Gifts are free — no platform fee on a transfer.</p>
+      <p className="mb-3 text-xs text-slate-500">Gifts are free: no platform fee on a transfer.</p>
       <button
         onClick={() => send.mutate()}
         disabled={send.isPending || !toEmail}

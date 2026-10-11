@@ -9,7 +9,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-16 border-t border-slate-200 bg-white">
-      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-6 py-10 sm:grid-cols-3">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 px-6 py-10 sm:grid-cols-4">
         <div>
           <div className="flex items-center gap-2 text-lg font-semibold text-slate-900">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-sm text-white">◷</span>
@@ -26,6 +26,15 @@ export function SiteFooter() {
             <li><Link href="/browse" className="inline-flex min-h-6 items-center hover:text-slate-900">Browse listings</Link></li>
             <li><Link href="/search" className="inline-flex min-h-6 items-center hover:text-slate-900">Book instantly</Link></li>
             <li><Link href="/requests/new" className="inline-flex min-h-6 items-center hover:text-slate-900">Request a match</Link></li>
+          </ul>
+        </div>
+
+        <div className="text-sm">
+          <p className="mb-2 font-medium text-slate-700">Legal</p>
+          <ul className="space-y-1 text-slate-500">
+            <li><Link href="/terms" className="inline-flex min-h-6 items-center hover:text-slate-900">Terms of Service</Link></li>
+            <li><Link href="/privacy" className="inline-flex min-h-6 items-center hover:text-slate-900">Privacy Policy</Link></li>
+            <li><Link href="/privacy#cookies" className="inline-flex min-h-6 items-center hover:text-slate-900">Cookies</Link></li>
           </ul>
         </div>
 
@@ -54,7 +63,7 @@ export function SiteFooter() {
             <a href="https://www.softwareequality.com" className="inline-flex min-h-6 items-center hover:text-slate-600" target="_blank" rel="noopener noreferrer">
               Equality Software Ltd
             </a>{" "}
-            (Company No. 15006381), registered in England — London, United Kingdom.
+            (Company No. 15006381), registered in England (London, United Kingdom).
           </p>
         </div>
       </div>

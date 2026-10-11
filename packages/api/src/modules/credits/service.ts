@@ -95,7 +95,7 @@ export async function startCreditPurchase(
   if (!featureFlags.walletFloatEnabled) {
     throw new AppError(
       403,
-      "Buying time credits is currently unavailable — book and pay by card instead",
+      "Buying time credits is currently unavailable. Book and pay by card instead",
       "WALLET_FLOAT_DISABLED"
     );
   }

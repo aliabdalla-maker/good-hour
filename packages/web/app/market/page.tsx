@@ -183,7 +183,7 @@ export default function MarketPage() {
           description={
             submittedQ || category || kind !== "ALL"
               ? "Try clearing a filter or searching for something broader."
-              : "The marketplace is empty — be the first to list a product or service."
+              : "The marketplace is empty. Be the first to list a product or service."
           }
           action={
             user ? (
@@ -249,7 +249,7 @@ export default function MarketPage() {
 
       {data && data.total > data.listings.length && (
         <p className="mt-6 text-center text-sm text-slate-500">
-          Showing {data.listings.length} of {data.total} — narrow your search to see more.
+          Showing {data.listings.length} of {data.total}. Narrow your search to see more.
         </p>
       )}
     </div>

@@ -116,7 +116,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/terms.itest.ts — no real user has done this yet (see FR-030)"
+    "evidence": "test:packages/api/src/test/terms.itest.ts; no real user has done this yet (see FR-030)"
   },
   {
     "id": "FR-009",
@@ -140,7 +140,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/concurrency.itest.ts — balance vs ledger sum asserted after contention"
+    "evidence": "test:packages/api/src/test/concurrency.itest.ts; balance vs ledger sum asserted after contention"
   },
   {
     "id": "FR-011",
@@ -176,7 +176,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/auctionSettlement.itest.ts — close, reserve, UNMET, idempotency, both directions. No real auction has run in production (see FR-030)"
+    "evidence": "test:packages/api/src/test/auctionSettlement.itest.ts; close, reserve, UNMET, idempotency, both directions. No real auction has run in production (see FR-030)"
   },
   {
     "id": "FR-014",
@@ -212,7 +212,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "code"
     ],
-    "evidence": "code:packages/api/src/modules/erp/service.ts — figures are real but near-zero, so unvalidated at scale"
+    "evidence": "code:packages/api/src/modules/erp/service.ts; figures are real but near-zero, so unvalidated at scale"
   },
   {
     "id": "FR-017",
@@ -236,7 +236,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "code"
     ],
-    "evidence": "code:packages/api/src/modules/erp/service.ts — connected in code, no data flowing"
+    "evidence": "code:packages/api/src/modules/erp/service.ts; connected in code, no data flowing"
   },
   {
     "id": "FR-019",
@@ -333,7 +333,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "criterion": "Listings without a photo receive a generated one, labelled as generated",
     "verdict": "Not met",
     "evidenceKinds": [],
-    "evidence": "Withdrawn on instruction — Gemini blocked on Google Cloud billing. The disclosure UI remains"
+    "evidence": "Withdrawn on instruction: Gemini blocked on Google Cloud billing. The disclosure UI remains"
   },
   {
     "id": "FR-027",
@@ -353,7 +353,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Multi-channel notifications: in-app, email, SMS",
     "priority": "Should",
-    "criterion": "Each channel delivers, or records that it only logged — a row must never claim a delivery that did not happen",
+    "criterion": "Each channel delivers, or records that it only logged; a row must never claim a delivery that did not happen",
     "verdict": "Met",
     "evidenceKinds": [
       "test"
@@ -370,7 +370,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/terms.itest.ts — closed a client-supplied isCorporateRate"
+    "evidence": "test:packages/api/src/test/terms.itest.ts; closed a client-supplied isCorporateRate"
   },
   {
     "id": "FR-030",
@@ -394,7 +394,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/payouts.itest.ts — MANUAL method only; Stripe Connect is a named enum value with no code path"
+    "evidence": "test:packages/api/src/test/payouts.itest.ts; MANUAL method only; Stripe Connect is a named enum value with no code path"
   },
   {
     "id": "FR-031",
@@ -413,7 +413,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "Full ERP/HR/Finance back office",
     "priority": "Won't",
-    "criterion": "—",
+    "criterion": "-",
     "verdict": "Not started",
     "evidenceKinds": [],
     "evidence": "Deferred at plan time; a read-only ERP surface stands in"
@@ -423,7 +423,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "family": "FR",
     "requirement": "B2G procurement workflows",
     "priority": "Won't",
-    "criterion": "—",
+    "criterion": "-",
     "verdict": "Not started",
     "evidenceKinds": [],
     "evidence": "Deferred at plan time"
@@ -438,7 +438,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/shared/src/locales.test.ts test:packages/web/lib/designAudit.test.ts — 15 locales translated (all unreviewed), 25 fall back to English per key. **Multi-currency is NOT done: GBP only"
+    "evidence": "test:packages/shared/src/locales.test.ts test:packages/web/lib/designAudit.test.ts; 15 locales translated (all unreviewed), 25 fall back to English per key. **Multi-currency is NOT done: GBP only"
   },
   {
     "id": "NFR-001",
@@ -512,7 +512,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/slo.itest.ts — point 150ms, list 600ms, write 900ms"
+    "evidence": "test:packages/api/src/test/slo.itest.ts; point 150ms, list 600ms, write 900ms"
   },
   {
     "id": "NFR-007",
@@ -524,7 +524,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/concurrency.itest.ts — 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up"
+    "evidence": "test:packages/api/src/test/concurrency.itest.ts; 8 buyers / 1 unit, 10 concurrent spends, duplicate top-up"
   },
   {
     "id": "NFR-008",
@@ -537,7 +537,7 @@ export const REQUIREMENTS: RequirementRow[] = [
       "manual",
       "code"
     ],
-    "evidence": "code:packages/api/src/app.ts manual: verified — no aggregator is provisioned yet"
+    "evidence": "code:packages/api/src/app.ts manual: verified; no aggregator is provisioned yet"
   },
   {
     "id": "NFR-009",
@@ -550,7 +550,7 @@ export const REQUIREMENTS: RequirementRow[] = [
       "manual",
       "code"
     ],
-    "evidence": "code:scripts/backup-verify.mjs manual: run against 26 tables / 2892 rows — counts identical after restore"
+    "evidence": "code:scripts/backup-verify.mjs manual: run against 26 tables / 2892 rows; counts identical after restore"
   },
   {
     "id": "NFR-010",
@@ -608,7 +608,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/compliance.itest.ts — thresholds are engineering defaults, not a legal determination"
+    "evidence": "test:packages/api/src/test/compliance.itest.ts; thresholds are engineering defaults, not a legal determination"
   },
   {
     "id": "CR-003",
@@ -644,7 +644,7 @@ export const REQUIREMENTS: RequirementRow[] = [
     "evidenceKinds": [
       "test"
     ],
-    "evidence": "test:packages/api/src/test/compliance.itest.ts — GET /auth/me/export, POST /auth/me/erase"
+    "evidence": "test:packages/api/src/test/compliance.itest.ts; GET /auth/me/export, POST /auth/me/erase"
   },
   {
     "id": "CR-006",
@@ -657,7 +657,7 @@ export const REQUIREMENTS: RequirementRow[] = [
       "prod",
       "code"
     ],
-    "evidence": "prod: live card payments completed through Stripe Elements; code:packages/web/components/StripePaymentForm.tsx — no PAN in our stack"
+    "evidence": "prod: live card payments completed through Stripe Elements; code:packages/web/components/StripePaymentForm.tsx; no PAN in our stack"
   }
 ] as RequirementRow[];
 

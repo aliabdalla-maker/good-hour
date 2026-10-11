@@ -18,6 +18,10 @@ export async function registerUser(input: RegisterInput) {
       passwordHash,
       role: input.role,
       isBusinessAccount: input.isBusinessAccount,
+      marketingOptIn: input.marketingOptIn,
+      consentEvents: {
+        create: { channel: "marketing_email", granted: input.marketingOptIn, source: "signup" },
+      },
     },
   });
 

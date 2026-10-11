@@ -128,9 +128,9 @@ export const erpLiquiditySchema = z.object({
 export type ErpLiquidity = z.infer<typeof erpLiquiditySchema>;
 
 export const LIQUIDITY_VERDICT_LABELS: Record<ErpLiquidity["verdict"], string> = {
-  NO_MARKET: "No market — no supply and no demand",
-  NO_SUPPLY: "No supply — demand with nothing to buy",
-  NO_DEMAND: "No demand — supply with no transactions",
+  NO_MARKET: "No market: no supply and no demand",
+  NO_SUPPLY: "No supply: demand with nothing to buy",
+  NO_DEMAND: "No demand: supply with no transactions",
   TRADING: "Trading",
 };
 

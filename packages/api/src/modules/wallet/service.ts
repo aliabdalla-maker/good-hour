@@ -68,7 +68,7 @@ export async function startTopUp(userId: string, input: TopUpWalletInput): Promi
   if (!featureFlags.walletFloatEnabled) {
     throw new AppError(
       403,
-      "Wallet top-ups are currently unavailable — pay for bookings by card instead",
+      "Wallet top-ups are currently unavailable. Pay for bookings by card instead",
       "WALLET_FLOAT_DISABLED"
     );
   }

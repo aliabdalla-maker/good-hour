@@ -152,7 +152,7 @@ function PayoutQueue() {
                   <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">
                     {p.destinationNote ?? (
                       <span className="text-warning-800">
-                        No destination given — contact the seller before sending anything.
+                        No destination given. Contact the seller before sending anything.
                       </span>
                     )}
                   </p>

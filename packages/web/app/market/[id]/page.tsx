@@ -222,7 +222,7 @@ export default function MarketListingPage() {
             {soldOut && <p className="mt-3 text-xs text-danger-600">This listing isn&apos;t available.</p>}
             {walletShort && !soldOut && !isOwn && (
               <p className="mt-3 text-xs text-warning-700">
-                Not enough in your wallet —{" "}
+                Not enough in your wallet:{" "}
                 <Link href="/wallet" className="font-medium underline">
                   top up
                 </Link>{" "}

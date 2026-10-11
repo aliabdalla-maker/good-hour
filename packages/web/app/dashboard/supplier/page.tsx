@@ -185,7 +185,7 @@ function VerificationCard() {
       {canSubmit && (
         <div className="mt-3">
           <p className="mb-2 text-sm text-slate-500">
-            Get a Verified badge on your listings — submit your business details for review.
+            Get a Verified badge on your listings: submit your business details for review.
           </p>
           {status?.status === "REJECTED" && status.note && (
             <p className="mb-2 text-sm text-danger-600">Previous decision: {status.note}</p>
@@ -260,7 +260,7 @@ function PropertyCard({ property, onRoomAdded }: { property: PropertyWithRooms; 
       <ul className="mt-3 flex flex-col gap-1 text-sm">
         {property.rooms.map((room) => (
           <li key={room.id} className="flex flex-wrap items-center justify-between gap-2">
-            <span>{room.name} — {room.currency} {room.baseHourlyRate}/hr ({room.minHours}-{room.maxHours}h)</span>
+            <span>{room.name}: {room.currency} {room.baseHourlyRate}/hr ({room.minHours}-{room.maxHours}h)</span>
             <AutoOfferToggle room={room} onChanged={onRoomAdded} />
           </li>
         ))}
