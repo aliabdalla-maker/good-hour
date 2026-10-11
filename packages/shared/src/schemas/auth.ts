@@ -8,6 +8,9 @@ export const registerSchema = z.object({
   // here was a privilege-escalation hole on an unauthenticated endpoint.
   role: z.enum(SELF_REGISTERABLE_ROLES).default("TRAVELLER"),
   isBusinessAccount: z.boolean().default(false),
+  // UK PECR: marketing email needs an explicit opt-in, so this defaults to false
+  // and the sign-up form leaves the box unticked.
+  marketingOptIn: z.boolean().default(false),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
