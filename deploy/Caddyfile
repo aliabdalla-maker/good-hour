@@ -33,3 +33,41 @@ api.goodhour.shop {
 	header X-Frame-Options "DENY"
 	reverse_proxy api:4000
 }
+
+# Software Equality company website (static, from the softwareequality-website
+# repo synced by the sitesync service). DNS: A records for softwareequality.com
+# and www.softwareequality.com pointing at this server. Clean URLs like on
+# Netlify: /privacy serves privacy.html.
+softwareequality.com {
+	encode zstd gzip
+	import security_headers
+	header X-Frame-Options "SAMEORIGIN"
+
+	# The AI assistant (/api/chat) and bootcamp checkout run as Netlify
+	# Functions. They stay on Netlify's free tier; only the pages moved here.
+	@netlify path /api/* /.netlify/functions/*
+	handle @netlify {
+		reverse_proxy https://rococo-beignet-d94339.netlify.app {
+			header_up Host rococo-beignet-d94339.netlify.app
+		}
+	}
+
+	handle {
+		root * /srv/sites/softwareequality-website/site
+		try_files {path} {path}.html {path}/index.html
+		file_server
+	}
+
+	handle_errors {
+		@missing expression {err.status_code} == 404
+		handle @missing {
+			root * /srv/sites/softwareequality-website/site
+			rewrite * /404.html
+			file_server
+		}
+	}
+}
+
+www.softwareequality.com {
+	redir https://softwareequality.com{uri} permanent
+}
