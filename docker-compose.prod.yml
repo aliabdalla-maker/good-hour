@@ -94,7 +94,7 @@ services:
     labels:
       # Bump this value to force Caddy to be recreated on the next auto-deploy
       # (e.g. to retry HTTPS certificate issuance after a DNS change).
-      com.goodhour.caddy-revision: "6"
+      com.goodhour.caddy-revision: "7"
     ports:
       - "80:80"
       - "443:443"
@@ -128,6 +128,30 @@ services:
         done
     volumes:
       - sites:/sites
+
+  # softwareequality.com back end (AI assistant + bootcamp Stripe checkout),
+  # run straight from the synced website repo (api/server.mjs, no build step,
+  # no dependencies). Uses OPENAI_* and STRIPE_SECRET_KEY from .env; set
+  # SE_OPENAI_API_KEY / SE_STRIPE_SECRET_KEY etc. to use different keys.
+  # node --watch restarts it automatically when a push changes the code.
+  se-api:
+    image: node:22-alpine
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+    working_dir: /sites
+    command:
+      - sh
+      - -c
+      - |
+        until [ -f /sites/softwareequality-website/api/server.mjs ]; do echo "waiting for site sync"; sleep 5; done
+        exec node --watch /sites/softwareequality-website/api/server.mjs
+    volumes:
+      - sites:/sites:ro
+    depends_on:
+      - sitesync
 
 volumes:
   postgres_data:
