@@ -43,18 +43,13 @@ softwareequality.com {
 	import security_headers
 	header X-Frame-Options "SAMEORIGIN"
 
-	# The AI assistant (/api/chat) and bootcamp checkout still run as Netlify
-	# Functions. Netlify routes by host name, so send them to Netlify's load
-	# balancer as softwareequality.com. Temporary: replace with endpoints on
-	# this server before the Netlify site is suspended or removed.
-	@netlify path /api/* /.netlify/functions/*
-	handle @netlify {
-		reverse_proxy https://75.2.60.5 {
-			header_up Host softwareequality.com
-			transport http {
-				tls_server_name softwareequality.com
-			}
-		}
+	# AI assistant (/api/chat) and bootcamp checkout: served by the se-api
+	# service on this server (code in the softwareequality-website repo,
+	# api/server.mjs). The legacy Netlify Functions path is kept so existing
+	# pages keep working unchanged.
+	@api path /api/* /.netlify/functions/*
+	handle @api {
+		reverse_proxy se-api:8787
 	}
 
 	handle {
