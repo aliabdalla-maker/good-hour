@@ -94,7 +94,7 @@ services:
     labels:
       # Bump this value to force Caddy to be recreated on the next auto-deploy
       # (e.g. to retry HTTPS certificate issuance after a DNS change).
-      com.goodhour.caddy-revision: "3"
+      com.goodhour.caddy-revision: "4"
     ports:
       - "80:80"
       - "443:443"
@@ -102,11 +102,35 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+      - sites:/srv/sites:ro
     depends_on:
       - web
       - api
+
+  # Static websites served by Caddy straight from public GitHub repos: pulls
+  # each repo every 2 minutes, so a push to main is live shortly after.
+  # softwareequality.com: github.com/aliabdalla-maker/softwareequality-website
+  sitesync:
+    image: alpine/git:latest
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        repo=https://github.com/aliabdalla-maker/softwareequality-website.git
+        dir=/sites/softwareequality-website
+        while true; do
+          if [ -d "$$dir/.git" ]; then
+            git -C "$$dir" fetch -q --depth 1 origin main && git -C "$$dir" reset -q --hard origin/main
+          else
+            rm -rf "$$dir" && git clone -q --depth 1 "$$repo" "$$dir"
+          fi
+          sleep 120
+        done
+    volumes:
+      - sites:/sites
 
 volumes:
   postgres_data:
   caddy_data:
   caddy_config:
+  sites:
