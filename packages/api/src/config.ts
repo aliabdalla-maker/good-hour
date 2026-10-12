@@ -16,6 +16,32 @@ loadDotenv({ path: path.resolve(__dirname, "../../../.env") });
 const trimmed = () => z.string().transform((v) => v.trim());
 const optionalTrimmed = () => z.string().transform((v) => v.trim()).optional();
 
+// API keys pasted over SSH can pick up terminal escape sequences (bracketed
+// paste "ESC[200~ ... ESC[201~", arrow keys), quotes or invisible Unicode.
+// Any non-printable character makes Node's fetch reject the Authorization
+// header ("Connection error."), so strip them, and if a well-formed key is
+// buried in the noise, use it (the last one: the most recent paste).
+const KEY_PATTERNS = [
+  /sk-or-v1-[0-9a-f]{64}(?![0-9a-z])/g, // OpenRouter
+  /sk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{32,}/g, // OpenAI
+  /(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{20,}/g, // Stripe secret / restricted
+  /whsec_[A-Za-z0-9]{20,}/g, // Stripe webhook secret
+];
+export function cleanSecret(raw: string): string {
+  // eslint-disable-next-line no-control-regex
+  const noAnsi = raw.replace(/\x1b\[[0-9;?]*[~A-Za-z]/g, "").replace(/\[(?:200|201)~/g, "");
+  for (const re of KEY_PATTERNS) {
+    const found = noAnsi.match(re);
+    if (found && found.length) return found[found.length - 1];
+  }
+  return noAnsi.replace(/^["'\u201c\u2018]+|["'\u201d\u2019]+$/g, "").replace(/[^\x21-\x7E]/g, "");
+}
+const optionalSecret = () =>
+  z
+    .string()
+    .transform((v) => cleanSecret(v))
+    .optional();
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   API_PORT: z.coerce.number().int().positive().default(4000),
@@ -29,13 +55,13 @@ const envSchema = z.object({
   API_PUBLIC_URL: z.string().default("http://localhost:4000"),
   // Minutes an unpaid booking holds its slots before they're auto-released.
   RESERVATION_HOLD_MINUTES: z.coerce.number().int().positive().default(15),
-  OPENAI_API_KEY: optionalTrimmed(),
+  OPENAI_API_KEY: optionalSecret(),
   OPENAI_MODEL: z.string().default("gpt-4o-mini"),
   // Points the OpenAI SDK at an OpenAI-compatible endpoint instead (e.g.
   // Groq's https://api.groq.com/openai/v1) -- unset uses OpenAI itself.
   OPENAI_BASE_URL: optionalTrimmed(),
-  STRIPE_SECRET_KEY: optionalTrimmed(),
-  STRIPE_WEBHOOK_SECRET: optionalTrimmed(),
+  STRIPE_SECRET_KEY: optionalSecret(),
+  STRIPE_WEBHOOK_SECRET: optionalSecret(),
   // Smoobu (vacation rental channel manager) HMAC API credentials, used to
   // import the platform's connected properties as review-before-publish
   // sourcing drafts, the same as a URL/feed import.
