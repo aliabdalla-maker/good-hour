@@ -133,7 +133,7 @@ services:
   # run straight from the synced website repo (api/server.mjs, no build step,
   # no dependencies). Uses OPENAI_* and STRIPE_SECRET_KEY from .env; set
   # SE_OPENAI_API_KEY / SE_STRIPE_SECRET_KEY etc. to use different keys.
-  # node --watch restarts it automatically when a push changes the code.
+  # It restarts automatically when a push changes the code.
   se-api:
     image: node:22-alpine
     restart: unless-stopped
@@ -146,8 +146,17 @@ services:
       - sh
       - -c
       - |
-        until [ -f /sites/softwareequality-website/api/server.mjs ]; do echo "waiting for site sync"; sleep 5; done
-        exec node --watch /sites/softwareequality-website/api/server.mjs
+        f=/sites/softwareequality-website/api/server.mjs
+        until [ -f "$$f" ]; do echo "waiting for site sync"; sleep 5; done
+        # Restart whenever a push changes the code (git replaces the file, which
+        # node --watch does not reliably follow).
+        while true; do
+          sum=$$(md5sum "$$f" | cut -d' ' -f1)
+          node "$$f" & pid=$$!
+          while kill -0 $$pid 2>/dev/null && [ "$$(md5sum "$$f" | cut -d' ' -f1)" = "$$sum" ]; do sleep 20; done
+          kill $$pid 2>/dev/null; wait $$pid 2>/dev/null
+          echo "se-api: code changed or exited, restarting"; sleep 2
+        done
     volumes:
       - sites:/sites:ro
     depends_on:
