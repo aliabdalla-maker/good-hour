@@ -43,12 +43,17 @@ softwareequality.com {
 	import security_headers
 	header X-Frame-Options "SAMEORIGIN"
 
-	# The AI assistant (/api/chat) and bootcamp checkout run as Netlify
-	# Functions. They stay on Netlify's free tier; only the pages moved here.
+	# The AI assistant (/api/chat) and bootcamp checkout still run as Netlify
+	# Functions. Netlify routes by host name, so send them to Netlify's load
+	# balancer as softwareequality.com. Temporary: replace with endpoints on
+	# this server before the Netlify site is suspended or removed.
 	@netlify path /api/* /.netlify/functions/*
 	handle @netlify {
-		reverse_proxy https://rococo-beignet-d94339.netlify.app {
-			header_up Host rococo-beignet-d94339.netlify.app
+		reverse_proxy https://75.2.60.5 {
+			header_up Host softwareequality.com
+			transport http {
+				tls_server_name softwareequality.com
+			}
 		}
 	}
 
