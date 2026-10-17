@@ -48,7 +48,12 @@ softwareequality.com {
 	handle_path /aep-x/* {
 		root * /srv/aepx/current
 		try_files {path} {path}/ /index.html
-		header Cache-Control "no-cache"
+		header {
+			Cache-Control "no-cache"
+			X-Frame-Options "DENY"
+			Permissions-Policy "camera=(), microphone=(), geolocation=()"
+			Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		}
 		file_server
 	}
 
