@@ -3,7 +3,6 @@
 # and api.goodhour.shop pointing at this server. The apex is intentionally not
 # used (CNAME-only DNS).
 {
-	# ACME contact address for certificate notices. Change to your email.
 	email admin@goodhour.shop
 }
 
@@ -18,7 +17,6 @@
 	}
 }
 
-# Public web app (www subdomain — apex not used).
 www.goodhour.shop {
 	encode zstd gzip
 	import security_headers
@@ -26,7 +24,6 @@ www.goodhour.shop {
 	reverse_proxy web:3000
 }
 
-# Public API (the browser calls this directly; it's NEXT_PUBLIC_API_URL).
 api.goodhour.shop {
 	encode zstd gzip
 	import security_headers
@@ -34,19 +31,33 @@ api.goodhour.shop {
 	reverse_proxy api:4000
 }
 
-# Software Equality company website (static, from the softwareequality-website
-# repo synced by the sitesync service). DNS: A records for softwareequality.com
-# and www.softwareequality.com pointing at this server. Clean URLs like on
-# Netlify: /privacy serves privacy.html.
+# Software Equality company website plus AEP-X.
+# The company site is synced from softwareequality-website into /srv/sites.
+# AEP-X is deployed independently by the aepx-core self-hosted GitHub runner
+# into /srv/aepx/current and bind-mounted read-only into this container.
 softwareequality.com {
 	encode zstd gzip
 	import security_headers
 	header X-Frame-Options "SAMEORIGIN"
 
-	# AI assistant (/api/chat) and bootcamp checkout: served by the se-api
-	# service on this server (code in the softwareequality-website repo,
-	# api/server.mjs). The legacy Netlify Functions path is kept so existing
-	# pages keep working unchanged.
+	# Canonicalise the application root.
+	redir /aep-x /aep-x/ 308
+
+	# AEP-X static application. handle_path strips /aep-x before file lookup,
+	# while the SPA fallback keeps future client-side routes working.
+	handle_path /aep-x/* {
+		root * /srv/aepx/current
+		try_files {path} {path}/ /index.html
+		header {
+			Cache-Control "no-cache"
+			X-Frame-Options "DENY"
+			Permissions-Policy "camera=(), microphone=(), geolocation=()"
+			Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		}
+		file_server
+	}
+
+	# AI assistant (/api/chat) and bootcamp checkout for the company website.
 	@api path /api/* /.netlify/functions/*
 	handle @api {
 		reverse_proxy se-api:8787

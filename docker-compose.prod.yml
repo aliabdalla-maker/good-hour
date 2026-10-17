@@ -36,8 +36,6 @@ services:
       context: .
       dockerfile: packages/api/Dockerfile
     image: goodhours-api
-    # Apply migrations, then ensure the clearly-labelled sample listings
-    # (packages/db/prisma/samples.ts; set SAMPLE_LISTINGS=off in .env to hide them).
     command: ["sh", "-c", "npm run db:deploy && npm run samples --workspace=packages/db"]
     env_file: [.env]
     depends_on:
@@ -78,7 +76,6 @@ services:
       context: .
       dockerfile: packages/web/Dockerfile
       args:
-        # NEXT_PUBLIC_* are inlined at BUILD time — rebuild to change them.
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.goodhour.shop}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
         NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-admin@softwareequality.com}
@@ -92,9 +89,8 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     labels:
-      # Bump this value to force Caddy to be recreated on the next auto-deploy
-      # (e.g. to retry HTTPS certificate issuance after a DNS change).
-      com.goodhour.caddy-revision: "7"
+      # Bump this value to force Caddy recreation after config/mount changes.
+      com.goodhour.caddy-revision: "8"
     ports:
       - "80:80"
       - "443:443"
@@ -103,13 +99,15 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - sites:/srv/sites:ro
+      # AEP-X is deployed by the self-hosted GitHub runner on this OCI host.
+      # Mount the parent so atomic current-symlink swaps are immediately visible.
+      - /srv/aepx:/srv/aepx:ro
     depends_on:
       - web
       - api
 
-  # Static websites served by Caddy straight from public GitHub repos: pulls
-  # each repo every 2 minutes, so a push to main is live shortly after.
-  # softwareequality.com: github.com/aliabdalla-maker/softwareequality-website
+  # Static company website served by Caddy straight from its public GitHub repo.
+  # AEP-X is separate: aepx-core deploys releases under /srv/aepx.
   sitesync:
     image: alpine/git:latest
     restart: unless-stopped
@@ -129,11 +127,6 @@ services:
     volumes:
       - sites:/sites
 
-  # softwareequality.com back end (AI assistant + bootcamp Stripe checkout),
-  # run straight from the synced website repo (api/server.mjs, no build step,
-  # no dependencies). Uses OPENAI_* and STRIPE_SECRET_KEY from .env; set
-  # SE_OPENAI_API_KEY / SE_STRIPE_SECRET_KEY etc. to use different keys.
-  # It restarts automatically when a push changes the code.
   se-api:
     image: node:22-alpine
     restart: unless-stopped
@@ -148,8 +141,6 @@ services:
       - |
         f=/sites/softwareequality-website/api/server.mjs
         until [ -f "$$f" ]; do echo "waiting for site sync"; sleep 5; done
-        # Restart whenever a push changes the code (git replaces the file, which
-        # node --watch does not reliably follow).
         while true; do
           sum=$$(md5sum "$$f" | cut -d' ' -f1)
           node "$$f" & pid=$$!
