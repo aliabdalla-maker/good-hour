@@ -43,6 +43,32 @@ softwareequality.com {
 	import security_headers
 	header X-Frame-Options "SAMEORIGIN"
 
+	# Content Security Policy. The pages use inline scripts, inline styles and
+	# a few onclick handlers, so 'unsafe-inline' is still needed; everything
+	# else is locked to this site plus the contact form (Web3Forms) and an
+	# optional booking calendar iframe on /book.
+	header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://api.web3forms.com; form-action 'self' https://api.web3forms.com; frame-src https://calendar.google.com https://cal.com https://calendly.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+
+	# Old .html links: 301 to the clean URL (/privacy.html -> /privacy,
+	# /index.html and /about/index.html -> the folder). Caddy runs redir
+	# before the handle blocks, so this sees the original request path.
+	@indexhtml path_regexp idx ^(.*/)index\.html$
+	@html path_regexp page ^(.+)\.html$
+	redir @indexhtml {re.idx.1}{?query} permanent
+	redir @html {re.page.1}{?query} permanent
+
+	# Caching: fonts never change (1 year); images keep their names when
+	# replaced, so 30 days; CSS and JS are loaded with ?v= version strings, so
+	# a day is safe; HTML is always revalidated.
+	@fonts path /fonts/* *.woff2
+	header @fonts Cache-Control "public, max-age=31536000, immutable"
+	@images path *.png *.jpg *.jpeg *.webp *.svg *.ico
+	header @images Cache-Control "public, max-age=2592000"
+	@assets path *.css *.js
+	header @assets Cache-Control "public, max-age=86400"
+	@pages not path /fonts/* *.woff2 *.png *.jpg *.jpeg *.webp *.svg *.ico *.css *.js /api/* /.netlify/functions/*
+	header @pages Cache-Control "no-cache"
+
 	# AI assistant (/api/chat) and bootcamp checkout: served by the se-api
 	# service on this server (code in the softwareequality-website repo,
 	# api/server.mjs). The legacy Netlify Functions path is kept so existing
