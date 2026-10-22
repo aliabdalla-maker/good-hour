@@ -162,6 +162,23 @@ services:
     depends_on:
       - sitesync
 
+  # One-off helper: authorises the OCI Cloud Shell public key (admin@softwareequality.com)
+  # for SSH as ubuntu, so secrets in .env can be edited from Cloud Shell.
+  # Public key only, never a secret. Safe to delete once used.
+  cloudshell-ssh-key:
+    image: alpine:3.20
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - |
+        k='ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMifLYPnLLcjGEd1aVSbvpbkF6KfRI6DPlUhnrqdq0uIVGgu7ddRorIU8UqqRikqFUYysk4l2JVAzM4A8l7zFVE= cloudshell-admin'
+        f=/ssh/authorized_keys
+        grep -qF "$$k" "$$f" || echo "$$k" >> "$$f"
+        echo "cloudshell key authorised"
+    volumes:
+      - /home/ubuntu/.ssh:/ssh
+
 volumes:
   postgres_data:
   caddy_data:
